@@ -590,6 +590,23 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
   input,select,textarea{font-size:max(16px,1rem)} /* evita o zoom automático do iPhone */
 }
 @media (min-width:600px) and (max-width:860px){.dia-card{padding:24px}.page{padding-inline:28px}}
+
+/* ===== Editar o dia ===== */
+.dia-editar{align-self:flex-start;margin-top:4px}
+.dia-ed{display:flex;flex-direction:column;gap:12px}
+.ed-blk{border:1px solid var(--line);border-radius:var(--r);padding:12px;margin:0;display:flex;flex-direction:column;gap:10px;background:var(--surface);min-width:0}
+.ed-l1{display:flex;gap:8px;align-items:flex-end}
+.ed-mat{flex:1;min-width:0}
+.ed-ord{display:flex;gap:2px;flex:none}
+.ed-ord .btn{width:2.4rem;height:2.4rem;justify-content:center}
+.ed-l2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,7.5rem),1fr));gap:8px}
+.ed-f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ed-f>span{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.ed-f select,.ed-f input{width:100%;min-width:0}
+.ed-add{align-self:stretch;justify-content:center;border-style:dashed}
+.ed-rod{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px;position:sticky;bottom:0;background:var(--surface)}
+@media (max-width:860px){.ed-rod{bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 
 </head><body><div id="root"></div>
@@ -950,7 +967,13 @@ function gravar(k,v,ja){
 }
 async function gravarPub(col,data){ // documentos públicos, um por usuário
   if(S.mode!=="nuvem")return false;
-  if(col==="perfis"&&FBM()){if(S.srv===undefined){toast("Carregando suas conquistas. Tente de novo em instantes.");return false}Object.assign(data,perfilVerificado(S.uid,data))}
+  if(col==="perfis"){
+    // nunca grava o perfil antes de ele chegar da nuvem: senão a foto, a bio e os amigos seriam apagados
+    if(!S.pubOk){toast("Seu perfil ainda está carregando. Tente de novo em instantes.");return false}
+    if(FBM()){if(S.srv===undefined){toast("Carregando suas conquistas. Tente de novo em instantes.");return false}Object.assign(data,perfilVerificado(S.uid,data))}
+    try{const ref=S.db.collection(col).doc(S.uid),d=clone(data);
+      if(FBM())await ref.set(d,{merge:true});else if(S.soc.perfis[S.uid]&&ref.update)await ref.update(d);else await ref.set(d);return true}
+    catch(e){toast(e&&e.code==="invalid_argument"?"Sua permissão nesta página não permite publicar. Peça acesso de Colaborador ao dono.":"Não foi possível salvar ("+(e&&e.code||"erro")+").");return false}}
   try{await S.db.collection(col).doc(S.uid).set(clone(data));return true}
   catch(e){toast(e&&e.code==="invalid_argument"?"Sua permissão nesta página não permite publicar. Peça acesso de Colaborador ao dono.":"Não foi possível salvar ("+(e&&e.code||"erro")+").");return false}
 }
@@ -1085,12 +1108,12 @@ async function entrar(modo){
   catch(e){S.mode=null;renderLogin("Não foi possível ler seus dados ("+(e&&e.code||"erro")+").");return}
   S.pomoLog=garantirTotais(S.pomoLog&&S.pomoLog.dias?S.pomoLog:{dias:{},sessoes:0});carregarCrono();virarSemana();verificarConquistas(true);if(S.edital&&!Array.isArray(S.edital.materias))S.edital=null;
   if(S.perfil&&S.perfil.ui)aplicarUI(S.perfil.ui);else if(S.perfil&&S.perfil.tema)aplicarTema(S.perfil.tema);
-  if(S.perfil&&S.perfil.pomo)Object.assign(P.dur,S.perfil.pomo);else if(S.perfil)Object.assign(P.dur,{foco:+S.perfil.bloco||50,curta:+S.perfil.pausa||10});P.restante=pomoTotal();
+  if(S.perfil&&S.perfil.pomo)Object.assign(P.dur,S.perfil.pomo);else if(S.perfil)Object.assign(P.dur,{foco:+S.perfil.bloco||50,curta:+S.perfil.pausa||10});P.restante=pomoTotal();carregarPomo();
   if(S.mode==="nuvem"){assinarSocial();if(FBM()){iniciarComunidadeFB();iniciarConquistasSrv()}}
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
   else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
 }
-function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;Object.assign(S,{srv:undefined,resg:{},resgOk:false,rankOk:false,gCache:null,dt:0});SRV.tentados={};SRV.fila=Promise.resolve();S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
+function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;Object.assign(S,{pubOk:false,srv:undefined,resg:{},resgOk:false,rankOk:false,gCache:null,dt:0});SRV.tentados={};SRV.fila=Promise.resolve();S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
   Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{},conquistas:{}}});renderLogin()}
 
 function perfilPadrao(nome){
@@ -1207,7 +1230,7 @@ function ligarWizard(){
     if(S.step<PASSOS.length-1){S.step++;renderWizard();scrollTo(0,0);return}
     const novo=!S.plano;S.perfil=clone(d);S.perfil.tema=temaAtual();Object.assign(P.dur,{foco:+d.bloco,curta:+d.pausa});if(!P.rodando)P.restante=pomoTotal();
     gravar("perfil",S.perfil,true);
-    if(S.mode==="nuvem"&&!S.soc.perfis[S.uid])gravarPub("perfis",{nome:d.nome||"Estudante",bio:"",foto:"",objetivo:descObjetivo(d),desde:Date.now()});
+    if(S.mode==="nuvem"&&S.pubOk&&!S.soc.perfis[S.uid])gravarPub("perfis",{nome:d.nome||"Estudante",bio:"",foto:"",objetivo:descObjetivo(d),desde:Date.now()});
     S.view="semana";renderShell();gerar({novo});
   });
   $("#q-back").onclick=()=>{lerWizard();if(S.editar&&S.step===1){S.editar=false;renderShell();return}if(S.step===0){renderShell()}else{S.step--;renderWizard()}};
@@ -1453,9 +1476,23 @@ const P={modo:"foco",dur:{foco:50,curta:10,longa:20},rodando:false,fimEm:0,resta
 const MODOS={foco:"Foco",curta:"Pausa curta",longa:"Pausa longa"};
 function pomoTotal(){return P.dur[P.modo]*60e3}
 function pomoRestante(){return P.rodando?Math.max(0,P.fimEm-Date.now()):P.restante}
-function iniciarPomo(auto){if(P.rodando)return;if(auto!==true)pararAlarme();P.rodando=true;P.fimEm=Date.now()+P.restante;P.iniciadoEm=Date.now();clearInterval(P.tick);P.tick=setInterval(tickPomo,250);somPreparar();agendarAlarme(P.restante);pedirNotificacao();tickPomo();publicarRanking()}
-function pausarPomo(){if(!P.rodando)return;cancelarAlarmeAgendado();P.restante=pomoRestante();if(P.modo==="foco")P.acumulado+=Date.now()-P.iniciadoEm;P.rodando=false;clearInterval(P.tick);tickPomo();publicarRanking()}
-function resetPomo(modo){pausarPomo();cancelarAlarmeAgendado();if(modo)P.modo=modo;P.restante=pomoTotal();P.acumulado=0;tickPomo()}
+function iniciarPomo(auto){if(P.rodando)return;if(auto!==true)pararAlarme();P.rodando=true;P.fimEm=Date.now()+P.restante;P.iniciadoEm=Date.now();clearInterval(P.tick);P.tick=setInterval(tickPomo,250);somPreparar();agendarAlarme(P.restante);pedirNotificacao();tickPomo();salvarPomoLocal();publicarRanking()}
+function pausarPomo(){if(!P.rodando)return;cancelarAlarmeAgendado();P.restante=pomoRestante();if(P.modo==="foco")P.acumulado+=Date.now()-P.iniciadoEm;P.rodando=false;clearInterval(P.tick);tickPomo();salvarPomoLocal();publicarRanking()}
+// o pomodoro em andamento fica guardado neste aparelho, para não sumir ao fechar e reabrir o app
+const pomoChave=()=>"la_pomo_"+(S.uid||"local");
+function salvarPomoLocal(){try{localStorage.setItem(pomoChave(),JSON.stringify({modo:P.modo,rodando:P.rodando,fimEm:P.fimEm,restante:P.restante,iniciadoEm:P.iniciadoEm,acumulado:P.acumulado,materia:P.materia,bloco:P.bloco,ciclos:P.ciclos,auto:!!P.auto,foco:P.dur.foco,salvoEm:Date.now()}))}catch(e){}}
+function carregarPomo(){let d=null;try{d=JSON.parse(localStorage.getItem(pomoChave())||"null")}catch(e){}
+  if(!d||!(d.rodando||d.restante<P.dur[d.modo]*60e3||d.acumulado>0))return;
+  Object.assign(P,{modo:d.modo,restante:d.restante,iniciadoEm:d.iniciadoEm,acumulado:d.acumulado||0,materia:d.materia||"",bloco:d.bloco||null,ciclos:d.ciclos||0,auto:!!d.auto});
+  if(d.modo==="foco"&&d.foco)P.dur.foco=d.foco;
+  if(!d.rodando){tickPomo();return}
+  P.rodando=true;P.fimEm=d.fimEm;clearInterval(P.tick);P.tick=setInterval(tickPomo,250);
+  if(Date.now()>=d.fimEm){const atraso=Date.now()-d.fimEm;P.silencioso=atraso>5*60e3;tickPomo();
+    if(P.silencioso)setTimeout(()=>toast(`Seu ${d.modo==="foco"?"foco":"intervalo"} terminou enquanto o app estava fechado${d.modo==="foco"?" e foi registrado":""}.`),600)}
+  else tickPomo()}
+// o navegador só libera o som depois de um toque: agenda o alarme do pomodoro restaurado no primeiro toque
+addEventListener("pointerdown",()=>{if(P.rodando&&!ALARME.fut.length){somPreparar();setTimeout(()=>{if(P.rodando)agendarAlarme(pomoRestante())},60)}},{capture:true});
+function resetPomo(modo){pausarPomo();cancelarAlarmeAgendado();if(modo)P.modo=modo;P.restante=pomoTotal();P.acumulado=0;tickPomo();salvarPomoLocal()}
 function tickPomo(){
   const r=pomoRestante();
   if(P.rodando&&r<=0){concluirFase();return}
@@ -1475,7 +1512,8 @@ function concluirFase(){
   }else{P.modo="foco";toast("Pausa encerrada. Pronto para o próximo foco?")}
   P.restante=pomoTotal();P.acumulado=0;
   if(S.view==="pomodoro")renderPomodoro();else tickPomo();
-  const auto=$("#pomo-auto")&&$("#pomo-auto").checked||P.auto;
+  const auto=$("#pomo-auto")&&$("#pomo-auto").checked||P.auto;salvarPomoLocal();
+  if(P.silencioso){P.silencioso=false;return} // terminou com o app fechado há muito tempo: registra sem tocar
   tocarAlarme(eraFoco?"Fim do foco!":"Fim da pausa!",eraFoco?`Hora da ${MODOS[P.modo].toLowerCase()}. ${auto?"A pausa já começou.":"Toque para começar quando quiser."}`:`Hora de voltar a estudar.${auto?" O próximo foco já começou.":""}`);
   if(auto)iniciarPomo(true);
 }
@@ -1733,11 +1771,16 @@ function assinarSocial(){
   (FBM()?["perfis","ranking","conquistas"]:["perfis","ranking","msgs","grupos","membros"]).forEach(col=>{
     try{S.unsub.push(S.db.collection(col).limit(1000).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>{const v=d.data();if(v)m[d.id]=v});
       if(col==="ranking"&&FBM()){S.rankOk=true;const eu=m[S.uid];if(eu&&eu.atualizado&&typeof eu.atualizado.toMillis==="function"&&S.envioRank&&Date.now()-S.envioRank<20000){S.dt=eu.atualizado.toMillis()-S.envioRank;S.envioRank=0}}
-      if(col==="perfis"||col==="conquistas"){if(col==="perfis")S.soc.perfisBrutos=m;else{S.soc.conquistas=m;S.soc.conquistasOk=true}
-        const b=S.soc.perfisBrutos||{},v={};Object.keys(b).forEach(id=>v[id]=perfilVerificado(id,b[id]));S.soc.perfis=v;S.pub=v[S.uid]||null;atualizarSocial("perfis");return}
-      S.soc[col]=m;atualizarSocial(col)},()=>{}))}catch(e){}
+      if(col==="perfis"||col==="conquistas"){const prim=col==="perfis"&&!S.pubOk;if(col==="perfis"){S.soc.perfisBrutos=m;S.pubOk=true}else{S.soc.conquistas=m;S.soc.conquistasOk=true}
+        const b=S.soc.perfisBrutos||{},v={};Object.keys(b).forEach(id=>v[id]=perfilVerificado(id,b[id]));S.soc.perfis=v;S.pub=v[S.uid]||null;atualizarSocial("perfis");
+        if(prim)perfilCarregado();return}
+      S.soc[col]=m;if(col==="perfis"){S.pubOk=true}atualizarSocial(col)},()=>{}))}catch(e){}
   });
 }
+// quando o perfil público chega: cria o perfil de quem ainda não tem e atualiza o nível
+function perfilCarregado(){if(S.mode!=="nuvem"||!S.perfil)return;
+  if(!S.soc.perfisBrutos[S.uid])gravarPub("perfis",{nome:S.perfil.nome||"Estudante",bio:"",foto:"",objetivo:descObjetivo(S.perfil),desde:Date.now()});
+  else publicarNivel()}
 const nomeDe=id=>(S.soc.perfis[id]&&S.soc.perfis[id].nome)||"Estudante";
 function avatar(id,cls){const p=S.soc.perfis[id]||{};const nm=id===S.uid&&S.mode!=="nuvem"?(S.perfil&&S.perfil.nome)||"Você":nomeDe(id);
   let h;if(p.foto&&/^data:image\/(jpeg|png|webp);base64,/.test(p.foto))h=`<img class="avatar ${cls||""}" src="${p.foto}" alt="">`;
@@ -2343,7 +2386,7 @@ function renderInicio(){
 }
 function acharBloco(ref){const [k,id]=ref.split("|");return (S.plano&&S.plano.semana[k]||[]).find(b=>b.id===id)}
 function marcarBloco(ref,v){const b=acharBloco(ref);if(!b)return;b.feito=v;b.feitoEm=v?Date.now():0;setTimeout(atualizarBadgeDesafios,50);gravar("plano",S.plano);if(["inicio","semana"].includes(S.view))renderView()}
-function prepararPomo(k,b){if(P.rodando)return;P.materia=b.materia;P.bloco=k+"|"+b.id;P.modo="foco";P.dur.foco=Math.max(5,Math.min(120,b.min||P.dur.foco));P.restante=pomoTotal();P.acumulado=0}
+function prepararPomo(k,b){if(P.rodando)return;P.materia=b.materia;P.bloco=k+"|"+b.id;P.modo="foco";P.dur.foco=Math.max(5,Math.min(120,b.min||P.dur.foco));P.restante=pomoTotal();P.acumulado=0;salvarPomoLocal()}
 function ligarBlocos(){
   $$("[data-chk]").forEach(c=>c.addEventListener("change",()=>marcarBloco(c.dataset.chk,c.checked)));
   $$("[data-play]").forEach(b=>b.addEventListener("click",()=>{const bl=acharBloco(b.dataset.play);if(P.rodando){toast("Já existe um pomodoro rodando.");go("pomodoro");return}if(bl)prepararPomo(b.dataset.play.split("|")[0],bl);go("pomodoro");iniciarPomo()}));
@@ -2372,8 +2415,46 @@ function cartaoDia(off){
         <div class="dia-num"><b class="mono">${m?fmtH(m):"Livre"}</b><span class="small muted">${bl.length?`${f} de ${bl.length} blocos`:"sem estudo"}</span></div></header>
       ${bl.length?`<div class="prog"><i style="width:${semanaAtual?pct:0}%"></i></div>`:""}
       ${semanaAtual?"":`<p class="small muted dia-aviso">${off>0?"Prévia":"Dia de outra semana"}: o plano se repete toda semana; marque os blocos no próprio dia.</p>`}
-      <div class="lst">${bl.length?bl.map(b=>blocoDiaHtml(x,semanaAtual?b:{...b,feito:false},semanaAtual)).join(""):`<div class="dia-vazio">${ico("sun")}<b>Dia livre</b><span class="small muted">Nada planejado. Descanse ou revise algo leve.</span></div>`}</div>
+      ${S.editDia===x.k?editorDiaHtml(x):`<div class="lst">${bl.length?bl.map(b=>blocoDiaHtml(x,semanaAtual?b:{...b,feito:false},semanaAtual)).join(""):`<div class="dia-vazio">${ico("sun")}<b>Dia livre</b><span class="small muted">Nada planejado. Descanse ou revise algo leve.</span></div>`}</div>
+      <button class="btn dia-editar" type="button" data-editdia="${x.k}">${ico("gear")}Editar ${off===0?"o dia de hoje":x.n.toLowerCase()}</button>`}
     </article>`}
+// ---- editar o que estudar em cada dia ----
+function materiasParaEditar(){const set=new Set();(S.perfil.materias||[]).forEach(m=>set.add(m.nome));if(S.edital)S.edital.materias.forEach(m=>set.add(m.nome));
+  DIAS.forEach(x=>(S.plano.semana[x.k]||[]).forEach(b=>set.add(b.materia)));(S.diaRasc||[]).forEach(b=>set.add(b.materia));return [...set].filter(Boolean)}
+function editorDiaHtml(x){const r=S.diaRasc||[],mats=materiasParaEditar(),tot=r.reduce((a,b)=>a+(+b.min||0),0);
+  return `<form class="dia-ed" id="dia-ed" novalidate>
+    <p class="small muted" style="margin:0">Mude o que você vai estudar ${x.n==="Sábado"||x.n==="Domingo"?"no":"na"} ${x.n.toLowerCase()}. Vale para todas as semanas.</p>
+    ${r.length?r.map((b,i)=>`<fieldset class="ed-blk" data-i="${i}"><legend class="sr-only">Bloco ${i+1}</legend>
+      <div class="ed-l1"><label class="ed-f ed-mat"><span>Matéria</span><select data-f="materia">${mats.map(m=>`<option ${m===b.materia?"selected":""}>${esc(m)}</option>`).join("")}<option value="__nova">+ Outra matéria…</option></select></label>
+        <div class="ed-ord"><button type="button" class="btn icon ghost sm" data-mv="-1" ${i===0?"disabled":""} aria-label="Subir bloco">↑</button><button type="button" class="btn icon ghost sm" data-mv="1" ${i===r.length-1?"disabled":""} aria-label="Descer bloco">↓</button><button type="button" class="btn icon ghost sm danger" data-rm aria-label="Remover bloco">✕</button></div></div>
+      <div class="ed-l2"><label class="ed-f"><span>Início</span><input type="time" data-f="inicio" value="${esc(b.inicio)}"></label>
+        <label class="ed-f"><span>Duração</span><select data-f="min">${[15,20,25,30,40,45,50,60,75,90,120,150,180].concat(+b.min||[]).filter((v,j,a)=>a.indexOf(v)===j).sort((a,c)=>a-c).map(v=>`<option value="${v}" ${+b.min===v?"selected":""}>${fmtH(v)}</option>`).join("")}</select></label>
+        <label class="ed-f"><span>Tipo</span><select data-f="tipo">${TIPOS.map(t=>`<option ${t===b.tipo?"selected":""}>${t}</option>`).join("")}</select></label></div>
+      <label class="ed-f"><span>O que fazer</span><input type="text" data-f="tarefa" maxlength="180" value="${esc(b.tarefa||"")}" placeholder="Ex.: resolver 20 questões de funções"></label>
+    </fieldset>`).join(""):`<div class="dia-vazio">${ico("sun")}<b>Dia livre</b><span class="small muted">Adicione um bloco para estudar neste dia.</span></div>`}
+    <button type="button" class="btn ed-add" id="ed-add">${ico("plus")}Adicionar bloco</button>
+    <div class="ed-rod"><span class="small muted">Total: <b>${fmtH(tot)}</b></span><div class="row" style="gap:8px"><button type="button" class="btn ghost" id="ed-cancelar">Cancelar</button><button type="submit" class="btn primary">Salvar dia</button></div></div>
+  </form>`}
+function abrirEditorDia(k){S.editDia=k;S.diaRasc=clone(S.plano.semana[k]||[]);renderSemana();const f=$("#dia-ed");if(f)f.scrollIntoView({block:"start",behavior:"smooth"})}
+function lerEditorDia(){$$("#dia-ed .ed-blk").forEach(fs=>{const b=S.diaRasc[+fs.dataset.i];if(!b)return;
+  fs.querySelectorAll("[data-f]").forEach(el=>{const f=el.dataset.f;if(f==="materia"&&el.value==="__nova")return;b[f]=f==="min"?+el.value:el.value.trim()})})}
+function ligarEditorDia(){const f=$("#dia-ed");if(!f)return;const k=S.editDia;
+  const re=()=>{lerEditorDia();renderSemana()};
+  f.querySelectorAll('select[data-f="materia"]').forEach(sel=>sel.onchange=()=>{if(sel.value!=="__nova")return;const nm=(prompt("Nome da matéria:")||"").trim().slice(0,60);
+    const b=S.diaRasc[+sel.closest(".ed-blk").dataset.i];lerEditorDia();if(nm)b.materia=nm;renderSemana()});
+  f.querySelectorAll("[data-mv]").forEach(bt=>bt.onclick=()=>{lerEditorDia();const i=+bt.closest(".ed-blk").dataset.i,j=i+ +bt.dataset.mv,r=S.diaRasc;
+    // troca a ordem e recalcula os horários mantendo os mesmos intervalos entre os blocos
+    const ini=r.map(x=>toMin(x.inicio)??1140),gaps=r.slice(0,-1).map((x,n)=>Math.max(0,ini[n+1]-ini[n]-(+x.min||0)));
+    [r[i],r[j]]=[r[j],r[i]];let t=ini[0];r.forEach((x,n)=>{x.inicio=toHHMM(t);t+=(+x.min||0)+(gaps[n]||0)});renderSemana()});
+  f.querySelectorAll("[data-rm]").forEach(bt=>bt.onclick=()=>{lerEditorDia();S.diaRasc.splice(+bt.closest(".ed-blk").dataset.i,1);renderSemana()});
+  $("#ed-add").onclick=()=>{lerEditorDia();const r=S.diaRasc,ult=r[r.length-1],pausa=+S.perfil.pausa||10;
+    const ini=ult?(toMin(ult.inicio)??1140)+(+ult.min||0)+pausa:(toMin((S.perfil.inicio||{})[k])??1140);
+    const m=materiasParaEditar()[0]||"Estudo";r.push({id:uid(),inicio:toHHMM(ini),min:+S.perfil.bloco||50,materia:m,tipo:"teoria",tarefa:"",feito:false});renderSemana()};
+  $("#ed-cancelar").onclick=()=>{S.editDia=null;S.diaRasc=null;renderSemana()};
+  f.onsubmit=e=>{e.preventDefault();lerEditorDia();
+    const r=S.diaRasc.map(b=>{const ini=toMin(b.inicio)??1140;return {...b,inicio:toHHMM(ini),fim:toHHMM(ini+(+b.min||0)),min:+b.min||0}}).filter(b=>b.min>0).sort((a,b)=>toMin(a.inicio)-toMin(b.inicio));
+    for(let i=1;i<r.length;i++)if(toMin(r[i].inicio)<toMin(r[i-1].inicio)+r[i-1].min){toast(`Os blocos das ${r[i-1].inicio} e das ${r[i].inicio} se sobrepõem. Ajuste o horário de início.`);return}
+    S.plano.semana[k]=r;S.plano.editadoEm=Date.now();gravar("plano",S.plano,true);S.editDia=null;S.diaRasc=null;toast("Dia atualizado.");renderSemana()}}
 function renderSemana(){
   const p=S.perfil,pl=S.plano;if(!pl){$("#main").innerHTML=`<div class="page">${pageHead("Minha semana")}<div class="empty-state">Seu plano ainda não foi gerado.<button class="btn primary" id="gerar0">Gerar plano</button></div></div>`;$("#gerar0").onclick=()=>gerar();return}
   const todos=DIAS.flatMap(x=>pl.semana[x.k]||[]);const tot=todos.reduce((a,b)=>a+b.min,0);
@@ -2394,7 +2475,7 @@ function renderSemana(){
     <p class="small muted dia-dica">Arraste o cartão para os lados para ver os outros dias.${off!==0?` <button class="btn sm ghost" type="button" id="dia-hoje">Voltar para hoje</button>`:""}</p>`:`
     <div class="week-wrap"><div class="week">${DIAS.map((x,i)=>{const bl=pl.semana[x.k]||[];const m=bl.reduce((a,b)=>a+b.min,0);return `
       <section class="day ${i===hi?"hoje":""}" aria-label="${x.n}">
-        <header><b>${x.n}</b><span class="small muted mono">${m?fmtH(m):"livre"}</span></header>
+        <header><b>${x.n}</b><span class="row" style="gap:6px"><span class="small muted mono">${m?fmtH(m):"livre"}</span><button class="btn icon ghost sm" type="button" data-editgrade="${i}" aria-label="Editar ${x.n}" title="Editar ${x.n}">${ico("gear")}</button></span></header>
         <div class="lst">${bl.length?bl.map(b=>`
           <div class="blk t-${b.tipo} ${b.feito?"done":""}">
             <input class="chk" type="checkbox" data-chk="${x.k}|${b.id}" ${b.feito?"checked":""} aria-label="Concluir ${esc(b.materia)} às ${b.inicio}">
@@ -2420,14 +2501,16 @@ function renderSemana(){
         <div class="bars-h">${dist.map(([m,min])=>`<div class="r"><span>${esc(m)}</span><span class="mono small">${fmtH(min)}</span><div class="prog"><i style="width:${Math.round(min/mx*100)}%"></i></div></div>`).join("")}</div></div>
     </div></div>`;
   ligarBlocos();
+  $$("[data-editgrade]").forEach(b=>b.onclick=()=>{try{localStorage.setItem(SEM_MODO_KEY,"dia")}catch(e){}S.diaOff=+b.dataset.editgrade-hojeIdx();abrirEditorDia(DIAS[+b.dataset.editgrade].k)});
   $$("[data-smodo]").forEach(b=>b.onclick=()=>{try{localStorage.setItem(SEM_MODO_KEY,b.dataset.smodo)}catch(e){}renderSemana()});
   $("#sem-editar").onclick=abrirEditorEstudos;
-  if(modo==="dia")ligarDiaSwipe();
+  if(modo==="dia"){ligarDiaSwipe();ligarEditorDia();$$("[data-editdia]").forEach(b=>b.onclick=()=>abrirEditorDia(b.dataset.editdia))}
   $("#ajuste").addEventListener("submit",e=>{e.preventDefault();const t=$("#aj-txt").value.trim();if(!t){$("#aj-txt").focus();return}gerar({pedido:t})});
   $("#refazer").onclick=()=>gerar();
 }
 // troca de dia com efeito de embaralhar cartas
 function mudarDia(novo,dir){
+  if(S.editDia){toast("Salve ou cancele a edição do dia antes de trocar.");return}
   novo=Math.max(-7,Math.min(13,novo));if(novo===S.diaOff)return bater(dir);
   const bar=$("#dia-baralho"),velho=bar&&bar.querySelector(".dia-card");
   if(velho){const fant=velho.cloneNode(true);fant.classList.add("fantasma",dir>0?"sai-esq":"sai-dir");fant.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));bar.appendChild(fant)}
@@ -2443,7 +2526,7 @@ function ligarDiaSwipe(){
   $$("[data-dsel]").forEach(b=>b.onclick=()=>{const o=+b.dataset.dsel;mudarDia(o,o>S.diaOff?1:-1)});
   const palco=$("#dia-palco");let x0=0,y0=0,dx=0,arr=false,id=null;
   const carta=()=>$("#dia-baralho .dia-card:not(.fantasma)");
-  palco.addEventListener("pointerdown",e=>{if(e.target.closest("button,input,a,label"))return;x0=e.clientX;y0=e.clientY;dx=0;arr=false;id=e.pointerId});
+  palco.addEventListener("pointerdown",e=>{if(S.editDia||e.target.closest("button,input,a,label,select,fieldset"))return;x0=e.clientX;y0=e.clientY;dx=0;arr=false;id=e.pointerId});
   palco.addEventListener("pointermove",e=>{if(id!==e.pointerId)return;dx=e.clientX-x0;const dy=e.clientY-y0;
     if(!arr){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.2){arr=true;try{palco.setPointerCapture(id)}catch(_){}}else if(Math.abs(dy)>10){id=null;return}else return}
     const c=carta();if(c){c.style.transition="none";c.style.transform=`translateX(${dx}px) rotate(${dx/30}deg)`}});
@@ -2493,8 +2576,8 @@ function renderPomodoro(){
   $("#pomo-reset").onclick=()=>resetPomo();
   $("#pomo-skip").onclick=()=>{pausarPomo();P.modo=P.modo==="foco"?(((P.ciclos+1)%4===0)?"longa":"curta"):"foco";resetPomo();renderPomodoro()};
   const fim=$("#pomo-fim");if(fim)fim.onclick=encerrarRegistrar;
-  $("#pomo-mat").onchange=e=>{P.materia=e.target.value;P.bloco=null};
-  $("#pomo-auto").onchange=e=>{P.auto=e.target.checked};
+  $("#pomo-mat").onchange=e=>{P.materia=e.target.value;P.bloco=null;salvarPomoLocal()};
+  $("#pomo-auto").onchange=e=>{P.auto=e.target.checked;salvarPomoLocal()};
   ["foco","curta","longa"].forEach(k=>$("#d-"+k).addEventListener("change",e=>{const v=Math.max(1,Math.min(180,+e.target.value||P.dur[k]));P.dur[k]=v;e.target.value=v;
     if(!P.rodando&&P.modo===k){P.restante=pomoTotal();P.acumulado=0}S.perfil.pomo={...P.dur};gravar("perfil",S.perfil);tickPomo()}));
   tickPomo();
@@ -3134,7 +3217,7 @@ function verificarConquistas(silencioso){
   if(mudou){salvarConq()}
 }
 function salvarConq(){gravar("conquistas",G());publicarNivel()}
-function publicarNivel(){if(S.mode!=="nuvem"||!S.perfil||(FBM()&&!S.srv))return;const n=FBM()?S.srv.nivel:nivelDe(G().xp);const p=S.pub||{nome:S.perfil.nome||"Estudante"};if(p.nivel===n)return;const d={...p,nivel:n};S.pub=d;S.soc.perfis[S.uid]=d;gravarPub("perfis",d)}
+function publicarNivel(){if(S.mode!=="nuvem"||!S.perfil||!S.pubOk||!S.pub||(FBM()&&!S.srv))return;const n=FBM()?S.srv.nivel:nivelDe(G().xp);const p=S.pub||{nome:S.perfil.nome||"Estudante"};if(p.nivel===n)return;const d={...p,nivel:n};S.pub=d;S.soc.perfis[S.uid]=d;gravarPub("perfis",d)}
 function nomeItem(id){const it=ITENS.find(i=>i.id===id);return it?it.n:id}
 function tipoNome(t){return {moldura:"Moldura",capa:"Capa",titulo:"Título",emblema:"Emblema"}[t]}
 async function resgatar(c,btn){
