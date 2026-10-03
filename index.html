@@ -1239,6 +1239,7 @@ function garantirTotais(L){ // totais de todo o tempo, que não se perdem quando
   L.tot=t;L.hist=L.hist||[];return L}
 function registrar(min,materia,fonte){
   fonte=fonte||"pomodoro";min=Math.round(min*100)/100;
+  {const ja=((S.pomoLog.dias[dataISO()]||{}).min)||0,cab=Math.max(0,LIMITE_DIA-ja);if(min>cab){toast("Limite de 16 horas por dia atingido: o tempo extra não foi contado.");min=cab}if(min<=0)return}
   const hoje=dataISO(),L=garantirTotais(S.pomoLog);L.dias[hoje]=L.dias[hoje]||{min:0,mat:{}};
   L.dias[hoje].min+=min;const k=materia||"Sem matéria";L.dias[hoje].mat[k]=(L.dias[hoje].mat[k]||0)+min;L.sessoes=(L.sessoes||0)+1;
   L.tot.min+=min;L.tot.mat[k]=(L.tot.mat[k]||0)+min;L.tot.fonte[fonte]=(L.tot.fonte[fonte]||0)+min;
@@ -1256,17 +1257,17 @@ function sequencia(){let n=0;for(let i=0;i<120;i++){if(minutosDia(diasAtras(i))>
 /* ================= Cronômetro livre ================= */
 const C={rodando:false,inicio:0,acum:0,materia:"",tick:null};
 function cronoMs(){return C.acum+(C.rodando?Date.now()-C.inicio:0)}
-function salvarCronoLocal(){try{localStorage.setItem("mapa_crono_"+(S.uid||"local"),JSON.stringify({rodando:C.rodando,inicio:C.inicio,acum:C.acum,materia:C.materia}))}catch(e){}}
+function salvarCronoLocal(){try{localStorage.setItem("mapa_crono_"+(S.uid||"local"),JSON.stringify({rodando:C.rodando,inicio:C.inicio,acum:C.acum,materia:C.materia,confirmado:C.confirmado||0}))}catch(e){}}
 function carregarCrono(){try{const d=JSON.parse(localStorage.getItem("mapa_crono_"+(S.uid||"local"))||"null");if(d){Object.assign(C,d);if(C.rodando){clearInterval(C.tick);C.tick=setInterval(tickCrono,500)}}}catch(e){}}
 function fmtRelogio(ms){const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t/60)%60,sg=t%60;return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sg).padStart(2,"0")}
-function iniciarCrono(){if(C.rodando)return;C.rodando=true;C.inicio=Date.now();clearInterval(C.tick);C.tick=setInterval(tickCrono,500);salvarCronoLocal();tickCrono();publicarRanking()}
+function iniciarCrono(){if(C.rodando)return;C.rodando=true;C.inicio=Date.now();C.confirmado=Date.now();clearInterval(C.tick);C.tick=setInterval(tickCrono,500);salvarCronoLocal();tickCrono();publicarRanking()}
 function pausarCrono(){if(!C.rodando)return;C.acum+=Date.now()-C.inicio;C.rodando=false;clearInterval(C.tick);salvarCronoLocal();tickCrono();publicarRanking()}
 function zerarCrono(){C.rodando=false;C.acum=0;C.inicio=0;clearInterval(C.tick);salvarCronoLocal();tickCrono()}
 function finalizarCrono(){const ms=cronoMs();const min=ms/60000;
   if(min<1){toast("Menos de 1 minuto: nada foi salvo.");zerarCrono();if(S.view==="cronometro")renderCronometro();return}
   const mat=C.materia;registrar(min,mat,"cronometro");zerarCrono();modalSessao(min,mat);if(S.view==="cronometro")renderCronometro()}
 function tickCrono(){
-  const ms=cronoMs(),txt=fmtRelogio(ms);
+  checarPresenca();const ms=cronoMs(),txt=fmtRelogio(ms);
   const t=$("#crono-t");if(t)t.textContent=txt;
   const b=$("#crono-play");if(b)b.innerHTML=C.rodando?ico("pause")+"Pausar":ico("play")+(ms>0?"Continuar":"Começar");
   const f=$("#crono-fim");if(f)f.disabled=ms<1000;const z=$("#crono-zerar");if(z)z.disabled=ms<1000||C.rodando;
@@ -1320,14 +1321,22 @@ function agoraEstudando(){
 }
 function publicarRanking(){
   if(S.mode!=="nuvem"||!S.pomoLog)return;
-  const L=garantirTotais(S.pomoLog),dias={};
-  for(let i=0;i<35;i++){const d=diasAtras(i);if(L.dias[d])dias[d]=Math.round(L.dias[d].min*100)/100}
-  const doc={dias,total:Math.round(L.tot.min*100)/100,atualizado:Date.now(),agora:agoraEstudando()};
-  S.soc.ranking[S.uid]=doc;gravarPub("ranking",doc);
+  const L=garantirTotais(S.pomoLog),loc=docRankingLocal(),hoje=dataISO(),agora=Date.now();
+  const prev=S.soc.ranking[S.uid];let total=Math.round(L.tot.min*100)/100,hojeMin=Math.min(LIMITE_DIA,Math.round(((L.dias[hoje]||{}).min||0)*100)/100);
+  if(prev&&typeof prev.total==="number"){const folga=(agora-tsMs(prev.ref!=null?prev.ref:prev.atualizado))/60000+4;total=Math.max(prev.total,Math.min(total,Math.round((prev.total+folga)*100)/100));
+    if(prev.hojeData===hoje&&typeof prev.hojeMin==="number")hojeMin=Math.min(hojeMin,Math.round((prev.hojeMin+(total-prev.total)+0.5)*100)/100)}
+  else total=Math.min(total,700);
+  const mudou=!prev||prev.total!==total;
+  const doc={dias:loc.dias,total,hojeData:hoje,hojeMin,ult:loc.ult,agora:agoraEstudando()};
+  S.soc.ranking[S.uid]={...(prev||{}),...doc,atualizado:agora,ref:mudou?agora:(prev&&(prev.ref!=null?prev.ref:prev.atualizado))};
+  if(FBM()){const SV=firebase.firestore.FieldValue.serverTimestamp();const env={...doc,atualizado:SV};if(mudou)env.ref=SV;
+    S.db.collection("ranking").doc(S.uid).set(env,{merge:true}).catch(e=>console.warn("ranking",e&&e.code))}
+  else gravarPub("ranking",{...doc,atualizado:agora});
 }
 const estudandoAgora=id=>{const r=S.soc.ranking[id];const a=r&&r.agora;return a&&a.desde&&Date.now()-a.desde<8*3600e3?a:null};
 const ponto=id=>estudandoAgora(id)?`<span title="Estudando agora" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-left:6px;vertical-align:middle"></span>`:"";
-function minPeriodo(id,dias){const r=S.soc.ranking[id];if(!r||!r.dias)return 0;let s=0;for(let i=0;i<dias;i++)s+=r.dias[diasAtras(i)]||0;
+function minPeriodo(id,dias){const r=S.soc.ranking[id];if(!r||!r.dias)return 0;let s=0;for(let i=0;i<dias;i++)s+=Math.min(LIMITE_DIA,r.dias[diasAtras(i)]||0);
+  if(dias===1&&r.hojeData)s=r.hojeData===dataISO()?Math.min(LIMITE_DIA,r.hojeMin||0):0;if(typeof r.total==="number")s=Math.min(s,r.total);
   const a=estudandoAgora(id);if(a)s+=Math.min(480,Math.max(0,(Date.now()-a.desde)/60000));return s}
 const visivelRanking=id=>{const p=S.soc.perfis[id];return !(p&&p.privacidade&&p.privacidade.ranking===false)};
 const minTotalR=id=>{const r=S.soc.ranking[id];const a=estudandoAgora(id);return (r&&r.total||0)+(a?Math.min(480,(Date.now()-a.desde)/60000):0)};
@@ -2179,9 +2188,10 @@ function renderRanking(){
     else ids=ids.filter(id=>membrosDe(S.rankGrupo).includes(id))}
   const PER={hoje:["Hoje",id=>minPeriodo(id,1),"Horas estudadas hoje (cronômetro e pomodoro). Zera à meia-noite."],semana:["7 dias",id=>minPeriodo(id,7),"Horas estudadas nos últimos 7 dias."],mes:["30 dias",id=>minPeriodo(id,30),"Horas estudadas nos últimos 30 dias."],geral:["Geral",minTotalR,"Todas as horas estudadas no app."]};
   const [,val,sub]=PER[S.rankTab]||PER.hoje;
-  const lista=ids.map(id=>({id,m:val(id)})).filter(x=>x.m>0.01).sort((a,b)=>b.m-a.m);
+  const todos=ids.map(id=>({id,m:val(id)})).filter(x=>x.m>0.01).sort((a,b)=>b.m-a.m);
+  const suspeitos=todos.filter(x=>riscoConta(x.id).nivel==="alto"),lista=todos.filter(x=>riscoConta(x.id).nivel!=="alto");
   const minha=lista.findIndex(x=>x.id===S.uid);
-  const agora=ids.filter(estudandoAgora);
+  const agora=ids.filter(id=>estudandoAgora(id)&&riscoConta(id).nivel!=="alto");
   $("#main").innerHTML=`<div class="page">
     ${pageHead("Ranking",sub+" Quem está estudando agora aparece com o ponto verde e o tempo sobe ao vivo.",
       `<div class="seg" role="group">${Object.entries(PER).map(([k,[n]])=>`<button type="button" data-rt="${k}" class="${S.rankTab===k?"on":""}">${n}</button>`).join("")}</div>
@@ -2190,7 +2200,8 @@ function renderRanking(){
     ${lista.length?`
     <div class="podium">${lista.slice(0,3).map((x,i)=>`<div class="card" data-perfil="${x.id}">${avatar(x.id,"lg")}<span class="eyebrow">${i+1}º lugar</span><b style="overflow-wrap:anywhere">${esc(nomeDe(x.id))}${ponto(x.id)}</b><span class="mono" style="font-size:1.3rem;font-weight:600">${fmtH(x.m)}</span></div>`).join("")}</div>
     <div class="card"><div class="card-h"><h3>Classificação</h3><span class="small muted">${minha>=0?`Você está em ${minha+1}º`:"Você ainda não pontuou neste período"}</span></div>
-      <div class="list">${lista.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}" data-perfil="${x.id}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id)}<div style="min-width:0"><div class="nm">${esc(nomeDe(x.id))}${ponto(x.id)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((S.soc.perfis[x.id]||{}).objetivo||"")}</div></div></div><span class="mono">${fmtH(x.m)}</span></div>`).join("")}</div></div>`
+      <div class="list">${lista.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}" data-perfil="${x.id}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id)}<div style="min-width:0"><div class="nm">${esc(nomeDe(x.id))}${ponto(x.id)}${escudo(x.id)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((S.soc.perfis[x.id]||{}).objetivo||"")}</div></div></div><span class="mono">${fmtH(x.m)}</span></div>`).join("")}</div></div>
+    ${suspeitos.length?`<details class="card" style="margin-top:16px"><summary>Em análise (${suspeitos.length}) · fora da classificação</summary><p class="small muted" style="margin:8px 0">O sistema antitrapaça encontrou registros fora do normal nestas contas.</p><div class="list">${suspeitos.map(x=>`<div class="li" data-perfil="${x.id}" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(x.id,"sm")}<div style="min-width:0"><div class="nm">${esc(nomeDe(x.id))}</div><div class="small muted">${esc(riscoConta(x.id).motivos.join("; "))}</div></div><span class="mono small muted">${fmtH(x.m)}</span></div>`).join("")}</div></details>`:""}`
     :`<div class="empty-state">${ico("trophy")}<b>Ninguém pontuou ainda neste período</b><span>Use o cronômetro ou o pomodoro: o tempo entra no ranking.</span><div class="row" style="justify-content:center"><button class="btn primary" type="button" data-link="cronometro">Abrir cronômetro</button><button class="btn" type="button" data-link="pomodoro">Abrir pomodoro</button></div></div>`}
   </div>`;
   $$("[data-rt]").forEach(b=>b.onclick=()=>{S.rankTab=b.dataset.rt;renderRanking()});
@@ -2368,26 +2379,35 @@ function renderPerfil(){
 /* ================= Desafios, níveis, distintivos e recompensas ================= */
 const MOLDURAS={bronze:["Bronze","linear-gradient(135deg,#e7a46b,#8c5a2b)"],prata:["Prata","linear-gradient(135deg,#f3f4f6,#9ca3af)"],ouro:["Ouro","linear-gradient(135deg,#fde68a,#d97706)"],
   diamante:["Diamante","linear-gradient(135deg,#a5f3fc,#e0f2fe,#93c5fd,#c4b5fd)"],chamas:["Chamas","linear-gradient(0deg,#ef4444,#f97316,#facc15)"],neon:["Neon","conic-gradient(#22d3ee,#e879f9,#22d3ee)"],
-  arcoiris:["Arco-íris","conic-gradient(#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#8b5cf6,#ef4444)"],floresta:["Floresta","linear-gradient(135deg,#86efac,#166534)"]};
+  arcoiris:["Arco-íris","conic-gradient(#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#8b5cf6,#ef4444)"],floresta:["Floresta","linear-gradient(135deg,#86efac,#166534)"],
+  esmeralda:["Esmeralda","linear-gradient(135deg,#6ee7b7,#047857)"],rubi:["Rubi","linear-gradient(135deg,#fda4af,#be123c)"],safira:["Safira","linear-gradient(135deg,#93c5fd,#1d4ed8)"],
+  ametista:["Ametista","linear-gradient(135deg,#d8b4fe,#6b21a8)"],holografica:["Holográfica","conic-gradient(#f0abfc,#a5f3fc,#fde68a,#bbf7d0,#f0abfc)"],sakura:["Sakura","linear-gradient(135deg,#fbcfe8,#ec4899)"]};
 const CAPAS_ESP={galaxia:["Galáxia","radial-gradient(circle at 20% 30%,#f0abfc 0,transparent 25%),radial-gradient(circle at 75% 60%,#93c5fd 0,transparent 30%),linear-gradient(135deg,#0f0c29,#302b63,#24243e)"],
-  boreal:["Aurora boreal","linear-gradient(160deg,#0b132b 10%,#1c7c54 45%,#73e2a7 60%,#5b21b6 90%)"],fogo:["Fogo","linear-gradient(135deg,#450a0a,#dc2626 45%,#f59e0b 80%,#fde047)"],abismo:["Oceano profundo","linear-gradient(180deg,#0c4a6e,#082f49 60%,#020617)"]};
-const TITULOS={iniciante:"Iniciante",dedicado:"Dedicado",focado:"Focado",imparavel:"Imparável",lenda:"Lenda dos Estudos",maratonista:"Maratonista",madrugador:"Madrugador",coruja:"Coruja",mestre_rev:"Mestre das Revisões",elite:"Atirador de Elite",semana_perfeita:"Semana Perfeita"};
+  boreal:["Aurora boreal","linear-gradient(160deg,#0b132b 10%,#1c7c54 45%,#73e2a7 60%,#5b21b6 90%)"],fogo:["Fogo","linear-gradient(135deg,#450a0a,#dc2626 45%,#f59e0b 80%,#fde047)"],abismo:["Oceano profundo","linear-gradient(180deg,#0c4a6e,#082f49 60%,#020617)"],
+  sakura:["Sakura","radial-gradient(circle at 30% 40%,#fff 0 3px,transparent 4px) 0 0/22px 22px,linear-gradient(135deg,#fbcfe8,#f9a8d4)"],cristal:["Cristal","linear-gradient(135deg,#e0f2fe,#f5d0fe,#cffafe,#fef9c3)"],
+  pixel:["Pixel","conic-gradient(#22c55e 25%,#15803d 0 50%,#22c55e 0 75%,#15803d 0) 0 0/16px 16px"],cidade:["Cidade à noite","linear-gradient(180deg,#1e1b4b,#7c3aed 60%,#f472b6)"],deserto:["Deserto","linear-gradient(180deg,#fde68a,#f59e0b 55%,#92400e)"]};
+const TITULOS={iniciante:"Iniciante",dedicado:"Dedicado",focado:"Focado",imparavel:"Imparável",lenda:"Lenda dos Estudos",maratonista:"Maratonista",madrugador:"Madrugador",coruja:"Coruja",mestre_rev:"Mestre das Revisões",elite:"Atirador de Elite",semana_perfeita:"Semana Perfeita",
+  explorador:"Explorador",constante:"Constante",mestre_q:"Mestre das Questões",mestre_foco:"Mestre do Foco",campeao_mes:"Campeão do Mês",lenda_viva:"Lenda Viva",jogo_limpo:"Jogo Limpo"};
 const IB={medal:'<circle cx="12" cy="15" r="6"/><path d="M8.5 10 6 3h4l2 4 2-4h4l-2.5 7"/>',flame:'<path d="M12 22c4 0 7-3 7-7 0-4-3-6-4-10-2 2-3 4-3 6-1-1-2-2-2-4-3 2-5 5-5 8 0 4 3 7 7 7z"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
   bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5"/>',repeat:'<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',crown:'<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>'};
 const ib=(n,sz)=>`<svg viewBox="0 0 24 24" width="${sz||16}" height="${sz||16}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IB[n]||IB.star}</svg>`;
 const EMBLEMAS={primeira:["Primeira sessão","star"],h10:["10 horas","clock"],h50:["50 horas","clock"],h100:["100 horas","crown"],seq7:["7 dias seguidos","flame"],seq30:["30 dias seguidos","flame"],
-  q100:["100 questões","target"],q500:["500 questões","target"],rev20:["20 revisões","repeat"],semana:["Semana perfeita","check"],materia:["Matéria concluída","book"],desafios10:["10 desafios","medal"],desafios50:["50 desafios","medal"]};
+  q100:["100 questões","target"],q500:["500 questões","target"],rev20:["20 revisões","repeat"],semana:["Semana perfeita","check"],materia:["Matéria concluída","book"],desafios10:["10 desafios","medal"],desafios50:["50 desafios","medal"],
+  h250:["250 horas","crown"],seq60:["60 dias seguidos","flame"],q1000:["1000 questões","target"],colecionador:["Colecionador","star"],mes30:["30h no mês","clock"],dias20:["20 dias no mês","flame"],nivel10:["Nível 10","bolt"]};
 // Itens que podem ser ganhos: tipo, chave e como desbloquear (para mostrar na coleção)
 const ITENS=[
   ...Object.entries(MOLDURAS).map(([k,[n]])=>({id:"moldura:"+k,tipo:"moldura",k,n})),
   ...Object.entries(CAPAS_ESP).map(([k,[n]])=>({id:"capa:"+k,tipo:"capa",k,n})),
   ...Object.entries(TITULOS).map(([k,n])=>({id:"titulo:"+k,tipo:"titulo",k,n})),
   ...Object.entries(EMBLEMAS).map(([k,[n]])=>({id:"emblema:"+k,tipo:"emblema",k,n}))];
-const NIVEL_ITENS={2:["titulo:iniciante"],3:["moldura:bronze","titulo:dedicado"],5:["moldura:prata","titulo:focado"],6:["capa:galaxia"],8:["moldura:ouro","titulo:imparavel"],12:["moldura:diamante","titulo:lenda"]};
+const NIVEL_ITENS={2:["titulo:iniciante"],3:["moldura:bronze","titulo:dedicado"],5:["moldura:prata","titulo:focado"],6:["capa:galaxia"],8:["moldura:ouro","titulo:imparavel"],10:["capa:deserto","emblema:nivel10"],12:["moldura:diamante","titulo:lenda"],15:["moldura:sakura"],20:["titulo:lenda_viva"]};
 const COMO={"moldura:bronze":"Alcance o nível 3","moldura:prata":"Alcance o nível 5","moldura:ouro":"Alcance o nível 8","moldura:diamante":"Alcance o nível 12","moldura:chamas":"Estude 7 dias seguidos","moldura:neon":"Complete o desafio semanal de horas","moldura:arcoiris":"Finalize uma semana inteira do plano","moldura:floresta":"Some 50 horas de estudo",
   "capa:galaxia":"Alcance o nível 6","capa:boreal":"Estude em 5 dias de uma mesma semana","capa:fogo":"Estude 30 dias seguidos","capa:abismo":"Faça 100 questões",
-  "titulo:iniciante":"Alcance o nível 2","titulo:dedicado":"Alcance o nível 3","titulo:focado":"Alcance o nível 5","titulo:imparavel":"Alcance o nível 8","titulo:lenda":"Alcance o nível 12","titulo:maratonista":"Estude 4 horas em um dia","titulo:madrugador":"Termine uma sessão antes das 7h","titulo:coruja":"Termine uma sessão depois das 23h","titulo:mestre_rev":"Faça 20 revisões","titulo:elite":"Acerte 80% em 100 questões ou mais","titulo:semana_perfeita":"Finalize uma semana inteira do plano"};
+  "titulo:iniciante":"Alcance o nível 2","titulo:dedicado":"Alcance o nível 3","titulo:focado":"Alcance o nível 5","titulo:imparavel":"Alcance o nível 8","titulo:lenda":"Alcance o nível 12","titulo:maratonista":"Estude 4 horas em um dia","titulo:madrugador":"Termine uma sessão antes das 7h","titulo:coruja":"Termine uma sessão depois das 23h","titulo:mestre_rev":"Faça 20 revisões","titulo:elite":"Acerte 80% em 100 questões ou mais","titulo:semana_perfeita":"Finalize uma semana inteira do plano",
+  "moldura:esmeralda":"Estude todos os 7 dias de uma semana","moldura:rubi":"Acerte 75% em 30+ questões numa semana","moldura:safira":"Some 250 horas de estudo","moldura:ametista":"Resgate 60 desafios num mês","moldura:holografica":"Estude em 20 dias de um mês","moldura:sakura":"Alcance o nível 15",
+  "capa:sakura":"Faça 3 sessões de 1h+ numa semana","capa:cristal":"Estude 30h num mês","capa:pixel":"Finalize 2 semanas do plano num mês","capa:cidade":"Estude 60 dias seguidos","capa:deserto":"Alcance o nível 10",
+  "titulo:explorador":"Estude 3 matérias numa semana","titulo:constante":"Estude em 20 dias de um mês","titulo:mestre_q":"Registre 1000 questões","titulo:mestre_foco":"Faça uma sessão única de 3 horas","titulo:campeao_mes":"Faça 300 questões num mês","titulo:lenda_viva":"Alcance o nível 20","titulo:jogo_limpo":"Mantenha a conta verificada por 14 dias de estudo"};
 // Conquistas permanentes: condição, emblema e itens extras
 const CONQ=[
   {k:"primeira",teste:e=>e.sessoes>=1,xp:20},{k:"h10",teste:e=>e.horas>=10,xp:80},{k:"h50",teste:e=>e.horas>=50,xp:200,itens:["moldura:floresta"]},{k:"h100",teste:e=>e.horas>=100,xp:400},
@@ -2395,7 +2415,9 @@ const CONQ=[
   {k:"q100",teste:e=>e.q>=100,xp:100,itens:["capa:abismo"]},{k:"q500",teste:e=>e.q>=500,xp:250},{k:"rev20",teste:e=>e.rev>=20,xp:150,itens:["titulo:mestre_rev"]},
   {k:"desafios10",teste:e=>e.desafios>=10,xp:100},{k:"desafios50",teste:e=>e.desafios>=50,xp:300},
   {k:"maratona",sem:true,teste:e=>e.maxDia>=240,xp:100,itens:["titulo:maratonista"]},{k:"madrugada",sem:true,teste:e=>e.madrugador,xp:40,itens:["titulo:madrugador"]},{k:"noite",sem:true,teste:e=>e.coruja,xp:40,itens:["titulo:coruja"]},
-  {k:"elite",sem:true,teste:e=>e.q>=100&&e.acertos/e.q>=.8,xp:150,itens:["titulo:elite"]}];
+  {k:"elite",sem:true,teste:e=>e.q>=100&&e.acertos/e.q>=.8,xp:150,itens:["titulo:elite"]},
+  {k:"h250",teste:e=>e.horas>=250,xp:600,itens:["moldura:safira"]},{k:"seq60",teste:e=>e.seq>=60,xp:600,itens:["capa:cidade"]},{k:"q1000",teste:e=>e.q>=1000,xp:400,itens:["titulo:mestre_q"]},
+  {k:"foco3h",sem:true,teste:e=>e.maxSessao>=180,xp:120,itens:["titulo:mestre_foco"]},{k:"limpo",sem:true,teste:e=>e.diasLimpos>=14,xp:150,itens:["titulo:jogo_limpo"]}];
 const xpNivel=n=>50*n*(n-1);
 function nivelDe(xp){let n=1;while(xp>=xpNivel(n+1))n++;return n}
 function G(){S.conq=S.conq&&S.conq.resgatados?S.conq:{xp:0,itens:{},resgatados:{},distintivos:{}};return S.conq}
@@ -2421,10 +2443,16 @@ function desafiosDoDia(){
     {k:"questoes",t:"Registre 10 questões",d:"Informe as questões ao finalizar uma sessão.",ic:"target",p:d.q||0,a:10,xp:30},
     ...(blocosPlano().length?[{k:"blocos",t:"Conclua 2 blocos do seu plano",d:"Marque os blocos de hoje em Minha semana.",ic:"check",p:blocosHoje,a:2,xp:40}]:[]),
     ...(revisoesPendentes().length||revHoje?[{k:"revisao",t:"Faça uma revisão programada",d:"Marque uma revisão de hoje como feita.",ic:"repeat",p:revHoje,a:1,xp:30}]:[]),
-    ...(S.edital?[{k:"topico",t:"Estude um tópico da prova",d:"Marque um tópico como estudado em Tópicos da prova.",ic:"book",p:topHoje,a:1,xp:30}]:[])];
+    ...(S.edital?[{k:"topico",t:"Estude um tópico da prova",d:"Marque um tópico como estudado em Tópicos da prova.",ic:"book",p:topHoje,a:1,xp:30}]:[]),
+    {k:"cedo",t:"Comece cedo",d:"Finalize uma sessão antes das 9h.",ic:"clock",p:(L.hist||[]).filter(h=>noDia(h.em,hoje)&&new Date(h.em).getHours()<9).length,a:1,xp:35},
+    {k:"longa",t:"Sessão longa",d:"Faça uma única sessão de 45 minutos ou mais.",ic:"bolt",p:Math.max(0,...(L.hist||[]).filter(h=>noDia(h.em,hoje)).map(h=>h.min||0)),a:45,xp:35,fmt:fmtH},
+    {k:"acerto",t:"Acerte 70% em 10 questões ou mais",d:"Registre questões e acertos ao finalizar a sessão.",ic:"target",p:(d.q||0)>=10?Math.round((d.acertos||0)/d.q*100):0,a:70,xp:40,fmt:v=>v+"%"},
+    {k:"cronometro",t:"Use o cronômetro",d:"Finalize uma sessão no cronômetro livre.",ic:"clock",p:(L.hist||[]).filter(h=>noDia(h.em,hoje)&&h.fonte==="cronometro").length,a:1,xp:20},
+    {k:"pomodoros",t:"Complete 2 pomodoros",d:"Cada foco concluído conta.",ic:"repeat",p:(L.hist||[]).filter(h=>noDia(h.em,hoje)&&h.fonte==="pomodoro").length,a:2,xp:30},
+    ...(hojeIdx()>=5?[{k:"fds",t:"Estude no fim de semana",d:"Some 1 hora de estudo hoje.",ic:"flame",p:d.min||0,a:60,xp:45,fmt:fmtH}]:[])];
   const fixo={k:"tempo",t:`Estude ${fmtH(alvoMin)} hoje`,d:"Some o tempo do cronômetro e do pomodoro.",ic:"clock",p:d.min||0,a:alvoMin,xp:40,fmt:fmtH};
   const meta={k:"meta",t:`Bata sua meta de hoje (${fmtH(metaHoje())})`,d:"A meta diária aparece no início.",ic:"flame",p:d.min||0,a:metaHoje(),xp:50,fmt:fmtH};
-  return [fixo,...embaralhar(pool,"d"+hoje+S.uid).slice(0,2),meta].map(x=>({...x,id:`d:${hoje}:${x.k}`}));
+  return [fixo,...embaralhar(pool,"d"+hoje+S.uid).slice(0,3),meta].map(x=>({...x,id:`d:${hoje}:${x.k}`}));
 }
 function desafiosDaSemana(){
   const sem=segundaDaSemana(),dias=diasDaSemana(),L=garantirTotais(S.pomoLog);
@@ -2443,16 +2471,32 @@ function desafiosDaSemana(){
   const extra=[{k:"dias",t:"Estude em 5 dias diferentes",d:"Constância vale mais do que um dia longo.",ic:"flame",p:diasEst,a:5,xp:120,itens:["capa:boreal"]},
     {k:"questoes",t:"Faça 50 questões",d:"Registre as questões ao finalizar cada sessão.",ic:"target",p:qSem,a:50,xp:120},
     {k:"revisoes",t:"Faça 5 revisões",d:"Revisões programadas de 1, 7 e 30 dias.",ic:"repeat",p:revSem,a:5,xp:120},
-    ...(S.edital?[{k:"topicos",t:"Estude 5 tópicos da prova",d:"Marque os tópicos em Tópicos da prova.",ic:"book",p:topSem,a:5,xp:120}]:[])];
-  const escolhidos=lista.concat(embaralhar(extra,"w"+sem+S.uid).slice(0,Math.max(1,4-lista.length)));
+    ...(S.edital?[{k:"topicos",t:"Estude 5 tópicos da prova",d:"Marque os tópicos em Tópicos da prova.",ic:"book",p:topSem,a:5,xp:120}]:[]),
+    {k:"todos7",t:"Estude todos os 7 dias",d:"Não pule nenhum dia desta semana.",ic:"flame",p:diasEst,a:7,xp:220,itens:["moldura:esmeralda"]},
+    {k:"longas",t:"Faça 3 sessões de 1 hora ou mais",d:"Sessões únicas, sem somar.",ic:"bolt",p:(L.hist||[]).filter(h=>h.em>=desde&&h.min>=60).length,a:3,xp:150,itens:["capa:sakura"]},
+    {k:"mats3",t:"Estude 3 matérias diferentes",d:"Diversifique para lembrar mais.",ic:"book",p:new Set(dias.flatMap(x=>Object.keys((L.dias[x]||{}).mat||{})).filter(m=>m!=="Sem matéria")).size,a:3,xp:120,itens:["titulo:explorador"]},
+    {k:"acerto75",t:"Acerte 75% em 30 questões ou mais",d:"Some as questões da semana.",ic:"target",p:qSem>=30?Math.round(dias.reduce((a,x)=>a+((L.dias[x]||{}).acertos||0),0)/qSem*100):0,a:75,xp:160,itens:["moldura:rubi"],fmt:v=>v+"%"},
+    {k:"diarios10",t:"Resgate 10 desafios diários",d:"Desafios diários resgatados nesta semana.",ic:"medal",p:Object.keys(G().resgatados).filter(k=>k.startsWith("d:")&&k.slice(2,12)>=sem).length,a:10,xp:150,itens:["emblema:colecionador"]}];
+  const escolhidos=lista.concat(embaralhar(extra,"w"+sem+S.uid).slice(0,Math.max(2,5-lista.length)));
   return escolhidos.map(x=>({...x,id:`w:${sem}:${x.k}`}));
 }
-function prontosParaResgatar(){if(!S.pomoLog)return 0;const g=G();return desafiosDoDia().concat(desafiosDaSemana()).filter(c=>c.p>=c.a&&!g.resgatados[c.id]).length}
+function desafiosDoMes(){
+  const hoje=new Date(),mes=dataISO(hoje).slice(0,7),L=garantirTotais(S.pomoLog),g=G();
+  const dias=Object.keys(L.dias).filter(d=>d.startsWith(mes));const min=dias.reduce((a,d)=>a+(L.dias[d].min||0),0),diasEst=dias.filter(d=>L.dias[d].min>0).length,q=dias.reduce((a,d)=>a+(L.dias[d].q||0),0);
+  const semanas=Object.keys(g.semanasFinalizadas||{}).filter(w=>w.startsWith(mes)).length,desMes=Object.keys(g.resgatados).filter(k=>k.slice(2,9)===mes).length;
+  return [{k:"horas",t:"Estude 30 horas neste mês",d:"Tempo do cronômetro e do pomodoro.",ic:"clock",p:min,a:1800,xp:400,itens:["capa:cristal","emblema:mes30"],fmt:fmtH},
+    {k:"dias",t:"Estude em 20 dias do mês",d:"Constância é o que mais conta.",ic:"flame",p:diasEst,a:20,xp:400,itens:["moldura:holografica","titulo:constante","emblema:dias20"]},
+    {k:"questoes",t:"Faça 300 questões neste mês",d:"Registre ao finalizar cada sessão.",ic:"target",p:q,a:300,xp:350,itens:["titulo:campeao_mes"]},
+    {k:"semanas",t:"Finalize 2 semanas do plano",d:"Resgate o desafio “Finalize a semana” duas vezes neste mês.",ic:"check",p:semanas,a:2,xp:350,itens:["capa:pixel"]},
+    {k:"desafios",t:"Resgate 60 desafios neste mês",d:"Diários, semanais e mensais contam.",ic:"medal",p:desMes,a:60,xp:400,itens:["moldura:ametista"]}].map(x=>({...x,id:`m:${mes}:${x.k}`}));
+}
+function prontosParaResgatar(){if(!S.pomoLog)return 0;const g=G();return desafiosDoDia().concat(desafiosDaSemana(),desafiosDoMes()).filter(c=>c.p>=c.a&&!g.resgatados[c.id]).length}
 // ---- conquistas ----
 function estatGamif(){const L=garantirTotais(S.pomoLog);const q=Object.values(L.q||{}).reduce((a,v)=>({f:a.f+v.feitas,c:a.c+v.acertos}),{f:0,c:0});
   const hs=(L.hist||[]);return {sessoes:L.sessoes||0,horas:L.tot.min/60,seq:Math.max(sequencia(),recordeSequencia()),q:q.f,acertos:q.c,rev:((S.revisoes&&S.revisoes.itens)||[]).filter(r=>r.feita).length,
     desafios:Object.keys(G().resgatados).length,maxDia:Math.max(0,...Object.values(L.dias).map(d=>d.min||0)),
-    madrugador:hs.some(h=>new Date(h.em).getHours()<7),coruja:hs.some(h=>new Date(h.em).getHours()>=23)}}
+    madrugador:hs.some(h=>new Date(h.em).getHours()<7),coruja:hs.some(h=>new Date(h.em).getHours()>=23),maxSessao:Math.max(0,...hs.map(h=>h.min||0)),
+    diasLimpos:riscoProprio().nivel==="baixo"?Object.values(L.dias).filter(d=>d.min>0).length:0}}
 function darItens(ids){const g=G(),novos=[];(ids||[]).forEach(id=>{if(!g.itens[id]){g.itens[id]=Date.now();novos.push(id)}});return novos}
 function ganharXP(n){const g=G(),antes=nivelDe(g.xp);g.xp+=n;const depois=nivelDe(g.xp);let novos=[];for(let k=antes+1;k<=depois;k++)novos=novos.concat(darItens(NIVEL_ITENS[k]));return {subiu:depois>antes,nivel:depois,novos}}
 function verificarConquistas(silencioso){
@@ -2467,7 +2511,9 @@ function publicarNivel(){if(S.mode!=="nuvem")return;const n=nivelDe(G().xp);cons
 function nomeItem(id){const it=ITENS.find(i=>i.id===id);return it?it.n:id}
 function tipoNome(t){return {moldura:"Moldura",capa:"Capa",titulo:"Título",emblema:"Emblema"}[t]}
 function resgatar(c){
-  const g=G();if(g.resgatados[c.id]||c.p<c.a)return;g.resgatados[c.id]=Date.now();
+  const g=G();if(g.resgatados[c.id]||c.p<c.a)return;
+  const rk=riscoProprio();if(rk.nivel==="alto"){toast("Resgate bloqueado: encontramos atividade fora do normal na sua conta. Veja a aba Jogo limpo.");return}
+  g.resgatados[c.id]=Date.now();if(c.id.startsWith("w:")&&c.id.endsWith(":semana")){g.semanasFinalizadas=g.semanasFinalizadas||{};g.semanasFinalizadas[dataISO().slice(0,7)+":"+c.id.slice(2,12)]=true}
   const novos=darItens(c.itens);const r=ganharXP(c.xp);verificarConquistas(true);salvarConq();
   celebrar(`+${c.xp} XP`,c.t,novos.concat(r.novos),r.subiu?r.nivel:0);
 }
@@ -2510,15 +2556,17 @@ function cartaoDesafio(c){const g=G(),ok=c.p>=c.a,res=!!g.resgatados[c.id],pct=M
 function renderDesafios(){
   verificarConquistas(true);
   const g=G(),n=nivelDe(g.xp),base=xpNivel(n),prox=xpNivel(n+1),pct=Math.round((g.xp-base)/(prox-base)*100),tab=S.desTab||"diarios";
-  const dia=desafiosDoDia(),sem=desafiosDaSemana();
+  const dia=desafiosDoDia(),sem=desafiosDaSemana(),mesD=desafiosDoMes();const fimMes=new Date();fimMes.setMonth(fimMes.getMonth()+1,1);fimMes.setHours(0,0,0,0);
   const fimDia=new Date();fimDia.setHours(24,0,0,0);const fimSem=new Date(segundaDaSemana()+"T00:00");fimSem.setDate(fimSem.getDate()+7);
-  const prontos=dia.concat(sem).filter(c=>c.p>=c.a&&!g.resgatados[c.id]).length;
+  const prontos=dia.concat(sem,mesD).filter(c=>c.p>=c.a&&!g.resgatados[c.id]).length;
   const tit=(S.pub&&S.pub.titulo&&TITULOS[S.pub.titulo])||"";
   let corpo="";
   if(tab==="diarios")corpo=`<p class="small muted" style="margin-bottom:10px">Novos desafios em ${tempoAte(fimDia)}.</p><div class="desafios">${dia.map(cartaoDesafio).join("")}</div>`;
   else if(tab==="semanais")corpo=`<p class="small muted" style="margin-bottom:10px">A semana termina em ${tempoAte(fimSem)}. Os blocos do plano são desmarcados toda segunda-feira.</p><div class="desafios">${sem.map(cartaoDesafio).join("")}</div>`;
+  else if(tab==="mensais")corpo=`<p class="small muted" style="margin-bottom:10px">O mês termina em ${tempoAte(fimMes)}. Desafios mensais dão as recompensas mais raras.</p><div class="desafios">${mesD.map(cartaoDesafio).join("")}</div>`;
+  else if(tab==="limpo")corpo=telaJogoLimpo();
   else if(tab==="conquistas"){const e=estatGamif();corpo=`<div class="desafios">${CONQ.map(c=>{const tem=!!g.distintivos[c.k];const nome=EMBLEMAS[c.k]?EMBLEMAS[c.k][0]:nomeItem((c.itens||[])[0]);const como=EMBLEMAS[c.k]?"":"";
-      const desc={primeira:"Finalize sua primeira sessão de estudo.",h10:"Some 10 horas de estudo no app.",h50:"Some 50 horas de estudo.",h100:"Some 100 horas de estudo.",seq7:"Estude 7 dias seguidos.",seq30:"Estude 30 dias seguidos.",q100:"Registre 100 questões.",q500:"Registre 500 questões.",rev20:"Faça 20 revisões programadas.",desafios10:"Resgate 10 desafios.",desafios50:"Resgate 50 desafios.",maratona:"Estude 4 horas em um único dia.",madrugada:"Termine uma sessão antes das 7h.",noite:"Termine uma sessão depois das 23h.",elite:"Acerte 80% de 100 questões ou mais."}[c.k];
+      const desc={primeira:"Finalize sua primeira sessão de estudo.",h10:"Some 10 horas de estudo no app.",h50:"Some 50 horas de estudo.",h100:"Some 100 horas de estudo.",seq7:"Estude 7 dias seguidos.",seq30:"Estude 30 dias seguidos.",q100:"Registre 100 questões.",q500:"Registre 500 questões.",rev20:"Faça 20 revisões programadas.",desafios10:"Resgate 10 desafios.",desafios50:"Resgate 50 desafios.",maratona:"Estude 4 horas em um único dia.",madrugada:"Termine uma sessão antes das 7h.",noite:"Termine uma sessão depois das 23h.",elite:"Acerte 80% de 100 questões ou mais.",h250:"Some 250 horas de estudo.",seq60:"Estude 60 dias seguidos.",q1000:"Registre 1000 questões.",foco3h:"Faça uma única sessão de 3 horas.",limpo:"Estude 14 dias com a conta verificada."}[c.k];
       return `<div class="card desafio ${tem?"":"bloq"}"><div class="row" style="flex-wrap:nowrap;gap:12px"><span class="des-ic" style="${tem?"background:var(--accent);color:var(--accent-fg)":""}">${ib(EMBLEMAS[c.k]?EMBLEMAS[c.k][1]:"medal",20)}</span><div style="min-width:0"><b>${esc(nome)}</b><div class="small muted">${desc}</div></div></div>
         <div class="row" style="justify-content:space-between"><span class="pill">+${c.xp} XP</span>${tem?`<span class="small" style="color:var(--ok);font-weight:600">${ib("check",14)} ${new Date(g.distintivos[c.k]).toLocaleDateString("pt-BR")}</span>`:`<span class="small muted">${ib("target",13)} bloqueado</span>`}</div></div>`}).join("")}</div>`}
   else{const eq=equipado();const grupos=[["moldura","Molduras da foto"],["capa","Capas exclusivas"],["titulo","Títulos"],["emblema","Emblemas (até 3 no perfil)"]];
@@ -2532,12 +2580,13 @@ function renderDesafios(){
       <div style="flex:1;min-width:0"><div class="row" style="gap:8px"><h2>Nível ${n}</h2>${tit?`<span class="pill solid">${esc(tit)}</span>`:""}</div>
         <div class="small muted" style="margin:4px 0 8px">${g.xp} XP · faltam ${prox-g.xp} XP para o nível ${n+1}</div><div class="prog" style="height:10px"><i style="width:${pct}%"></i></div>
         <div class="row small muted" style="margin-top:8px;gap:14px"><span>${Object.keys(g.distintivos).length} conquistas</span><span>${Object.keys(g.itens).length} itens</span><span>${Object.keys(g.resgatados).length} desafios resgatados</span></div></div></div></div>
-    <div class="tabs" role="tablist">${[["diarios","Diários"],["semanais","Semanais"],["conquistas","Conquistas"],["colecao","Coleção"]].map(([k,nm])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-dtab="${k}">${nm}${k==="diarios"&&dia.some(c=>c.p>=c.a&&!g.resgatados[c.id])||k==="semanais"&&sem.some(c=>c.p>=c.a&&!g.resgatados[c.id])?' <span class="pill solid" style="padding:0 6px">!</span>':""}</button>`).join("")}</div>
+    <div class="tabs" role="tablist">${[["diarios","Diários"],["semanais","Semanais"],["mensais","Mensais"],["conquistas","Conquistas"],["colecao","Coleção"],["limpo","Jogo limpo"]].map(([k,nm])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-dtab="${k}">${nm}${k==="diarios"&&dia.some(c=>c.p>=c.a&&!g.resgatados[c.id])||k==="semanais"&&sem.some(c=>c.p>=c.a&&!g.resgatados[c.id])||k==="mensais"&&mesD.some(c=>c.p>=c.a&&!g.resgatados[c.id])?' <span class="pill solid" style="padding:0 6px">!</span>':""}</button>`).join("")}</div>
     ${corpo}
     ${S.mode!=="nuvem"?`<p class="hint" style="margin-top:12px">Como visitante, o progresso fica só neste navegador e os itens não aparecem para outras pessoas.</p>`:""}
   </div>`;
   $$("[data-dtab]").forEach(b=>b.onclick=()=>{S.desTab=b.dataset.dtab;renderDesafios()});
-  $$("[data-resgatar]").forEach(b=>b.onclick=()=>{const c=dia.concat(sem).find(x=>x.id===b.dataset.resgatar);if(c)resgatar(c)});
+  $$("[data-resgatar]").forEach(b=>b.onclick=()=>{const c=dia.concat(sem,mesD).find(x=>x.id===b.dataset.resgatar);if(c)resgatar(c)});
+  ligarJogoLimpo();
   $$("[data-equipar]").forEach(b=>b.onclick=()=>equipar(b.dataset.equipar));
   atualizarBadgeDesafios(prontos);
 }
@@ -2545,6 +2594,97 @@ function atualizarBadgeDesafios(n){if(n==null)n=prontosParaResgatar();$$('[data-
 // semana nova: desmarca os blocos do plano toda segunda-feira
 function virarSemana(){if(!S.plano)return;const sem=segundaDaSemana();if(!S.plano.semanaRef){S.plano.semanaRef=sem;gravar("plano",S.plano);return}
   if(S.plano.semanaRef!==sem){DIAS.forEach(x=>(S.plano.semana[x.k]||[]).forEach(b=>{b.feito=false;delete b.feitoEm}));S.plano.semanaRef=sem;gravar("plano",S.plano,true)}}
+
+/* ================= Jogo limpo: anti-trapaça ================= */
+const LIMITE_DIA=960; // 16 horas
+const tsMs=v=>typeof v==="number"?v:v&&typeof v.toMillis==="function"?v.toMillis():v&&v.seconds?v.seconds*1000:Date.now();
+function riscoDe(r,p){
+  if(!r)return {score:0,nivel:"baixo",motivos:[]};
+  const m=[];let sc=0;const dias=r.dias||{},vals=Object.values(dias).map(Number).filter(x=>!isNaN(x));
+  const maxD=Math.max(0,...vals);
+  if(maxD>LIMITE_DIA){sc+=60;m.push("Mais de 16 horas registradas em um único dia")}else if(maxD>720){sc+=25;m.push("Mais de 12 horas em um único dia")}
+  let s7=0;for(let i=0;i<7;i++)s7+=dias[diasAtras(i)]||0;if(s7/7>600){sc+=30;m.push("Média acima de 10 horas por dia na semana")}
+  const hoje=dias[dataISO()]||0;let prev=0,n=0;for(let i=1;i<=14;i++){const v=dias[diasAtras(i)]||0;prev+=v;if(v>0)n++}
+  const media=n?prev/n:0;if(hoje>360&&media>0&&hoje>media*4){sc+=20;m.push("Salto de tempo muito acima da média da pessoa")}
+  const soma=vals.reduce((a,b)=>a+b,0);if(soma>(r.total||0)+5){sc+=40;m.push("Soma dos dias maior do que o total registrado")}
+  const ult=(r.ult||[]).map(u=>u.m||0);
+  if(ult.some(x=>x>300)){sc+=25;m.push("Sessão única com mais de 5 horas")}
+  if(ult.length>=5){let rep=1,maxRep=1;for(let i=1;i<ult.length;i++){if(ult[i]>=30&&Math.abs(ult[i]-ult[i-1])<0.5){rep++;maxRep=Math.max(maxRep,rep)}else rep=1}if(maxRep>=5){sc+=15;m.push("Várias sessões seguidas com duração idêntica")}}
+  const desde=p&&p.desde;if(desde&&Date.now()-desde<3*864e5&&(r.total||0)>1500){sc+=20;m.push("Conta criada há poucos dias com muitas horas")}
+  return {score:Math.min(100,sc),nivel:sc>=60?"alto":sc>=30?"medio":"baixo",motivos:m};
+}
+function docRankingLocal(){const L=garantirTotais(S.pomoLog),dias={};for(let i=0;i<35;i++){const d=diasAtras(i);if(L.dias[d])dias[d]=Math.round(L.dias[d].min*100)/100}
+  return {dias,total:L.tot.min,ult:(L.hist||[]).slice(0,10).map(h=>({m:Math.round(h.min*10)/10,em:h.em}))}}
+function riscoProprio(){if(!S.pomoLog)return {score:0,nivel:"baixo",motivos:[]};return riscoDe(docRankingLocal(),S.pub||{desde:Date.now()})}
+function riscoConta(id){const base=riscoDe(S.soc.ranking[id],S.soc.perfis[id]);const ia=S.iaRisco&&S.iaRisco[id];
+  if(ia&&ia.risco==="alto"&&base.nivel!=="alto")return {...base,nivel:"alto",motivos:base.motivos.concat("IA: "+ia.motivo)};
+  if(ia&&ia.risco==="medio"&&base.nivel==="baixo")return {...base,nivel:"medio",motivos:base.motivos.concat("IA: "+ia.motivo)};return base}
+const escudo=id=>{const r=riscoConta(id);return r.nivel==="medio"?`<span title="Em verificação: ${esc(r.motivos.join("; "))}" style="color:var(--muted);margin-left:6px;vertical-align:middle">${ib("target",13)}</span>`:""};
+
+/* Verificação "Ainda estudando?" do cronômetro: a cada 60 minutos; sem resposta em 5 minutos, o tempo para de contar */
+const CHECK_MIN=60,CHECK_TOL=5;
+function checarPresenca(){
+  if(!C.rodando)return;const due=(C.confirmado||C.inicio)+CHECK_MIN*60e3,agora=Date.now();
+  if(agora>due+CHECK_TOL*60e3){C.acum+=Math.max(0,due-C.inicio);C.rodando=false;clearInterval(C.tick);C.confirmado=0;salvarCronoLocal();document.getElementById("crono-check")?.remove();
+    toast("Cronômetro pausado: ninguém confirmou que estava estudando. O tempo sem confirmação não foi contado.");publicarRanking();tickCrono();return}
+  if(agora>=due&&!document.getElementById("crono-check")){const bg=document.createElement("div");bg.className="modal-bg";bg.id="crono-check";
+    bg.innerHTML=`<div class="card stack modal" role="alertdialog" aria-modal="true" style="text-align:center;align-items:center"><span class="des-ic">${ib("clock",22)}</span><h2>Ainda estudando?</h2>
+      <p class="muted">Confirme para o cronômetro continuar contando. Sem resposta em ${CHECK_TOL} minutos, ele pausa e o tempo depois desta pergunta não conta.</p>
+      <div class="row" style="justify-content:center"><button class="btn primary" type="button" data-ck="sim">Sim, estou estudando</button><button class="btn" type="button" data-ck="pausar">Pausar</button></div></div>`;
+    document.body.appendChild(bg);bg.addEventListener("click",e=>{const a=e.target.closest("[data-ck]");if(!a)return;bg.remove();
+      if(a.dataset.ck==="sim"){C.confirmado=Date.now();salvarCronoLocal()}else{pausarCrono();if(S.view==="cronometro")renderCronometro()}})}
+}
+
+/* Análise com IA (Claude) — disponível quando o site roda no claude.ai */
+async function iaAnalisarMinhaConta(){
+  const box=$("#ia-eu");if(!S.sample||!box)return;box.innerHTML=`<div class="row muted small"><span class="spinner"></span>A IA está analisando suas sessões…</div>`;
+  const L=garantirTotais(S.pomoLog),d=docRankingLocal(),rk=riscoProprio();
+  const prompt=`Você é o sistema antitrapaça de um app de estudos com ranking de horas. Analise os registros de UM estudante e diga se há sinais de trapaça (tempo inflado, cronômetro esquecido ligado, registros impossíveis) ou se é um padrão humano plausível. Seja justo: estudar muito não é trapaça; sessões de 1 a 4 horas e dias de 6 a 10 horas são possíveis.
+Dados (minutos por dia, últimos 35 dias): ${JSON.stringify(d.dias)}
+Total registrado: ${Math.round(d.total)} min
+Últimas sessões (minutos, fonte, hora de término): ${JSON.stringify((L.hist||[]).slice(0,30).map(h=>({min:Math.round(h.min),fonte:h.fonte,hora:new Date(h.em).toLocaleString("pt-BR")})))}
+Detector automático: pontuação ${rk.score}/100, motivos: ${rk.motivos.join("; ")||"nenhum"}
+Responda SOMENTE com JSON: {"risco":"baixo|medio|alto","resumo":"1 a 2 frases","motivos":["..."],"dicas":["como manter os registros confiáveis"]}`;
+  try{const r=await S.sample.json(prompt,{modelTier:"default",cache:false});
+    box.innerHTML=`<div class="stack sm"><div class="row"><span class="pill ${r.risco==="baixo"?"":"solid"}">Risco ${esc(r.risco||"?")}</span><span class="small muted">análise da IA</span></div><p>${esc(r.resumo||"")}</p>
+      ${(r.motivos||[]).length?`<ul style="margin:0;padding-left:18px">${r.motivos.map(x=>`<li class="small">${esc(x)}</li>`).join("")}</ul>`:""}
+      ${(r.dicas||[]).length?`<p class="small muted">${r.dicas.map(esc).join(" ")}</p>`:""}</div>`}
+  catch(e){box.innerHTML=`<p class="err">A IA não respondeu (${esc(e&&e.code||"erro")}).</p>`}
+}
+async function iaAnalisarRanking(){
+  const box=$("#ia-rank");if(!S.sample||!box)return;box.innerHTML=`<div class="row muted small"><span class="spinner"></span>A IA está revisando o ranking…</div>`;
+  const ids=Object.keys(S.soc.ranking).filter(visivelRanking).sort((a,b)=>minTotalR(b)-minTotalR(a)).slice(0,30);
+  const contas=ids.map((id,i)=>{const r=S.soc.ranking[id],p=S.soc.perfis[id]||{},h=riscoDe(r,p);return {id:"C"+(i+1),dias:r.dias,total:Math.round(r.total||0),sessoes:(r.ult||[]).map(u=>u.m),diasDeConta:p.desde?Math.round((Date.now()-p.desde)/864e5):null,detector:h.score}});
+  const prompt=`Você é o sistema antitrapaça de um ranking de horas de estudo. Para cada conta abaixo, avalie se os registros parecem inflados ou impossíveis. Seja justo: estudar muito não é trapaça; marque "alto" só com sinais fortes (dias acima de 16h, sessões únicas acima de 5h repetidas, soma incoerente, saltos absurdos).
+Contas: ${JSON.stringify(contas)}
+Responda SOMENTE com JSON: {"contas":[{"id":"C1","risco":"baixo|medio|alto","motivo":"curto"}]}`;
+  try{const r=await S.sample.json(prompt,{modelTier:"default",cache:false});S.iaRisco=S.iaRisco||{};
+    (r.contas||[]).forEach(c=>{const i=parseInt(String(c.id).replace(/\D/g,""))-1;if(ids[i])S.iaRisco[ids[i]]={risco:c.risco,motivo:String(c.motivo||"").slice(0,120)}});
+    const alt=Object.values(S.iaRisco).filter(x=>x.risco==="alto").length,med=Object.values(S.iaRisco).filter(x=>x.risco==="medio").length;
+    box.innerHTML=`<p class="small">A IA revisou ${ids.length} contas: ${alt} com risco alto e ${med} com risco médio. Contas de risco alto saem da classificação até a próxima atualização.</p>`}
+  catch(e){box.innerHTML=`<p class="err">A IA não respondeu (${esc(e&&e.code||"erro")}).</p>`}
+}
+function telaJogoLimpo(){
+  const rk=riscoProprio(),cor=rk.nivel==="baixo"?"var(--ok)":rk.nivel==="medio"?"#d97706":"var(--danger)";
+  return `<div class="cols">
+    <div class="stack">
+      <div class="card stack"><div class="row" style="justify-content:space-between"><h3>Situação da sua conta</h3><span class="pill" style="color:${cor};border-color:${cor}"><span class="dot"></span>${rk.nivel==="baixo"?"Verificada":rk.nivel==="medio"?"Em verificação":"Bloqueada para recompensas"}</span></div>
+        <p class="small muted">Pontuação de risco: ${rk.score}/100. ${rk.motivos.length?"Motivos: "+rk.motivos.map(esc).join("; ")+".":"Nenhum sinal fora do normal."}</p>
+        ${rk.nivel==="alto"?`<p class="small">Enquanto o risco estiver alto, não dá para resgatar recompensas e sua conta sai do ranking. Isso volta ao normal sozinho quando os registros se normalizam.</p>`:""}</div>
+      <div class="card stack"><h3>Como protegemos o ranking</h3>
+        <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px" class="small">
+          <li><b>Regras no servidor:</b> o banco de dados recusa somar mais tempo do que o tempo real que passou desde a última sessão registrada, e nenhum dia passa de 16 horas.</li>
+          <li><b>“Ainda estudando?”:</b> o cronômetro pergunta a cada ${CHECK_MIN} minutos. Sem resposta em ${CHECK_TOL} minutos, ele pausa e o tempo depois da pergunta não conta.</li>
+          <li><b>Detector automático:</b> analisa os registros públicos de todos (dias acima de 16h, médias impossíveis, saltos, sessões gigantes ou repetidas, contas novas com muitas horas). Contas suspeitas saem do pódio e ficam “em análise”.</li>
+          <li><b>Análise com IA:</b> ${S.sample?"a IA (Claude) revisa os padrões e confirma ou descarta suspeitas.":"disponível na versão do site no claude.ai, onde a IA (Claude) revisa os padrões. Nesta versão, o detector automático faz a verificação."}</li>
+        </ul></div>
+    </div>
+    <div class="stack">
+      <div class="card stack"><h3>Analisar minha conta com IA</h3>${S.sample?`<p class="small muted">A IA lê seus registros e diz se algo parece fora do normal.</p><button class="btn primary" type="button" id="ia-eu-btn">${ico("spark")}Analisar com IA</button><div id="ia-eu"></div>`:`<p class="small muted">Disponível na versão com IA do site.</p>`}</div>
+      <div class="card stack"><h3>Revisar o ranking com IA</h3>${S.sample&&S.mode==="nuvem"?`<p class="small muted">A IA revisa as 30 contas com mais horas e marca as suspeitas.</p><button class="btn" type="button" id="ia-rank-btn">${ico("spark")}Revisar ranking</button><div id="ia-rank"></div>`:`<p class="small muted">Disponível na versão com IA do site, com login.</p>`}</div>
+    </div></div>`;
+}
+function ligarJogoLimpo(){const a=$("#ia-eu-btn");if(a)a.onclick=iaAnalisarMinhaConta;const b=$("#ia-rank-btn");if(b)b.onclick=iaAnalisarRanking}
 
 /* ================= Configurações ================= */
 function renderConfig(){

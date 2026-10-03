@@ -9,7 +9,29 @@ service cloud.firestore {
 
     // Perfil público (nome, foto, bio, amigos) e ranking: todos leem, cada um escreve o seu
     match /perfis/{uid} { allow read: if logado(); allow write: if eu(uid); }
-    match /ranking/{uid} { allow read: if logado(); allow write: if eu(uid); }
+    // Ranking: o servidor não aceita somar mais tempo do que o tempo real que passou desde a última vez que o total mudou
+    match /ranking/{uid} {
+      function refAntes() { return resource.data.get('ref', resource.data.atualizado); }
+      function folgaOk() {
+        let novo = request.resource.data.total;
+        let velho = resource.data.total;
+        return (refAntes() is timestamp && novo <= velho + (request.time.toMillis() - refAntes().toMillis()) / 60000 + 5)
+            || (refAntes() is number && novo <= velho + (request.time.toMillis() - refAntes()) / 60000 + 5);
+      }
+      function valido() {
+        let d = request.resource.data;
+        return d.atualizado == request.time && d.total is number && d.total >= 0 && d.total <= 300000
+          && (!('hojeMin' in d) || (d.hojeMin is number && d.hojeMin >= 0 && d.hojeMin <= 960));
+      }
+      allow read: if logado();
+      allow create: if eu(uid) && valido() && request.resource.data.total <= 720 && request.resource.data.ref == request.time;
+      allow update: if eu(uid) && valido()
+        && ((request.resource.data.total == resource.data.total && request.resource.data.get('ref', null) == resource.data.get('ref', null))
+            || (request.resource.data.total > resource.data.total && request.resource.data.ref == request.time && folgaOk()))
+        && (request.resource.data.get('hojeData', '') != resource.data.get('hojeData', '')
+            || request.resource.data.get('hojeMin', 0) <= resource.data.get('hojeMin', 0) + (request.resource.data.total - resource.data.total) + 1);
+      allow delete: if false;
+    }
 
     // Dados da versão anterior (só para migrar e apagar)
     match /msgs/{uid} { allow read: if logado(); allow write: if eu(uid); }
