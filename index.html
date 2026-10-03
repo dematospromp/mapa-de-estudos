@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro, cronômetro, grupos de estudo, catálogo de provas e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro, cronômetro, revisões, estatísticas, grupos de estudo, catálogo de provas e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -238,6 +238,8 @@ input[type=range]{width:100%;accent-color:var(--fg)}
 pre.prompt{white-space:pre-wrap;font-family:var(--f-mono);font-size:.76rem;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;max-height:420px;overflow:auto;margin:12px 0 0}
 details>summary{cursor:pointer;font-weight:500}
 .lock{max-width:520px;margin:40px auto}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:grid;place-items:center;padding:16px}
+.modal{width:min(460px,100%);max-height:calc(100dvh - 32px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .dm-cols{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:860px){.dm-cols{grid-template-columns:1fr}}
 .overlay{display:none}
@@ -576,6 +578,7 @@ function toast(msg){let box=document.querySelector(".toasts");if(!box){box=docum
 const I={
   home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
   cal:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   watch:'<circle cx="12" cy="14" r="7.5"/><path d="M12 10.5V14h2.5M10 2.5h4M12 2.5v4M18.5 7.5l1.5-1.5"/>',
   timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/>',
   scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/>',
@@ -746,7 +749,7 @@ async function entrar(modo){
     S.mode="nuvem";S.uid=id;try{nomeConta=(await S.userCap.me()).name||S.nomeCadastro||""}catch(e){}
   }else{S.mode="local";S.uid="local"}
   $("#root").innerHTML=`<div class="wizard"><div class="row muted"><span class="spinner"></span>Carregando seus dados…</div></div>`;
-  try{[S.perfil,S.plano,S.edital,S.pomoLog]=await Promise.all(["perfil","plano","edital","pomo"].map(ler))}
+  try{[S.perfil,S.plano,S.edital,S.pomoLog,S.revisoes]=await Promise.all(["perfil","plano","edital","pomo","revisoes"].map(ler));if(!S.revisoes||!Array.isArray(S.revisoes.itens))S.revisoes={itens:[]}}
   catch(e){S.mode=null;renderLogin("Não foi possível ler seus dados ("+(e&&e.code||"erro")+").");return}
   S.pomoLog=garantirTotais(S.pomoLog&&S.pomoLog.dias?S.pomoLog:{dias:{},sessoes:0});carregarCrono();if(S.edital&&!Array.isArray(S.edital.materias))S.edital=null;
   if(S.perfil&&S.perfil.tema)aplicarTema(S.perfil.tema);
@@ -1099,8 +1102,8 @@ const P={modo:"foco",dur:{foco:50,curta:10,longa:20},rodando:false,fimEm:0,resta
 const MODOS={foco:"Foco",curta:"Pausa curta",longa:"Pausa longa"};
 function pomoTotal(){return P.dur[P.modo]*60e3}
 function pomoRestante(){return P.rodando?Math.max(0,P.fimEm-Date.now()):P.restante}
-function iniciarPomo(){if(P.rodando)return;P.rodando=true;P.fimEm=Date.now()+P.restante;P.iniciadoEm=Date.now();clearInterval(P.tick);P.tick=setInterval(tickPomo,250);somPreparar();tickPomo()}
-function pausarPomo(){if(!P.rodando)return;P.restante=pomoRestante();if(P.modo==="foco")P.acumulado+=Date.now()-P.iniciadoEm;P.rodando=false;clearInterval(P.tick);tickPomo()}
+function iniciarPomo(){if(P.rodando)return;P.rodando=true;P.fimEm=Date.now()+P.restante;P.iniciadoEm=Date.now();clearInterval(P.tick);P.tick=setInterval(tickPomo,250);somPreparar();tickPomo();publicarRanking()}
+function pausarPomo(){if(!P.rodando)return;P.restante=pomoRestante();if(P.modo==="foco")P.acumulado+=Date.now()-P.iniciadoEm;P.rodando=false;clearInterval(P.tick);tickPomo();publicarRanking()}
 function resetPomo(modo){pausarPomo();if(modo)P.modo=modo;P.restante=pomoTotal();P.acumulado=0;tickPomo()}
 function tickPomo(){
   const r=pomoRestante();
@@ -1115,7 +1118,7 @@ function tickPomo(){
 function concluirFase(){
   clearInterval(P.tick);P.rodando=false;bip();
   if(P.modo==="foco"){
-    registrar(P.dur.foco,P.materia);P.ciclos++;
+    registrar(P.dur.foco,P.materia);P.ciclos++;setTimeout(()=>modalSessao(P.dur.foco,P.materia),400);
     if(P.bloco)marcarBloco(P.bloco,true);
     P.modo=P.ciclos%4===0?"longa":"curta";toast(`Sessão de foco concluída: +${P.dur.foco} min. Hora da ${MODOS[P.modo].toLowerCase()}.`);
   }else{P.modo="foco";toast("Pausa encerrada. Pronto para o próximo foco?")}
@@ -1126,7 +1129,7 @@ function concluirFase(){
 function encerrarRegistrar(){
   if(P.modo!=="foco")return;let ms=P.acumulado+(P.rodando?Date.now()-P.iniciadoEm:0);
   const min=Math.floor(ms/60000);pausarPomo();
-  if(min>=1){registrar(min,P.materia);toast(`${min} min registrados.`)}else toast("Menos de 1 minuto: nada foi registrado.");
+  if(min>=1){registrar(min,P.materia);modalSessao(min,P.materia)}else toast("Menos de 1 minuto: nada foi registrado.");
   resetPomo("foco");if(S.view==="pomodoro")renderPomodoro();
 }
 function garantirTotais(L){ // totais de todo o tempo, que não se perdem quando os dias antigos são apagados
@@ -1141,8 +1144,7 @@ function registrar(min,materia,fonte){
   L.hist.unshift({em:Date.now(),min,mat:k,fonte});L.hist=L.hist.slice(0,40);
   const ks=Object.keys(L.dias).sort();while(ks.length>120){delete L.dias[ks.shift()]}
   gravar("pomo",L,true);
-  if(S.mode==="nuvem"){const dias={};for(let i=0;i<14;i++){const d=diasAtras(i);if(L.dias[d])dias[d]=L.dias[d].min}
-    gravarPub("ranking",{dias,total:L.tot.min,atualizado:Date.now()})}
+  publicarRanking();
 }
 let actx=null;
 function somPreparar(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){}}
@@ -1156,12 +1158,12 @@ function cronoMs(){return C.acum+(C.rodando?Date.now()-C.inicio:0)}
 function salvarCronoLocal(){try{localStorage.setItem("mapa_crono_"+(S.uid||"local"),JSON.stringify({rodando:C.rodando,inicio:C.inicio,acum:C.acum,materia:C.materia}))}catch(e){}}
 function carregarCrono(){try{const d=JSON.parse(localStorage.getItem("mapa_crono_"+(S.uid||"local"))||"null");if(d){Object.assign(C,d);if(C.rodando){clearInterval(C.tick);C.tick=setInterval(tickCrono,500)}}}catch(e){}}
 function fmtRelogio(ms){const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t/60)%60,sg=t%60;return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sg).padStart(2,"0")}
-function iniciarCrono(){if(C.rodando)return;C.rodando=true;C.inicio=Date.now();clearInterval(C.tick);C.tick=setInterval(tickCrono,500);salvarCronoLocal();tickCrono()}
-function pausarCrono(){if(!C.rodando)return;C.acum+=Date.now()-C.inicio;C.rodando=false;clearInterval(C.tick);salvarCronoLocal();tickCrono()}
+function iniciarCrono(){if(C.rodando)return;C.rodando=true;C.inicio=Date.now();clearInterval(C.tick);C.tick=setInterval(tickCrono,500);salvarCronoLocal();tickCrono();publicarRanking()}
+function pausarCrono(){if(!C.rodando)return;C.acum+=Date.now()-C.inicio;C.rodando=false;clearInterval(C.tick);salvarCronoLocal();tickCrono();publicarRanking()}
 function zerarCrono(){C.rodando=false;C.acum=0;C.inicio=0;clearInterval(C.tick);salvarCronoLocal();tickCrono()}
 function finalizarCrono(){const ms=cronoMs();const min=ms/60000;
   if(min<1){toast("Menos de 1 minuto: nada foi salvo.");zerarCrono();if(S.view==="cronometro")renderCronometro();return}
-  registrar(min,C.materia,"cronometro");toast(`${fmtH(min)} de estudo salvos na sua conta.`);zerarCrono();if(S.view==="cronometro")renderCronometro()}
+  const mat=C.materia;registrar(min,mat,"cronometro");zerarCrono();modalSessao(min,mat);if(S.view==="cronometro")renderCronometro()}
 function tickCrono(){
   const ms=cronoMs(),txt=fmtRelogio(ms);
   const t=$("#crono-t");if(t)t.textContent=txt;
@@ -1209,6 +1211,115 @@ function renderCronometro(){
   tickCrono();
 }
 
+/* ================= Ranking: publicação e "estudando agora" ================= */
+function agoraEstudando(){
+  if(C.rodando)return {desde:C.inicio-C.acum,materia:C.materia||"",modo:"cronometro"};
+  if(P.rodando&&P.modo==="foco")return {desde:P.iniciadoEm-(P.acumulado||0),materia:P.materia||"",modo:"pomodoro"};
+  return null;
+}
+function publicarRanking(){
+  if(S.mode!=="nuvem"||!S.pomoLog)return;
+  const L=garantirTotais(S.pomoLog),dias={};
+  for(let i=0;i<35;i++){const d=diasAtras(i);if(L.dias[d])dias[d]=Math.round(L.dias[d].min*100)/100}
+  const doc={dias,total:Math.round(L.tot.min*100)/100,atualizado:Date.now(),agora:agoraEstudando()};
+  S.soc.ranking[S.uid]=doc;gravarPub("ranking",doc);
+}
+const estudandoAgora=id=>{const r=S.soc.ranking[id];const a=r&&r.agora;return a&&a.desde&&Date.now()-a.desde<8*3600e3?a:null};
+const ponto=id=>estudandoAgora(id)?`<span title="Estudando agora" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-left:6px;vertical-align:middle"></span>`:"";
+function minPeriodo(id,dias){const r=S.soc.ranking[id];if(!r||!r.dias)return 0;let s=0;for(let i=0;i<dias;i++)s+=r.dias[diasAtras(i)]||0;
+  const a=estudandoAgora(id);if(a)s+=Math.min(480,Math.max(0,(Date.now()-a.desde)/60000));return s}
+const minTotalR=id=>{const r=S.soc.ranking[id];const a=estudandoAgora(id);return (r&&r.total||0)+(a?Math.min(480,(Date.now()-a.desde)/60000):0)};
+
+/* ================= Revisões programadas (1, 7 e 30 dias) ================= */
+const ETAPAS=[1,7,30];
+function revisoesPendentes(){const hoje=dataISO();return ((S.revisoes&&S.revisoes.itens)||[]).filter(r=>!r.feita&&r.quando<=hoje).sort((a,b)=>a.quando<b.quando?-1:1)}
+function revisoesProximas(dias){const lim=(()=>{const d=new Date();d.setDate(d.getDate()+dias);return dataISO(d)})(),hoje=dataISO();
+  return ((S.revisoes&&S.revisoes.itens)||[]).filter(r=>!r.feita&&r.quando>hoje&&r.quando<=lim).sort((a,b)=>a.quando<b.quando?-1:1)}
+function agendarRevisoes(assunto,materia){
+  S.revisoes=S.revisoes&&S.revisoes.itens?S.revisoes:{itens:[]};const base=new Date();
+  ETAPAS.forEach(n=>{const d=new Date(base);d.setDate(d.getDate()+n);S.revisoes.itens.push({id:uid(),assunto:assunto.slice(0,140),materia:materia||"",etapa:n,quando:dataISO(d),feita:false,criado:Date.now()})});
+  S.revisoes.itens=S.revisoes.itens.filter(r=>!r.feita||Date.now()-(r.feitaEm||0)<60*864e5).slice(-400);
+  gravar("revisoes",S.revisoes,true);
+}
+function marcarRevisao(id,v){const r=((S.revisoes&&S.revisoes.itens)||[]).find(x=>x.id===id);if(!r)return;r.feita=v;r.feitaEm=v?Date.now():0;gravar("revisoes",S.revisoes)}
+function revisaoLinha(r){const atras=r.quando<dataISO();return `<label class="li" style="grid-template-columns:auto minmax(0,1fr) auto;cursor:pointer"><input class="chk" type="checkbox" data-rev="${r.id}" ${r.feita?"checked":""}>
+  <div style="min-width:0"><div class="nm">${esc(r.assunto)}</div><div class="small muted">${esc(r.materia||"Sem matéria")} · revisão de ${r.etapa} ${r.etapa===1?"dia":"dias"}</div></div>
+  <span class="pill ${atras?"solid":""}">${atras?"atrasada":r.quando===dataISO()?"hoje":new Date(r.quando+"T12:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</span></label>`}
+function ligarRevisoes(depois){$$("[data-rev]").forEach(c=>c.addEventListener("change",()=>{marcarRevisao(c.dataset.rev,c.checked);if(c.checked)toast("Revisão concluída.");if(depois)setTimeout(depois,250)}))}
+
+/* ================= Registro da sessão: assunto, questões e revisões ================= */
+function modalSessao(min,materia){
+  document.querySelectorAll(".modal-bg").forEach(m=>m.remove());
+  const bg=document.createElement("div");bg.className="modal-bg";
+  bg.innerHTML=`<form class="card stack modal" role="dialog" aria-modal="true" aria-labelledby="ms-t" novalidate>
+    <div><span class="eyebrow">Sessão salva</span><h2 id="ms-t" style="margin-top:4px">${fmtH(min)} de ${esc(materia||"estudo")}</h2></div>
+    <div class="field"><label for="ms-assunto">O que você estudou? (opcional)</label><input type="text" id="ms-assunto" maxlength="140" placeholder="Ex.: Leis de Newton, crase, funções do 2º grau"></div>
+    <div class="grid2" style="gap:12px"><div class="field"><label for="ms-q">Questões feitas</label><input type="number" id="ms-q" min="0" max="999" inputmode="numeric" placeholder="0"></div>
+      <div class="field"><label for="ms-a">Acertos</label><input type="number" id="ms-a" min="0" max="999" inputmode="numeric" placeholder="0"></div></div>
+    <label class="row small" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" id="ms-rev" checked style="accent-color:var(--fg)">Agendar revisões deste assunto em 1, 7 e 30 dias</label>
+    <p class="err" id="ms-err"></p>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="ms-pular">Pular</button><button class="btn primary" type="submit">Salvar</button></div>
+  </form>`;
+  document.body.appendChild(bg);const f=bg.querySelector("form");setTimeout(()=>bg.querySelector("#ms-assunto").focus(),50);
+  const fechar=()=>bg.remove();bg.querySelector("#ms-pular").onclick=fechar;bg.addEventListener("keydown",e=>{if(e.key==="Escape")fechar()});
+  f.addEventListener("submit",e=>{e.preventDefault();const as=bg.querySelector("#ms-assunto").value.trim(),q=Math.max(0,parseInt(bg.querySelector("#ms-q").value)||0),a=Math.max(0,parseInt(bg.querySelector("#ms-a").value)||0);
+    if(a>q){bg.querySelector("#ms-err").textContent="Os acertos não podem passar do número de questões.";return}
+    const L=garantirTotais(S.pomoLog),k=materia||"Sem matéria";
+    if(q){L.q=L.q||{};L.q[k]=L.q[k]||{feitas:0,acertos:0};L.q[k].feitas+=q;L.q[k].acertos+=a;const h=L.dias[dataISO()];if(h){h.q=(h.q||0)+q;h.acertos=(h.acertos||0)+a}}
+    if(L.hist&&L.hist[0]&&as)L.hist[0].assunto=as;
+    gravar("pomo",L,true);
+    if(as&&bg.querySelector("#ms-rev").checked){agendarRevisoes(as,materia);toast("Revisões agendadas para 1, 7 e 30 dias.")}else toast("Sessão registrada.");
+    fechar();if(["inicio","estatisticas","cronometro","pomodoro"].includes(S.view))renderView();
+  });
+}
+
+/* ================= Meta diária ================= */
+function metaHoje(){const m=S.perfil&&+S.perfil.metaDia;if(m)return m;const k=DIAS[hojeIdx()].k;const pl=S.plano&&S.plano.semana&&S.plano.semana[k];const plan=(pl||[]).reduce((a,b)=>a+(b.min||0),0);return plan||Math.round((+((S.perfil&&S.perfil.horas&&S.perfil.horas[k])||0))*60)||60}
+function anelMeta(feito,meta){const p=Math.min(1,meta?feito/meta:0),L=2*Math.PI*30;
+  return `<svg viewBox="0 0 72 72" width="72" height="72" aria-hidden="true" style="transform:rotate(-90deg);flex:none"><circle cx="36" cy="36" r="30" fill="none" stroke="var(--line)" stroke-width="7"/><circle cx="36" cy="36" r="30" fill="none" stroke="var(--fg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${L}" stroke-dashoffset="${L*(1-p)}"/></svg>`}
+function recordeSequencia(){const L=S.pomoLog;if(!L)return 0;const ds=Object.keys(L.dias).filter(d=>L.dias[d].min>0).sort();let best=0,cur=0,prev=null;
+  ds.forEach(d=>{if(prev){const a=new Date(prev+"T12:00"),b=new Date(d+"T12:00");cur=Math.round((b-a)/864e5)===1?cur+1:1}else cur=1;best=Math.max(best,cur);prev=d});return best}
+
+/* ================= Estatísticas ================= */
+function renderEstatisticas(){
+  const L=garantirTotais(S.pomoLog),T=L.tot;
+  let s30=0,dias30=0,melhor={d:null,m:0};for(let i=0;i<30;i++){const d=diasAtras(i),m=minutosDia(d);s30+=m;if(m>0)dias30++;if(m>melhor.m)melhor={d,m}}
+  const mat30={};for(let i=0;i<30;i++){const x=L.dias[diasAtras(i)];if(x)Object.entries(x.mat||{}).forEach(([k,v])=>mat30[k]=(mat30[k]||0)+v)}
+  const mats=Object.entries(mat30).sort((a,b)=>b[1]-a[1]),mx=mats.length?mats[0][1]:1;
+  const q=Object.entries(L.q||{}).filter(([,v])=>v.feitas>0).sort((a,b)=>b[1].feitas-a[1].feitas);
+  const qt=q.reduce((a,[,v])=>({f:a.f+v.feitas,c:a.c+v.acertos}),{f:0,c:0});
+  // mapa de constância: 17 semanas, segunda a domingo
+  const semanas=17,hoje=new Date(),fim=new Date(hoje);fim.setDate(fim.getDate()+(6-hojeIdx()));
+  const cel=[];for(let i=semanas*7-1;i>=0;i--){const d=new Date(fim);d.setDate(fim.getDate()-i);const iso=dataISO(d);cel.push({iso,m:d>hoje?-1:minutosDia(iso)})}
+  const nivel=m=>m<0?"transparent":m===0?"var(--sunken)":m<30?"color-mix(in srgb,var(--fg) 25%,transparent)":m<60?"color-mix(in srgb,var(--fg) 45%,transparent)":m<120?"color-mix(in srgb,var(--fg) 70%,transparent)":"var(--fg)";
+  const pend=revisoesPendentes(),prox=revisoesProximas(14);
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Estatísticas","Seu histórico de estudo: constância, tempo por matéria, desempenho em questões e revisões.")}
+    <div class="stats">
+      <div class="stat"><div class="eyebrow">Total no app</div><div class="v">${fmtH(T.min)}</div><div class="s">${(T.min/60).toLocaleString("pt-BR",{maximumFractionDigits:1})} horas</div></div>
+      <div class="stat"><div class="eyebrow">Média por dia (30 dias)</div><div class="v">${fmtH(s30/30)}</div><div class="s">estudou em ${dias30} de 30 dias</div></div>
+      <div class="stat"><div class="eyebrow">Sequência</div><div class="v">${sequencia()} ${sequencia()===1?"dia":"dias"}</div><div class="s">recorde: ${recordeSequencia()} ${recordeSequencia()===1?"dia":"dias"}</div></div>
+      <div class="stat"><div class="eyebrow">Melhor dia (30 dias)</div><div class="v">${melhor.m?fmtH(melhor.m):"—"}</div><div class="s">${melhor.d?new Date(melhor.d+"T12:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"short"}):"ainda sem registros"}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Constância nas últimas ${semanas} semanas</h3>
+      <span class="row small muted" style="gap:4px">menos ${[0,20,45,90,150].map(m=>`<i style="width:11px;height:11px;border-radius:3px;display:inline-block;background:${nivel(m)}"></i>`).join("")} mais</span></div>
+      <div style="overflow-x:auto"><div style="display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;grid-auto-columns:12px;gap:3px;width:max-content">
+        ${cel.map(c=>`<i title="${c.iso}: ${fmtH(Math.max(0,c.m))}" style="width:12px;height:12px;border-radius:3px;background:${nivel(c.m)}"></i>`).join("")}</div></div>
+    </div>
+    <div class="cols">
+      <div class="stack">
+        <div class="card"><div class="card-h"><h3>Tempo por matéria (30 dias)</h3></div>
+          ${mats.length?`<div class="bars-h">${mats.map(([m,v])=>`<div class="r"><span>${esc(m)}</span><span class="mono small">${fmtH(v)}</span><div class="prog"><i style="width:${Math.round(v/mx*100)}%"></i></div></div>`).join("")}</div>`:`<p class="small muted">Use o cronômetro ou o pomodoro para ver seu tempo por matéria.</p>`}</div>
+        <div class="card"><div class="card-h"><h3>Desempenho em questões</h3>${qt.f?`<span class="pill">${Math.round(qt.c/qt.f*100)}% de acerto geral</span>`:""}</div>
+          ${q.length?`<div class="bars-h">${q.map(([m,v])=>{const p=Math.round(v.acertos/v.feitas*100);return `<div class="r"><span>${esc(m)} <span class="small muted">· ${v.acertos}/${v.feitas}</span></span><span class="mono small">${p}%</span><div class="prog"><i style="width:${p}%"></i></div></div>`}).join("")}</div>`
+          :`<p class="small muted">Ao finalizar uma sessão, informe quantas questões fez e quantas acertou para ver seu desempenho por matéria.</p>`}</div>
+      </div>
+      <div class="card"><div class="card-h"><h3>Revisões</h3><span class="small muted">${pend.length} para hoje</span></div>
+        ${pend.length||prox.length?`<div class="list">${pend.concat(prox).slice(0,20).map(revisaoLinha).join("")}</div>`:`<p class="small muted">Nenhuma revisão agendada. Ao finalizar uma sessão, escreva o assunto estudado para agendar revisões em 1, 7 e 30 dias.</p>`}</div>
+    </div></div>`;
+  ligarRevisoes(renderEstatisticas);
+}
+
 /* ================= Comunidade (nuvem) ================= */
 function assinarSocial(){
   (FBM()?["perfis","ranking"]:["perfis","ranking","msgs","grupos","membros"]).forEach(col=>{
@@ -1232,7 +1343,7 @@ function atualizarSocial(col){
 function todosGrupos(){const out={};Object.entries(S.soc.grupos).forEach(([dono,doc])=>Object.entries((doc&&doc.lista)||{}).forEach(([gid,g])=>{out[gid]={...g,id:gid,dono}}));return out}
 function membrosDe(gid){return Object.entries(S.soc.membros).filter(([,d])=>d&&d.grupos&&d.grupos[gid]).map(([id])=>id)}
 function meusGrupos(){const d=S.soc.membros[S.uid];return d&&d.grupos?Object.keys(d.grupos).filter(g=>d.grupos[g]):[]}
-function minHoje(id){const r=S.soc.ranking[id];return r&&r.dias?(r.dias[dataISO()]||0):0}
+function minHoje(id){return minPeriodo(id,1)}
 function min7(id){const r=S.soc.ranking[id];if(!r||!r.dias)return 0;let s=0;for(let i=0;i<7;i++)s+=r.dias[diasAtras(i)]||0;return s}
 async function enviarMsg(canal,texto){
   texto=texto.trim().slice(0,600);if(!texto)return;
@@ -1367,7 +1478,7 @@ function renderGrupoFB(){
   }else{
     corpo.innerHTML=`<div class="card"><div class="card-h"><h3>Membros · ranking de hoje</h3></div><div id="gmemb"><div class="row muted small"><span class="spinner"></span>Carregando…</div></div></div>`;
     assinar("tela:gmemb",base.collection("membros"),snap=>{const box=$("#gmemb");if(!box)return;const ids=snap.docs.map(d=>d.id).sort((a,b)=>minHoje(b)-minHoje(a));
-      box.innerHTML=`<div class="list">${ids.map((id,i)=>`<div class="li ${id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(id,"sm")}<span class="nm">${esc(nomeDe(id))}${id===g.dono?' <span class="pill">criador</span>':""}</span></div><div class="row" style="flex-wrap:nowrap;gap:8px"><span class="mono small">${fmtH(minHoje(id))}</span>${id!==S.uid?`<button class="btn sm ghost" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(nomeDe(id))}">${ico("chat")}</button>`:""}</div></div>`).join("")}</div>`;
+      box.innerHTML=`<div class="list">${ids.map((id,i)=>`<div class="li ${id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(id,"sm")}<span class="nm">${esc(nomeDe(id))}${ponto(id)}${id===g.dono?' <span class="pill">criador</span>':""}</span></div><div class="row" style="flex-wrap:nowrap;gap:8px"><span class="mono small">${fmtH(minPeriodo(id,1))}</span>${id!==S.uid?`<button class="btn sm ghost" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(nomeDe(id))}">${ico("chat")}</button>`:""}</div></div>`).join("")}</div>`;
       $$("[data-dm]",box).forEach(b=>b.onclick=()=>abrirDM(b.dataset.dm))});
   }
 }
@@ -1469,7 +1580,7 @@ function renderBiblioteca(){
 
 /* ================= Shell com barra lateral ================= */
 const NAV=[
-  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["biblioteca","Biblioteca","book"]]],
+  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["estatisticas","Estatísticas","chart"],["biblioteca","Biblioteca","book"]]],
   ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
   ["Comunidade",[["grupos","Grupos de estudo","users"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
   ["Conta",[["perfil","Meu perfil","user"],["config","Configurações","gear"]]]];
@@ -1511,7 +1622,7 @@ function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
 function renderView(){
   $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
-  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
   f();
 }
 const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;
@@ -1531,7 +1642,7 @@ function renderInicio(){
   $("#main").innerHTML=`<div class="page">
     ${pageHead(`${saud}${nome?", "+esc(nome):""}`,`${DIAS[hi].n}, ${new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long"})} · ${esc(descObjetivo(p))}`,`<button class="btn primary" type="button" id="ini-pomo">${ico("play")}Começar a estudar</button>`)}
     <div class="stats">
-      <div class="stat"><div class="eyebrow">Estudado hoje</div><div class="v">${fmtH(minutosDia(dataISO()))}</div><div class="s">pomodoro e cronômetro</div></div>
+      <div class="stat" style="display:flex;gap:12px;align-items:center">${anelMeta(minutosDia(dataISO()),metaHoje())}<div style="min-width:0"><div class="eyebrow">Meta de hoje</div><div class="v" style="font-size:1.25rem">${fmtH(minutosDia(dataISO()))}</div><div class="s">de ${fmtH(metaHoje())}${minutosDia(dataISO())>=metaHoje()?" · batida!":""}</div></div></div>
       <div class="stat"><div class="eyebrow">Sequência</div><div class="v">${sequencia()} ${sequencia()===1?"dia":"dias"}</div><div class="s">dias seguidos estudando</div></div>
       <div class="stat"><div class="eyebrow">Semana</div><div class="v">${feitos}/${todos.length}</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>
       <div class="stat"><div class="eyebrow">${dp!=null?esc(p.nomeProva||"Prova"):"Matérias"}</div><div class="v">${dp!=null?(dp>=0?dp+" dias":"já passou"):p.materias.length}</div><div class="s">${dp!=null?"até a prova":"no seu plano"}</div></div>
@@ -1547,6 +1658,8 @@ function renderInicio(){
           </div>`).join("")}</div>`:`<div class="empty-state">Nada planejado para hoje. Aproveite para descansar ou revisar algo leve.</div>`}
       </div>
       <div class="stack">
+        ${(()=>{const rv=revisoesPendentes();return `<div class="card"><div class="card-h"><h3>Revisões de hoje</h3><a class="small muted" href="#estatisticas" data-link="estatisticas">Ver todas</a></div>
+          ${rv.length?`<div class="list">${rv.slice(0,5).map(revisaoLinha).join("")}</div>${rv.length>5?`<p class="small muted">+${rv.length-5} revisões</p>`:""}`:`<p class="small muted">Nenhuma revisão para hoje. Ao finalizar uma sessão, escreva o assunto para agendar revisões em 1, 7 e 30 dias.</p>`}</div>`})()}
         ${prox.length?`<div class="card"><div class="card-h"><h3>Próximos tópicos · ${esc(ed.nome)}</h3></div><div class="list">${prox.map(x=>`<div class="li" style="grid-template-columns:minmax(0,1fr)"><div style="min-width:0"><div class="eyebrow">${esc(x.m)}</div><div class="small">${esc(x.t.t)}</div></div></div>`).join("")}</div></div>`
           :`<div class="card stack sm"><h3>Vai fazer uma prova?</h3><p class="small muted">Envie o edital ou escreva o nome da prova para ver os tópicos cobrados, matéria por matéria.</p><button class="btn sm" type="button" data-link="edital">${ico("scan")}Escanear edital</button></div>`}
         <div class="card"><div class="card-h"><h3>Ranking de hoje</h3><a class="small muted" href="#ranking" data-link="ranking">Ver tudo</a></div>
@@ -1555,7 +1668,7 @@ function renderInicio(){
       </div>
     </div></div>`;
   $("#ini-pomo").onclick=()=>{const prox=blocos.find(b=>!b.feito);if(prox)prepararPomo(hojeK,prox);go("pomodoro")};
-  ligarBlocos();$$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
+  ligarBlocos();ligarRevisoes(renderInicio);$$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
 }
 function acharBloco(ref){const [k,id]=ref.split("|");return (S.plano&&S.plano.semana[k]||[]).find(b=>b.id===id)}
 function marcarBloco(ref,v){const b=acharBloco(ref);if(!b)return;b.feito=v;gravar("plano",S.plano);if(["inicio","semana"].includes(S.view))renderView()}
@@ -1954,20 +2067,27 @@ function renderMsgs(){
 /* ================= Ranking ================= */
 function renderRanking(){
   if(S.mode!=="nuvem"){$("#main").innerHTML=bloqueado("Ranking");ligarBloqueado();return}
-  const meus=meusGrupos(),gs=todosGrupos();
-  let ids=Object.keys(S.soc.ranking);if(S.rankGrupo!=="todos")ids=ids.filter(id=>membrosDe(S.rankGrupo).includes(id));
-  const val=S.rankTab==="hoje"?minHoje:min7;
-  const lista=ids.map(id=>({id,m:val(id)})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m);
+  clearInterval(S.rankTimer);S.rankTimer=setInterval(()=>{if(S.view==="ranking")renderRanking();else clearInterval(S.rankTimer)},30000);
+  const gruposOpc=FBM()?Object.keys(FBC.meus).filter(g=>FBC.grupos[g]).map(g=>[g,FBC.grupos[g].nome]):meusGrupos().filter(g=>todosGrupos()[g]).map(g=>[g,todosGrupos()[g].nome]);
+  let ids=Object.keys(S.soc.ranking);
+  if(S.rankGrupo!=="todos"){
+    if(FBM()){const m=(S.rankMembros||{})[S.rankGrupo];if(!m){S.rankMembros=S.rankMembros||{};S.db.collection("grupos").doc(S.rankGrupo).collection("membros").get().then(sn=>{S.rankMembros[S.rankGrupo]=sn.docs.map(d=>d.id);renderRanking()}).catch(()=>{S.rankGrupo="todos";renderRanking()});ids=[]}else ids=ids.filter(id=>m.includes(id))}
+    else ids=ids.filter(id=>membrosDe(S.rankGrupo).includes(id))}
+  const PER={hoje:["Hoje",id=>minPeriodo(id,1),"Horas estudadas hoje (cronômetro e pomodoro). Zera à meia-noite."],semana:["7 dias",id=>minPeriodo(id,7),"Horas estudadas nos últimos 7 dias."],mes:["30 dias",id=>minPeriodo(id,30),"Horas estudadas nos últimos 30 dias."],geral:["Geral",minTotalR,"Todas as horas estudadas no app."]};
+  const [,val,sub]=PER[S.rankTab]||PER.hoje;
+  const lista=ids.map(id=>({id,m:val(id)})).filter(x=>x.m>0.01).sort((a,b)=>b.m-a.m);
   const minha=lista.findIndex(x=>x.id===S.uid);
+  const agora=ids.filter(estudandoAgora);
   $("#main").innerHTML=`<div class="page">
-    ${pageHead("Ranking",S.rankTab==="hoje"?"Horas estudadas hoje, registradas pelo pomodoro. Zera à meia-noite.":"Horas estudadas nos últimos 7 dias.",
-      `<div class="seg" role="group">${[["hoje","Hoje"],["semana","7 dias"]].map(([k,n])=>`<button type="button" data-rt="${k}" class="${S.rankTab===k?"on":""}">${n}</button>`).join("")}</div>
-       <select id="rk-g" style="width:auto"><option value="todos">Todos os estudantes</option>${meus.filter(g=>gs[g]).map(g=>`<option value="${g}" ${S.rankGrupo===g?"selected":""}>${esc(gs[g].nome)}</option>`).join("")}</select>`)}
+    ${pageHead("Ranking",sub+" Quem está estudando agora aparece com o ponto verde e o tempo sobe ao vivo.",
+      `<div class="seg" role="group">${Object.entries(PER).map(([k,[n]])=>`<button type="button" data-rt="${k}" class="${S.rankTab===k?"on":""}">${n}</button>`).join("")}</div>
+       <select id="rk-g" style="width:auto"><option value="todos">Todos os estudantes</option>${gruposOpc.map(([g,n])=>`<option value="${g}" ${S.rankGrupo===g?"selected":""}>${esc(n)}</option>`).join("")}</select>`)}
+    ${agora.length?`<div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Estudando agora · ${agora.length}</h3></div><div class="row" style="gap:14px">${agora.map(id=>{const a=estudandoAgora(id);return `<div class="row" style="flex-wrap:nowrap;gap:8px">${avatar(id,"sm")}<div><div class="small" style="font-weight:600">${esc(nomeDe(id))}${ponto(id)}</div><div class="small muted">${esc(a.materia||"estudando")} · ${fmtH((Date.now()-a.desde)/60000)}</div></div></div>`}).join("")}</div></div>`:""}
     ${lista.length?`
-    <div class="podium">${lista.slice(0,3).map((x,i)=>`<div class="card">${avatar(x.id,"lg")}<span class="eyebrow">${i+1}º lugar</span><b style="overflow-wrap:anywhere">${esc(nomeDe(x.id))}</b><span class="mono" style="font-size:1.3rem;font-weight:600">${fmtH(x.m)}</span></div>`).join("")}</div>
+    <div class="podium">${lista.slice(0,3).map((x,i)=>`<div class="card">${avatar(x.id,"lg")}<span class="eyebrow">${i+1}º lugar</span><b style="overflow-wrap:anywhere">${esc(nomeDe(x.id))}${ponto(x.id)}</b><span class="mono" style="font-size:1.3rem;font-weight:600">${fmtH(x.m)}</span></div>`).join("")}</div>
     <div class="card"><div class="card-h"><h3>Classificação</h3><span class="small muted">${minha>=0?`Você está em ${minha+1}º`:"Você ainda não pontuou neste período"}</span></div>
-      <div class="list">${lista.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id)}<div style="min-width:0"><div class="nm">${esc(nomeDe(x.id))}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((S.soc.perfis[x.id]||{}).objetivo||"")}</div></div></div><span class="mono">${fmtH(x.m)}</span></div>`).join("")}</div></div>`
-    :`<div class="empty-state">${ico("trophy")}<b>Ninguém pontuou ainda</b><span>Conclua uma sessão de foco no pomodoro para entrar no ranking.</span><button class="btn primary" type="button" data-link="pomodoro">Abrir pomodoro</button></div>`}
+      <div class="list">${lista.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id)}<div style="min-width:0"><div class="nm">${esc(nomeDe(x.id))}${ponto(x.id)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((S.soc.perfis[x.id]||{}).objetivo||"")}</div></div></div><span class="mono">${fmtH(x.m)}</span></div>`).join("")}</div></div>`
+    :`<div class="empty-state">${ico("trophy")}<b>Ninguém pontuou ainda neste período</b><span>Use o cronômetro ou o pomodoro: o tempo entra no ranking.</span><div class="row" style="justify-content:center"><button class="btn primary" type="button" data-link="cronometro">Abrir cronômetro</button><button class="btn" type="button" data-link="pomodoro">Abrir pomodoro</button></div></div>`}
   </div>`;
   $$("[data-rt]").forEach(b=>b.onclick=()=>{S.rankTab=b.dataset.rt;renderRanking()});
   $("#rk-g").onchange=e=>{S.rankGrupo=e.target.value;renderRanking()};
@@ -2030,6 +2150,8 @@ function renderConfig(){
           </div>
           ${mats.length?`<div class="bars-h">${mats.slice(0,10).map(([m,v])=>`<div class="r"><span>${esc(m)}</span><span class="mono small">${fmtH(v)}</span><div class="prog"><i style="width:${Math.round(v/mx*100)}%"></i></div></div>`).join("")}</div>`:""}
         </div>`})()}
+      <div class="card row" style="justify-content:space-between"><div><h3>Meta diária de estudo</h3><p class="small muted">Aparece no início como um anel de progresso. Hoje: ${fmtH(metaHoje())}.</p></div>
+        <select id="cf-meta" style="width:auto">${[[0,"Automática (pelo plano)"],[30,"30 min"],[60,"1 hora"],[90,"1h30"],[120,"2 horas"],[180,"3 horas"],[240,"4 horas"],[300,"5 horas"],[360,"6 horas"],[480,"8 horas"]].map(([v,n])=>`<option value="${v}" ${(+S.perfil.metaDia||0)===v?"selected":""}>${n}</option>`).join("")}</select></div>
       <div class="card row" style="justify-content:space-between"><div><h3>Suas respostas</h3><p class="small muted">${esc(descObjetivo(S.perfil))} · ${S.perfil.materias.length} matérias · ${fmtH(DIAS.reduce((a,x)=>a+(+S.perfil.horas[x.k]||0),0)*60)} por semana</p></div>
         <button class="btn" type="button" id="cf-tri">Refazer triagem</button></div>
       <div class="card row" style="justify-content:space-between"><div><h3>Armazenamento</h3><p class="small muted">${S.mode==="nuvem"?"Seus dados estão salvos na nuvem, ligados à sua conta.":"Seus dados estão só neste navegador. Entre com a conta para salvar na nuvem."}</p></div>
@@ -2039,6 +2161,7 @@ function renderConfig(){
     </div></div>`;
   $$("[data-tm]").forEach(b=>b.onclick=()=>{if(temaAtual()!==b.dataset.tm)trocarTema();renderConfig()});
   $("#cf-crono").onclick=()=>go("cronometro");
+  $("#cf-meta").onchange=e=>{S.perfil.metaDia=+e.target.value;gravar("perfil",S.perfil);toast("Meta diária salva.");renderConfig()};
   $("#cf-tri").onclick=()=>{S.step=0;S.draft=migrar(clone(S.perfil));renderWizard();scrollTo(0,0)};
 }
 
