@@ -193,22 +193,64 @@ service cloud.firestore {
       allow delete: if logado() && resource.data.autor == request.auth.uid;
     }
 
-    // Grupos de estudo
+    // Grupos de estudo: criador (dono), administradores, senha opcional, foto e papel de parede
     match /grupos/{gid} {
+      function grupo() { return get(/databases/$(database)/documents/grupos/$(gid)).data; }
       function membro() { return exists(/databases/$(database)/documents/grupos/$(gid)/membros/$(request.auth.uid)); }
-      function dono() { return get(/databases/$(database)/documents/grupos/$(gid)).data.dono == request.auth.uid; }
+      function dono() { return grupo().dono == request.auth.uid; }
+      function admin() { return request.auth.uid in grupo().get('admins', []); }
+      function gestor() { return logado() && (dono() || admin()); }
+      function campos() {
+        let d = request.resource.data;
+        return d.nome is string && d.nome.size() > 0 && d.nome.size() <= 60
+          && d.get('desc', '') is string && d.get('desc', '').size() <= 160
+          && d.get('bio', '') is string && d.get('bio', '').size() <= 1000
+          && d.get('foto', '') is string && d.get('foto', '').size() <= 120000
+          && d.get('fundo', '') is string && d.get('fundo', '').size() <= 40
+          && d.get('admins', []) is list && d.get('admins', []).size() <= 20
+          && d.get('temSenha', false) is bool;
+      }
       allow read: if logado();
-      allow create: if logado() && request.resource.data.dono == request.auth.uid;
-      allow update: if logado() && resource.data.dono == request.auth.uid;
+      allow create: if logado() && request.resource.data.dono == request.auth.uid && campos()
+        && request.resource.data.get('admins', []).size() == 0;
+      // o criador muda tudo (menos quem é o dono); administradores mudam só a aparência, a bio e a senha
+      allow update: if logado() && campos() && request.resource.data.dono == resource.data.dono
+        && (resource.data.dono == request.auth.uid
+            || (request.auth.uid in resource.data.get('admins', [])
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'desc', 'bio', 'foto', 'fundo', 'temSenha', 'atualizado'])));
       allow delete: if logado() && (resource.data.dono == request.auth.uid || gid == request.auth.uid);
 
-      match /membros/{uid} { allow read: if logado(); allow write: if eu(uid); }
+      // senha do grupo: ninguém lê (nem o dono); só o resumo (hash) fica guardado
+      match /privado/{doc} {
+        allow read: if false;
+        allow write: if gestor();
+      }
+      // pedido de entrada com senha: precisa bater com o hash guardado; ninguém lê
+      match /entradas/{uid} {
+        allow read: if false;
+        allow create, update: if eu(uid) && request.resource.data.chave is string
+          && request.resource.data.chave == get(/databases/$(database)/documents/grupos/$(gid)/privado/senha).data.hash;
+        allow delete: if eu(uid);
+      }
+      // papel de parede em imagem (pesado demais para o documento do grupo)
+      match /extras/{doc} {
+        allow read: if logado() && membro();
+        allow write: if gestor() && request.resource.data.get('fundo', '').size() <= 700000;
+      }
+
+      match /membros/{uid} {
+        allow read: if logado();
+        allow create: if eu(uid) && (!grupo().get('temSenha', false) || dono()
+          || existsAfter(/databases/$(database)/documents/grupos/$(gid)/entradas/$(uid)));
+        allow update: if eu(uid);
+        allow delete: if eu(uid) || gestor();
+      }
 
       match /mensagens/{mid} {
         allow read: if logado() && membro();
         allow create: if logado() && membro() && request.resource.data.autor == request.auth.uid
                       && request.resource.data.texto is string && request.resource.data.texto.size() <= 1000;
-        allow delete: if logado() && resource.data.autor == request.auth.uid;
+        allow delete: if logado() && (resource.data.autor == request.auth.uid || gestor());
       }
 
       match /arquivos/{fid} {
@@ -216,11 +258,11 @@ service cloud.firestore {
         allow read: if logado() && membro();
         allow create: if logado() && membro() && request.resource.data.autor == request.auth.uid;
         allow update: if logado() && resource.data.autor == request.auth.uid;
-        allow delete: if logado() && (resource.data.autor == request.auth.uid || dono());
+        allow delete: if logado() && (resource.data.autor == request.auth.uid || gestor());
         match /partes/{pid} {
           allow read: if logado() && membro();
           allow create: if logado() && membro() && autorArquivo();
-          allow delete: if logado() && (autorArquivo() || dono());
+          allow delete: if logado() && (autorArquivo() || gestor());
         }
       }
     }

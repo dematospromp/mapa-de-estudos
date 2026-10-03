@@ -51,7 +51,7 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .btn.sm{padding:5px 10px;font-size:.82rem}
 .btn.icon{padding:7px}
 .btn.danger{color:var(--danger)}
-input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:8px 11px;min-width:0;width:100%;transition:border-color .12s,box-shadow .12s}
+input[type=text],input[type=password],input[type=email],input[type=date],input[type=time],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:8px 11px;min-width:0;width:100%;transition:border-color .12s,box-shadow .12s}
 input:focus,select:focus,textarea:focus{border-color:var(--fg);box-shadow:0 0 0 3px var(--ring);outline:none}
 textarea{min-height:88px;resize:vertical}
 .field{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -607,6 +607,29 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .ed-rod{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px;position:sticky;bottom:0;background:var(--surface)}
 @media (max-width:860px){.ed-rod{bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ===== Grupos: foto, capa, bio e papel de parede ===== */
+.gav{display:inline-grid;place-items:center;flex:none;border-radius:14px;color:#fff;font-weight:700;object-fit:cover;width:40px;height:40px;font-size:.9rem}
+.gav.md{width:48px;height:48px;font-size:1rem}.gav.lg{width:84px;height:84px;font-size:1.6rem;border-radius:20px;border:4px solid var(--surface);box-shadow:var(--shadow)}.gav.xl{width:96px;height:96px;font-size:1.8rem;border-radius:22px}
+.g-hero{padding:0;overflow:hidden;margin-bottom:14px}
+.g-capa{height:120px;background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 40%,var(--bg)))}
+.g-hero-c{display:flex;gap:16px;align-items:flex-end;padding:0 20px 16px;margin-top:-42px;flex-wrap:wrap}
+.g-hero-c h1{font-size:1.6rem;overflow-wrap:anywhere}
+.g-acoes{margin-left:auto}
+.g-bio{border-top:1px solid var(--line);padding:12px 20px}
+.g-bio summary{cursor:pointer;font-weight:600}.g-bio p{white-space:pre-wrap;margin:8px 0 0;color:var(--muted)}
+.fundos{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.fundo-op{display:flex;flex-direction:column;gap:6px;align-items:center;border:2px solid transparent;border-radius:var(--r);padding:6px;background:none;cursor:pointer;font:inherit;color:var(--fg)}
+.fundo-op span{width:100%;height:64px;border-radius:calc(var(--r) - 4px);border:1px solid var(--line);display:grid;place-items:center}
+.fundo-op.on{border-color:var(--accent)}.fundo-op small{font-size:.75rem}
+.fundo-img{background:var(--sunken)}
+.chat.com-fundo .msgs{background:linear-gradient(color-mix(in srgb,var(--surface) 78%,transparent),color-mix(in srgb,var(--surface) 78%,transparent)),var(--g-fundo);background-attachment:local}
+.chat.com-fundo .msg>div:last-child{background:color-mix(in srgb,var(--surface) 88%,transparent);border-radius:12px;padding:6px 10px}
+.msg{position:relative}
+.msg-del{position:absolute;top:0;right:0;border:0;background:none;color:var(--muted);cursor:pointer;font-size:.75rem;opacity:0;padding:2px 6px;border-radius:6px}
+.msg:hover .msg-del,.msg-del:focus,.msg-del.conf{opacity:1}.msg-del.conf{color:var(--danger,#dc2626);font-weight:600}
+@media (hover:none){.msg-del{opacity:.55}}
+@media (max-width:640px){.g-hero-c{padding:0 14px 14px}.g-acoes{margin-left:0;width:100%}.g-acoes .btn{flex:1;justify-content:center}}
 </style>
 
 </head><body><div id="root"></div>
@@ -1858,15 +1881,11 @@ function naoLidas(){return Object.values(FBC.convs).filter(c=>c.ultimaDe&&c.ulti
 function refreshCom(o){
   const n=naoLidas();$$('[data-go="mensagens"]').forEach(a=>{let b=a.querySelector(".badge");if(n){if(!b){a.insertAdjacentHTML("beforeend",'<span class="badge"></span>');b=a.querySelector(".badge")}b.textContent=n}else if(b)b.remove()});
   if(!$("#main"))return;
-  if(S.view==="grupos"&&!S.grupoAberto&&(o==="grupos"||o==="social"))renderGruposFB();
+  if(S.view==="grupos"&&!S.grupoAberto&&(o==="grupos"||o==="social")&&!($("#g-form")&&!$("#g-form").hidden))renderGruposFB(); // não apaga o formulário enquanto a pessoa digita
   if(S.view==="grupos"&&S.grupoAberto&&o==="grupos"&&!FBC.grupos[S.grupoAberto]){S.grupoAberto=null;renderGruposFB()}
   if(S.view==="grupos"&&S.grupoAberto&&o==="social")renderGrupoFB();
   if(S.view==="mensagens"&&o==="convs")listaConversas();
-}
-async function entrarGrupoFB(gid,quieto){
-  try{await S.db.collection("grupos").doc(gid).collection("membros").doc(S.uid).set({em:Date.now()});
-    await meuDoc("social").set({grupos:{[gid]:true}},{merge:true});if(!quieto)toast("Você entrou no grupo.")}
-  catch(e){toast("Não foi possível entrar no grupo ("+(e&&e.code||"erro")+").")}
+  if(S.view==="buscarGrupos"&&(o==="grupos"||o==="social")&&document.activeElement!==$("#gb-busca"))renderBuscarGruposFB();
 }
 async function sairGrupoFB(gid){
   try{await S.db.collection("grupos").doc(gid).collection("membros").doc(S.uid).delete();
@@ -1889,53 +1908,121 @@ function renderChatFB(){
 }
 
 /* ---- Grupos ---- */
+// papéis de parede prontos (o chat fica por cima com um véu para o texto continuar legível)
+const FUNDOS_G={"":["Padrão",""],aurora:["Aurora","linear-gradient(160deg,#7c3aed,#06b6d4)"],oceano:["Oceano","linear-gradient(160deg,#0ea5e9,#1e3a8a)"],
+  floresta:["Floresta","linear-gradient(160deg,#065f46,#84cc16)"],entardecer:["Entardecer","linear-gradient(160deg,#f97316,#db2777)"],noite:["Noite","linear-gradient(160deg,#020617,#312e81)"],
+  lavanda:["Lavanda","linear-gradient(160deg,#c4b5fd,#f0abfc)"],caderno:["Caderno","linear-gradient(#93c5fd55 1px,transparent 1px) 0 0/100% 28px,linear-gradient(90deg,#fca5a566 2px,transparent 2px) 44px 0/100% 100%,#fffdf5"],
+  quadriculado:["Quadriculado","linear-gradient(#9ca3af44 1px,transparent 1px) 0 0/22px 22px,linear-gradient(90deg,#9ca3af44 1px,transparent 1px) 0 0/22px 22px,#f8fafc"],
+  pontos:["Pontos","radial-gradient(#94a3b866 1.5px,transparent 1.6px) 0 0/18px 18px,#f1f5f9"],lousa:["Lousa","radial-gradient(circle at 30% 20%,#2f5d50,#1b3a32)"]};
+const souGestor=g=>!!g&&(g.dono===S.uid||(g.admins||[]).includes(S.uid));
+const souDono=g=>!!g&&g.dono===S.uid;
+function gAvatar(g,cls){if(g.foto&&/^data:image\/(jpeg|png|webp);base64,/.test(g.foto))return `<img class="gav ${cls||""}" src="${g.foto}" alt="">`;
+  const ini=(g.nome||"G").split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase();let h=0;for(const ch of g.id||g.nome||"")h=(h*31+ch.charCodeAt(0))%360;
+  return `<span class="gav ${cls||""}" style="background:hsl(${h} 55% 45%)" aria-hidden="true">${esc(ini)}</span>`}
+async function hashSenha(gid,senha){const d=new TextEncoder().encode("logic-academy:"+gid+":"+senha);const h=await crypto.subtle.digest("SHA-256",d);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("")}
+function reduzirImg(file,max,q){return new Promise((ok,no)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");
+  c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL("image/jpeg",q||.72))};img.onerror=no;img.src=url})}
+// entrar: grupos com senha pedem a senha (conferida pelo servidor)
+async function entrarGrupoFB(gid,quieto,senha){
+  const g=FBC.grupos[gid],db=S.db,base=db.collection("grupos").doc(gid);
+  try{if(g&&g.temSenha&&g.dono!==S.uid){
+      if(senha==null){senha=await pedirSenhaGrupo(g);if(senha==null)return false}
+      const b=db.batch();b.set(base.collection("entradas").doc(S.uid),{chave:await hashSenha(gid,senha),em:Date.now()});b.set(base.collection("membros").doc(S.uid),{em:Date.now()});await b.commit()}
+    else await base.collection("membros").doc(S.uid).set({em:Date.now()});
+    await meuDoc("social").set({grupos:{[gid]:true}},{merge:true});if(!quieto)toast("Você entrou no grupo.");return true}
+  catch(e){toast(e&&e.code==="permission-denied"&&g&&g.temSenha?"Senha incorreta. Peça a senha a um administrador do grupo.":"Não foi possível entrar no grupo ("+(e&&e.code||"erro")+").");return false}
+}
+function pedirSenhaGrupo(g){return new Promise(res=>{document.querySelectorAll(".modal-bg").forEach(m=>m.remove());const bg=document.createElement("div");bg.className="modal-bg";
+  bg.innerHTML=`<form class="card stack modal" role="dialog" aria-modal="true"><div class="row" style="gap:12px;flex-wrap:nowrap">${gAvatar(g,"md")}<div style="min-width:0"><h3>${esc(g.nome)}</h3><span class="small muted">${ico("lock")} Grupo com senha</span></div></div>
+    <div class="field"><label for="gs-senha">Senha do grupo</label><input type="password" id="gs-senha" autocomplete="off" maxlength="60" required></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="gs-x">Cancelar</button><button class="btn primary" type="submit">Entrar</button></div></form>`;
+  document.body.appendChild(bg);const f=bg.querySelector("form"),fim=v=>{bg.remove();res(v)};setTimeout(()=>bg.querySelector("#gs-senha").focus(),50);
+  bg.querySelector("#gs-x").onclick=()=>fim(null);bg.addEventListener("click",e=>{if(e.target===bg)fim(null)});
+  f.onsubmit=e=>{e.preventDefault();const v=bg.querySelector("#gs-senha").value;if(v)fim(v)}})}
+function cartaoGrupo(g){const sou=!!FBC.meus[g.id];return `
+  <div class="card gcard"><div class="row" style="gap:12px;flex-wrap:nowrap">${gAvatar(g,"md")}<div style="min-width:0;flex:1"><h3 style="overflow-wrap:anywhere">${esc(g.nome)}</h3>
+    <div class="row small muted" style="gap:6px">${g.temSenha?`<span class="pill">${ico("lock")}Com senha</span>`:`<span class="pill">Aberto</span>`}${sou?`<span class="pill solid">Membro</span>`:""}</div></div></div>
+    <p class="small muted" style="flex:1">${esc(g.desc||g.bio||"Sem descrição.")}</p>
+    <div class="row small muted" style="flex-wrap:nowrap">${avatar(g.dono,"sm")}<span>Criado por ${esc(nomeDe(g.dono))}</span></div>
+    <div class="row"><button class="btn sm ${sou?"primary":""}" type="button" data-abrir="${g.id}">${sou?"Abrir":"Ver grupo"}</button>${sou?"":`<button class="btn sm" type="button" data-entrar="${g.id}">${g.temSenha?ico("lock"):""}Entrar</button>`}</div>
+  </div>`}
+function ligarCartoesGrupo(){
+  $$("[data-abrir]").forEach(b=>b.onclick=()=>{S.grupoAberto=b.dataset.abrir;FBC.grupoTab="chat";go("grupos")});
+  $$("[data-entrar]").forEach(b=>b.onclick=async()=>{if(await entrarGrupoFB(b.dataset.entrar)){S.grupoAberto=b.dataset.entrar;FBC.grupoTab="chat";go("grupos")}})}
 function renderGruposFB(){
   if(S.grupoAberto){renderGrupoFB();return}
-  const gs=Object.values(FBC.grupos).sort((a,b)=>(!!FBC.meus[b.id]-!!FBC.meus[a.id])||(b.criadoEm||0)-(a.criadoEm||0));
+  const gs=Object.values(FBC.grupos).filter(g=>FBC.meus[g.id]).sort((a,b)=>(b.criadoEm||0)-(a.criadoEm||0));
   const aberto=$("#g-form")&&!$("#g-form").hidden;
   $("#main").innerHTML=`<div class="page">
-    ${pageHead("Grupos de estudo","Cada grupo tem chat próprio, arquivos compartilhados e ranking dos membros.",`<button class="btn primary" type="button" id="g-novo">${ico("plus")}Criar grupo</button>`)}
+    ${pageHead("Meus grupos","Os grupos de que você participa. Cada um tem chat, arquivos e ranking.",`<button class="btn" type="button" data-link="buscarGrupos">${ico("search")}Buscar grupos</button><button class="btn primary" type="button" id="g-novo">${ico("plus")}Criar grupo</button>`)}
     <form class="card stack" id="g-form" ${aberto?"":"hidden"} style="margin-bottom:16px">
-      <div class="grid2"><div class="field"><label for="g-nome">Nome do grupo</label><input type="text" id="g-nome" maxlength="50" placeholder="Ex.: CMB 1º ano" required></div>
-      <div class="field"><label for="g-desc">Descrição</label><input type="text" id="g-desc" maxlength="140" placeholder="Para quem é o grupo e como vocês estudam"></div></div>
+      <div class="grid2"><div class="field"><label for="g-nome">Nome do grupo</label><input type="text" id="g-nome" maxlength="60" placeholder="Ex.: CMB 1º ano" required></div>
+      <div class="field"><label for="g-desc">Descrição curta</label><input type="text" id="g-desc" maxlength="160" placeholder="Para quem é o grupo e como vocês estudam"></div></div>
+      <div class="field"><label for="g-senha">Senha (opcional)</label><input type="password" id="g-senha" maxlength="60" autocomplete="new-password" placeholder="Deixe vazio para qualquer pessoa poder entrar"><span class="hint">Com senha, só entra quem souber. Foto, papel de parede, bio e administradores ficam nas configurações do grupo.</span></div>
       <div class="row"><button class="btn primary" type="submit">Criar e entrar</button><button class="btn ghost" type="button" id="g-cancel">Cancelar</button></div>
     </form>
-    ${gs.length?`<div class="groups">${gs.map(g=>{const sou=!!FBC.meus[g.id];return `
-      <div class="card gcard"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h3 style="min-width:0;overflow-wrap:anywhere">${esc(g.nome)}</h3>${sou?`<span class="pill solid">Membro</span>`:""}</div>
-        <p class="small muted" style="flex:1">${esc(g.desc||"Sem descrição.")}</p>
-        <div class="row small muted" style="flex-wrap:nowrap">${avatar(g.dono,"sm")}<span>Criado por ${esc(nomeDe(g.dono))}</span></div>
-        <div class="row"><button class="btn sm ${sou?"primary":""}" type="button" data-abrir="${g.id}">${sou?"Abrir":"Ver"}</button>${sou?"":`<button class="btn sm" type="button" data-entrar="${g.id}">Entrar</button>`}</div>
-      </div>`}).join("")}</div>`:`<div class="empty-state">${ico("users")}<b>Nenhum grupo ainda</b><span>Crie o primeiro grupo e chame seus colegas.</span></div>`}
+    ${gs.length?`<div class="groups">${gs.map(cartaoGrupo).join("")}</div>`:`<div class="empty-state">${ico("users")}<b>Você ainda não está em nenhum grupo</b><span>Busque um grupo para entrar ou crie o seu e chame seus colegas.</span><button class="btn" type="button" data-link="buscarGrupos">${ico("search")}Buscar grupos</button></div>`}
   </div>`;
   const f=$("#g-form");$("#g-novo").onclick=()=>{f.hidden=false;$("#g-nome").focus()};$("#g-cancel").onclick=()=>f.hidden=true;
-  f.addEventListener("submit",async e=>{e.preventDefault();const nome=$("#g-nome").value.trim();if(!nome)return;
-    try{const ref=S.db.collection("grupos").doc();await ref.set({nome,desc:$("#g-desc").value.trim(),dono:S.uid,criadoEm:Date.now()});await entrarGrupoFB(ref.id,true);toast("Grupo criado.");S.grupoAberto=ref.id;FBC.grupoTab="chat";renderView()}
-    catch(err){toast("Não foi possível criar o grupo ("+(err&&err.code||"erro")+").")}});
-  $$("[data-abrir]").forEach(b=>b.onclick=()=>{S.grupoAberto=b.dataset.abrir;FBC.grupoTab="chat";renderView()});
-  $$("[data-entrar]").forEach(b=>b.onclick=async()=>{await entrarGrupoFB(b.dataset.entrar);S.grupoAberto=b.dataset.entrar;FBC.grupoTab="chat";renderView()});
+  $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
+  f.addEventListener("submit",async e=>{e.preventDefault();const nome=$("#g-nome").value.trim(),desc=$("#g-desc").value.trim(),senha=$("#g-senha").value;if(!nome)return;const bt=f.querySelector("[type=submit]");bt.disabled=true;
+    try{const ref=S.db.collection("grupos").doc();await ref.set({nome,desc,bio:"",foto:"",fundo:"",admins:[],temSenha:false,dono:S.uid,criadoEm:Date.now()});
+      if(senha){const b=S.db.batch();b.set(ref.collection("privado").doc("senha"),{hash:await hashSenha(ref.id,senha)});b.update(ref,{temSenha:true});await b.commit()}
+      FBC.grupos[ref.id]={nome,desc,bio:"",foto:"",fundo:"",admins:[],temSenha:!!senha,dono:S.uid,id:ref.id,criadoEm:Date.now()};await entrarGrupoFB(ref.id,true);toast("Grupo criado.");S.grupoAberto=ref.id;FBC.grupoTab="config";renderView()}
+    catch(err){bt.disabled=false;toast("Não foi possível criar o grupo ("+(err&&err.code||"erro")+").")}});
+  ligarCartoesGrupo();
 }
+function renderBuscarGruposFB(){
+  const b=qbNorm(FBC.busca||"").trim(),filtro=FBC.gFiltro||"";
+  const gs=Object.values(FBC.grupos).filter(g=>(!b||qbNorm(g.nome+" "+(g.desc||"")+" "+(g.bio||"")+" "+nomeDe(g.dono)).includes(b))&&(!filtro||(filtro==="aberto"?!g.temSenha:filtro==="senha"?g.temSenha:!FBC.meus[g.id])))
+    .sort((x,y)=>(!!FBC.meus[x.id]-!!FBC.meus[y.id])||(y.criadoEm||0)-(x.criadoEm||0));
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Buscar grupos",`${Object.keys(FBC.grupos).length} grupos no Logic Academy. Encontre um grupo da sua prova, escola ou matéria.`,`<button class="btn" type="button" data-link="grupos">${ico("users")}Meus grupos</button>`)}
+    <div class="card stack sm" style="margin-bottom:16px">
+      <div class="qb-busca">${ico("search")}<input id="gb-busca" type="search" placeholder="Nome do grupo, prova, escola ou criador" value="${esc(FBC.busca||"")}" aria-label="Buscar grupos"></div>
+      <div class="qb-chips">${[["","Todos"],["fora","Que não participo"],["aberto","Abertos"],["senha","Com senha"]].map(([k,n])=>`<button type="button" class="qb-chip ${filtro===k?"on":""}" data-gfiltro="${k}">${n}</button>`).join("")}</div>
+    </div>
+    <p class="small muted" style="margin-bottom:8px">${gs.length} ${gs.length===1?"grupo encontrado":"grupos encontrados"}</p>
+    ${gs.length?`<div class="groups">${gs.map(cartaoGrupo).join("")}</div>`:`<div class="empty-state">${ico("search")}<b>Nenhum grupo encontrado</b><span>Tente outra palavra ou crie um grupo novo.</span><button class="btn" type="button" data-link="grupos">${ico("plus")}Criar grupo</button></div>`}
+  </div>`;
+  let t;const i=$("#gb-busca");i.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{FBC.busca=i.value;const pos=i.selectionStart;renderBuscarGruposFB();const n=$("#gb-busca");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}},200)};
+  $$("[data-gfiltro]").forEach(x=>x.onclick=()=>{FBC.gFiltro=x.dataset.gfiltro;renderBuscarGruposFB()});
+  $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
+  ligarCartoesGrupo();
+}
+async function fundoGrupoCss(g){if(!g.fundo)return "";if(g.fundo!=="img")return (FUNDOS_G[g.fundo]||[,""])[1];
+  FBC.fundos=FBC.fundos||{};if(FBC.fundos[g.id]===undefined){try{const d=await S.db.collection("grupos").doc(g.id).collection("extras").doc("visual").get();FBC.fundos[g.id]=d.exists?d.data().fundo||"":""}catch(e){FBC.fundos[g.id]=""}}
+  return FBC.fundos[g.id]?`url("${FBC.fundos[g.id]}") center/cover`:""}
 function renderGrupoFB(){
   const g=FBC.grupos[S.grupoAberto];if(!g){$("#main").innerHTML=`<div class="page"><div class="row muted"><span class="spinner"></span>Carregando grupo…</div></div>`;return}
-  const sou=!!FBC.meus[g.id],dono=g.dono===S.uid,tab=FBC.grupoTab;
+  const sou=!!FBC.meus[g.id],dono=souDono(g),gestor=souGestor(g);let tab=FBC.grupoTab;if(tab==="config"&&!gestor)tab=FBC.grupoTab="chat";
   pararTela();
+  const fundo=g.fundo&&g.fundo!=="img"?(FUNDOS_G[g.fundo]||[,""])[1]:"";
   $("#main").innerHTML=`<div class="page">
-    <button class="btn ghost sm" type="button" id="g-voltar" style="margin-bottom:10px">← Todos os grupos</button>
-    ${pageHead(esc(g.nome),[esc(g.desc||""),`criado por ${esc(nomeDe(g.dono))}`].filter(Boolean).join(" · "),sou?`${dono?"":`<button class="btn" type="button" id="g-sair">Sair do grupo</button>`}${dono?`<button class="btn ghost danger" type="button" id="g-apagar">Apagar grupo</button>`:""}`:`<button class="btn primary" type="button" id="g-entrar">Entrar no grupo</button>`)}
-    ${sou?`<div class="tabs" role="tablist">${[["chat","Chat"],["arquivos","Arquivos"],["membros","Membros"]].map(([k,n])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-gtab="${k}">${n}</button>`).join("")}</div>
+    <button class="btn ghost sm" type="button" id="g-voltar" style="margin-bottom:10px">${ico("back")}Meus grupos</button>
+    <div class="g-hero card"><div class="g-capa" id="g-capa" style="${fundo?`background:${fundo}`:""}"></div>
+      <div class="g-hero-c">${gAvatar(g,"lg")}
+        <div style="min-width:0;flex:1"><h1>${esc(g.nome)}</h1><div class="row small muted" style="gap:6px;margin-top:4px">${g.temSenha?`<span class="pill">${ico("lock")}Com senha</span>`:`<span class="pill">Aberto</span>`}<span>criado por ${esc(nomeDe(g.dono))}</span>${(g.admins||[]).length?`<span>· ${(g.admins||[]).length} ${(g.admins||[]).length===1?"admin":"admins"}</span>`:""}</div>
+          ${g.desc?`<p style="margin-top:6px">${esc(g.desc)}</p>`:""}</div>
+        <div class="row g-acoes">${sou?(dono?"":`<button class="btn" type="button" id="g-sair">Sair do grupo</button>`):`<button class="btn primary" type="button" id="g-entrar">${g.temSenha?ico("lock"):""}Entrar no grupo</button>`}</div></div>
+      ${g.bio?`<details class="g-bio" ${sou?"":"open"}><summary>Sobre o grupo</summary><p>${esc(g.bio)}</p></details>`:""}</div>
+    ${sou?`<div class="tabs" role="tablist">${[["chat","Chat"],["arquivos","Arquivos"],["membros","Membros"]].concat(gestor?[["config","Configurações"]]:[]).map(([k,n])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-gtab="${k}">${n}</button>`).join("")}</div>
       <div id="g-corpo"></div>`
-    :`<div class="empty-state">${ico("users")}<b>Entre no grupo para ver o chat, os arquivos e os membros.</b></div>`}
+    :`<div class="empty-state">${ico(g.temSenha?"lock":"users")}<b>Entre no grupo para ver o chat, os arquivos e os membros.</b>${g.temSenha?`<span>Este grupo tem senha. Peça a senha a um administrador.</span>`:""}</div>`}
   </div>`;
-  $("#g-voltar").onclick=()=>{S.grupoAberto=null;pararTela();renderView()};
+  if(g.fundo==="img")fundoGrupoCss(g).then(css=>{const c=$("#g-capa");if(c&&css)c.style.background=css});
+  $("#g-voltar").onclick=()=>{S.grupoAberto=null;pararTela();go("grupos")};
   const s=$("#g-sair");if(s)s.onclick=async()=>{await sairGrupoFB(g.id);S.grupoAberto=null;renderView()};
-  const en=$("#g-entrar");if(en)en.onclick=async()=>{await entrarGrupoFB(g.id);setTimeout(renderGrupoFB,300)};
-  const ap=$("#g-apagar");let conf=false;if(ap)ap.onclick=async()=>{if(!conf){conf=true;ap.textContent="Toque de novo para apagar";return}
-    try{await S.db.collection("grupos").doc(g.id).delete();await meuDoc("social").set({grupos:{[g.id]:firebase.firestore.FieldValue.delete()}},{merge:true});toast("Grupo apagado.");S.grupoAberto=null;renderView()}catch(e){toast("Não foi possível apagar o grupo.")}};
+  const en=$("#g-entrar");if(en)en.onclick=async()=>{if(await entrarGrupoFB(g.id)){FBC.meus[g.id]=true;FBC.grupoTab="chat";renderGrupoFB()}};
   $$("[data-gtab]").forEach(b=>b.onclick=()=>{FBC.grupoTab=b.dataset.gtab;renderGrupoFB()});
   if(!sou)return;
   const base=S.db.collection("grupos").doc(g.id),corpo=$("#g-corpo");
   if(tab==="chat"){
     corpo.innerHTML=chatBox("gchat","Mensagem para o grupo");
-    assinar("tela:gchat",base.collection("mensagens").orderBy("em","desc").limit(150),snap=>pintarMsgs("gchat",snap.docs.map(d=>d.data()).reverse()));
+    const chat=corpo.querySelector(".chat");fundoGrupoCss(g).then(css=>{if(css&&chat.isConnected){chat.classList.add("com-fundo");chat.style.setProperty("--g-fundo",css)}});
+    assinar("tela:gchat",base.collection("mensagens").orderBy("em","desc").limit(150),snap=>{const lista=snap.docs.map(d=>({...d.data(),_id:d.id})).reverse();pintarMsgs("gchat",lista);
+      $$("#gchat .msg").forEach((el,i)=>{const m=lista[i];if(!m||!(gestor||m.autor===S.uid))return;const bt=document.createElement("button");bt.type="button";bt.className="msg-del";bt.title="Apagar mensagem";bt.setAttribute("aria-label","Apagar mensagem");bt.textContent="✕";
+        let c=false;bt.onclick=async ev=>{ev.stopPropagation();if(!c){c=true;bt.textContent="Apagar?";bt.classList.add("conf");return}try{await base.collection("mensagens").doc(m._id).delete()}catch(e){toast("Não foi possível apagar.")}};el.appendChild(bt)})});
     ligarComposer("gchat",t=>base.collection("mensagens").add({autor:S.uid,texto:t,em:Date.now()}));
   }else if(tab==="arquivos"){
     corpo.innerHTML=`<div class="stack">
@@ -1945,16 +2032,66 @@ function renderGrupoFB(){
     $("#g-file").onchange=async e=>{for(const f of [...e.target.files])await enviarArquivoFB(base,f);e.target.value=""};
     assinar("tela:garq",base.collection("arquivos").orderBy("em","desc").limit(200),snap=>{const box=$("#garq");if(!box)return;const arr=snap.docs.map(d=>({...d.data(),id:d.id}));
       box.innerHTML=arr.length?arr.map(a=>`<div class="li"><span class="avatar" aria-hidden="true">${ico("file")}</span><div style="min-width:0"><div class="nm">${esc(a.nome)}</div><div class="small muted">${tamanhoTxt(a.tamanho)} · ${esc(nomeDe(a.autor))} · ${hora(a.em)}${a.completo?"":" · enviando…"}</div></div>
-        <div class="row" style="flex-wrap:nowrap;gap:6px">${a.completo?`<button class="btn sm" type="button" data-baixar="${a.id}">Baixar</button>`:""}${a.autor===S.uid||g.dono===S.uid?`<button class="btn sm ghost danger" type="button" data-apagar="${a.id}" aria-label="Apagar ${esc(a.nome)}">✕</button>`:""}</div></div>`).join("")
+        <div class="row" style="flex-wrap:nowrap;gap:6px">${a.completo?`<button class="btn sm" type="button" data-baixar="${a.id}">Baixar</button>`:""}${a.autor===S.uid||gestor?`<button class="btn sm ghost danger" type="button" data-apagar="${a.id}" aria-label="Apagar ${esc(a.nome)}">✕</button>`:""}</div></div>`).join("")
         :`<p class="small muted">Nenhum arquivo ainda. Envie resumos, listas e provas para o grupo.</p>`;
       $$("[data-baixar]",box).forEach(b=>b.onclick=()=>baixarArquivoFB(base,arr.find(x=>x.id===b.dataset.baixar),b));
       $$("[data-apagar]",box).forEach(b=>{let c=false;b.onclick=async()=>{if(!c){c=true;b.textContent="Apagar?";return}await apagarArquivoFB(base,b.dataset.apagar)}});
     });
+  }else if(tab==="membros"){
+    corpo.innerHTML=`<div class="card"><div class="card-h"><h3>Membros · ranking de hoje</h3>${dono?`<span class="small muted">Toque em ${ico("shield")} para tornar alguém administrador</span>`:""}</div><div id="gmemb"><div class="row muted small"><span class="spinner"></span>Carregando…</div></div></div>`;
+    assinar("tela:gmemb",base.collection("membros"),snap=>{const box=$("#gmemb");if(!box)return;const g2=FBC.grupos[g.id]||g,adm=g2.admins||[];const ids=snap.docs.map(d=>d.id).sort((a,b)=>minHoje(b)-minHoje(a));
+      box.innerHTML=`<div class="list">${ids.map((id,i)=>{const ehAdm=adm.includes(id),ehDono=id===g2.dono;return `<div class="li ${id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0" data-perfil="${id}">${avatar(id,"sm")}<span class="nm">${esc(nomeDe(id))}${ponto(id)}${ehDono?' <span class="pill solid">criador</span>':ehAdm?' <span class="pill">admin</span>':""}</span></div>
+        <div class="row" style="flex-wrap:nowrap;gap:6px"><span class="mono small">${fmtH(minPeriodo(id,1))}</span>
+          ${dono&&!ehDono?`<button class="btn sm ${ehAdm?"primary":"ghost"}" type="button" data-adm="${id}" aria-pressed="${ehAdm}" title="${ehAdm?"Tirar de administrador":"Tornar administrador"}">${ico("shield")}<span class="sr-mob">${ehAdm?"Admin":"Tornar admin"}</span></button>`:""}
+          ${gestor&&!ehDono&&id!==S.uid&&(dono||!ehAdm)?`<button class="btn sm ghost danger" type="button" data-remover="${id}" title="Remover do grupo" aria-label="Remover ${esc(nomeDe(id))} do grupo">✕</button>`:""}
+          ${id!==S.uid?`<button class="btn sm ghost" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(nomeDe(id))}">${ico("chat")}</button>`:""}</div></div>`}).join("")}</div>`;
+      $$("[data-dm]",box).forEach(b=>b.onclick=()=>abrirDM(b.dataset.dm));
+      $$("[data-adm]",box).forEach(b=>b.onclick=async()=>{const id=b.dataset.adm,cur=(FBC.grupos[g.id]||g).admins||[],novo=cur.includes(id)?cur.filter(x=>x!==id):cur.concat(id);
+        if(novo.length>20){toast("Limite de 20 administradores.");return}b.disabled=true;
+        try{await base.update({admins:novo});FBC.grupos[g.id]={...(FBC.grupos[g.id]||g),admins:novo};toast(cur.includes(id)?`${nomeDe(id)} não é mais administrador.`:`${nomeDe(id)} agora é administrador.`);renderGrupoFB()}
+        catch(e){b.disabled=false;toast("Não foi possível alterar ("+(e&&e.code||"erro")+").")}});
+      $$("[data-remover]",box).forEach(b=>{let c=false;b.onclick=async()=>{if(!c){c=true;b.textContent="Remover?";return}
+        try{await base.collection("membros").doc(b.dataset.remover).delete();toast("Membro removido do grupo.")}catch(e){toast("Não foi possível remover ("+(e&&e.code||"erro")+").")}}});
+    });
   }else{
-    corpo.innerHTML=`<div class="card"><div class="card-h"><h3>Membros · ranking de hoje</h3></div><div id="gmemb"><div class="row muted small"><span class="spinner"></span>Carregando…</div></div></div>`;
-    assinar("tela:gmemb",base.collection("membros"),snap=>{const box=$("#gmemb");if(!box)return;const ids=snap.docs.map(d=>d.id).sort((a,b)=>minHoje(b)-minHoje(a));
-      box.innerHTML=`<div class="list">${ids.map((id,i)=>`<div class="li ${id===S.uid?"me-row":""}" data-perfil="${id}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(id,"sm")}<span class="nm">${esc(nomeDe(id))}${ponto(id)}${id===g.dono?' <span class="pill">criador</span>':""}</span></div><div class="row" style="flex-wrap:nowrap;gap:8px"><span class="mono small">${fmtH(minPeriodo(id,1))}</span>${id!==S.uid?`<button class="btn sm ghost" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(nomeDe(id))}">${ico("chat")}</button>`:""}</div></div>`).join("")}</div>`;
-      $$("[data-dm]",box).forEach(b=>b.onclick=()=>abrirDM(b.dataset.dm))});
+    const fundoAtual=g.fundo||"";
+    corpo.innerHTML=`<form class="stack" id="gcfg">
+      <div class="card stack"><h3>Perfil do grupo</h3>
+        <div class="row" style="gap:16px;flex-wrap:nowrap">${gAvatar(g,"xl")}<div class="stack sm"><label class="btn" for="gc-foto">${ico("user")}Trocar foto</label><input type="file" id="gc-foto" accept="image/*" hidden>${g.foto?`<button class="btn ghost sm" type="button" id="gc-rmfoto">Remover foto</button>`:""}</div></div>
+        <div class="grid2"><div class="field"><label for="gc-nome">Nome</label><input type="text" id="gc-nome" maxlength="60" value="${esc(g.nome)}" required></div>
+          <div class="field"><label for="gc-desc">Descrição curta</label><input type="text" id="gc-desc" maxlength="160" value="${esc(g.desc||"")}"></div></div>
+        <div class="field"><label for="gc-bio">Bio da comunidade</label><textarea id="gc-bio" maxlength="1000" rows="5" placeholder="Objetivo do grupo, regras de convivência, horários de estudo em conjunto…">${esc(g.bio||"")}</textarea><span class="hint"><span id="gc-bio-n">${(g.bio||"").length}</span>/1000</span></div>
+        <div class="row"><button class="btn primary" type="submit">Salvar perfil</button></div></div>
+      <div class="card stack"><h3>Papel de parede do chat</h3>
+        <div class="fundos">${Object.entries(FUNDOS_G).map(([k,[n,css]])=>`<button type="button" class="fundo-op ${fundoAtual===k?"on":""}" data-fundo="${k}" aria-pressed="${fundoAtual===k}"><span style="background:${css||"var(--sunken)"}"></span><small>${n}</small></button>`).join("")}
+          <label class="fundo-op ${fundoAtual==="img"?"on":""}" for="gc-fundo"><span class="fundo-img">${ico("plus")}</span><small>${fundoAtual==="img"?"Sua imagem":"Enviar imagem"}</small></label><input type="file" id="gc-fundo" accept="image/*" hidden></div></div>
+      <div class="card stack"><h3>${ico("lock")} Senha do grupo</h3>
+        <p class="small muted" style="margin:0">${g.temSenha?"Este grupo tem senha: só entra quem souber. Quem já é membro continua no grupo.":"Este grupo é aberto: qualquer pessoa pode entrar."} A senha fica protegida no servidor; nem os administradores conseguem vê-la depois.</p>
+        <div class="row" style="flex-wrap:wrap;gap:8px"><input type="password" id="gc-senha" maxlength="60" autocomplete="new-password" placeholder="${g.temSenha?"Nova senha":"Criar senha"}" style="flex:1;min-width:12rem">
+          <button class="btn" type="button" id="gc-salvasenha">${g.temSenha?"Trocar senha":"Definir senha"}</button>${g.temSenha?`<button class="btn ghost danger" type="button" id="gc-tirasenha">Tirar senha</button>`:""}</div></div>
+      <div class="card stack"><h3>${ico("shield")} Administradores</h3>
+        <p class="small muted" style="margin:0">Administradores podem mudar o perfil, o papel de parede e a senha do grupo, apagar mensagens e arquivos e remover membros. Só o criador nomeia administradores e pode apagar o grupo.</p>
+        <div class="row" style="gap:8px;flex-wrap:wrap">${[g.dono].concat(g.admins||[]).map(id=>`<span class="pill" data-perfil="${id}">${avatar(id,"sm")}${esc(nomeDe(id))}${id===g.dono?" · criador":""}</span>`).join("")}</div>
+        ${dono?`<button class="btn" type="button" id="gc-irmembros" style="align-self:flex-start">${ico("users")}Gerenciar na aba Membros</button>`:""}</div>
+      ${dono?`<div class="card stack"><h3>Zona de perigo</h3><button class="btn ghost danger" type="button" id="g-apagar" style="align-self:flex-start">Apagar grupo</button><span class="hint">Apaga o grupo para todos. Não dá para desfazer.</span></div>`:""}
+    </form>`;
+    const salvar=async(dados,msg)=>{try{await base.update(dados);FBC.grupos[g.id]={...(FBC.grupos[g.id]||g),...dados};toast(msg||"Grupo atualizado.");renderGrupoFB();return true}catch(e){toast("Não foi possível salvar ("+(e&&e.code||"erro")+").");return false}};
+    $("#gc-bio").oninput=e=>$("#gc-bio-n").textContent=e.target.value.length;
+    $("#gcfg").onsubmit=e=>{e.preventDefault();const nome=$("#gc-nome").value.trim();if(!nome){$("#gc-nome").focus();return}salvar({nome,desc:$("#gc-desc").value.trim(),bio:$("#gc-bio").value.trim()},"Perfil do grupo salvo.")};
+    $("#gc-foto").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{salvar({foto:await reduzirFoto(f,192)},"Foto do grupo atualizada.")}catch(err){toast("Não consegui abrir essa imagem.")}};
+    const rf=$("#gc-rmfoto");if(rf)rf.onclick=()=>salvar({foto:""},"Foto removida.");
+    $$("[data-fundo]").forEach(b=>b.onclick=()=>salvar({fundo:b.dataset.fundo},"Papel de parede atualizado."));
+    $("#gc-fundo").onchange=async e=>{const f=e.target.files[0];if(!f)return;
+      try{let url=await reduzirImg(f,1280,.72);if(url.length>650000)url=await reduzirImg(f,900,.6);
+        await base.collection("extras").doc("visual").set({fundo:url});FBC.fundos=FBC.fundos||{};FBC.fundos[g.id]=url;salvar({fundo:"img"},"Papel de parede atualizado.")}
+      catch(err){toast("Não foi possível usar essa imagem ("+(err&&err.code||"erro")+").")}};
+    $("#gc-salvasenha").onclick=async()=>{const v=$("#gc-senha").value;if(v.length<4){toast("Use uma senha com pelo menos 4 caracteres.");$("#gc-senha").focus();return}
+      try{const b=S.db.batch();b.set(base.collection("privado").doc("senha"),{hash:await hashSenha(g.id,v)});b.update(base,{temSenha:true});await b.commit();FBC.grupos[g.id]={...(FBC.grupos[g.id]||g),temSenha:true};toast("Senha do grupo salva. Envie a senha para quem você quiser chamar.");renderGrupoFB()}
+      catch(e){toast("Não foi possível salvar a senha ("+(e&&e.code||"erro")+").")}};
+    const ts=$("#gc-tirasenha");if(ts)ts.onclick=async()=>{try{await base.update({temSenha:false});await base.collection("privado").doc("senha").delete().catch(()=>{});FBC.grupos[g.id]={...(FBC.grupos[g.id]||g),temSenha:false};toast("O grupo agora é aberto.");renderGrupoFB()}catch(e){toast("Não foi possível tirar a senha.")}};
+    const im=$("#gc-irmembros");if(im)im.onclick=()=>{FBC.grupoTab="membros";renderGrupoFB()};
+    const ap=$("#g-apagar");let conf=false;if(ap)ap.onclick=async()=>{if(!conf){conf=true;ap.textContent="Toque de novo para apagar o grupo";return}
+      try{await base.delete();await meuDoc("social").set({grupos:{[g.id]:firebase.firestore.FieldValue.delete()}},{merge:true});toast("Grupo apagado.");S.grupoAberto=null;go("grupos")}catch(e){toast("Não foi possível apagar o grupo.")}};
   }
 }
 const tamanhoTxt=n=>n>=1048576?(n/1048576).toLocaleString("pt-BR",{maximumFractionDigits:1})+" MB":Math.max(1,Math.round(n/1024))+" KB";
@@ -2041,6 +2178,7 @@ function renderAmigosFB(){
 
 /* ================= Banco de questões (provas oficiais) ================= */
 Object.assign(I,{
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',shield:'<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>',
   qbank:'<path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M10 11a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2M12 17h.01"/>',
   mentor:'<path d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3z"/><path d="M9.5 20.5h5"/><path d="m12 7-1.2 2.4 2.4.4-1.2 2.2"/>',
   bookmark:'<path d="M6 3h12v18l-6-4-6 4z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
@@ -2296,25 +2434,12 @@ async function mentorEnviar(t){
   m.ocupado=false;m.msgs=m.msgs.slice(-40);gravar("mentoria",{msgs:m.msgs});if(S.view==="mentoria")renderMentoria();
 }
 
-/* ---- Biblioteca ---- */
-function renderBiblioteca(){
-  $("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Biblioteca")}
-    <div class="card stack" style="align-items:center;text-align:center;padding:40px 24px">
-      <span class="logo" style="width:56px;height:56px;border-radius:14px">${ico("book")}</span>
-      <span class="pill">Em breve</span>
-      <h2>Esta aba receberá atualizações futuras</h2>
-      <p class="muted" style="max-width:52ch">A Biblioteca vai reunir materiais de estudo organizados por matéria e por prova. Enquanto isso, compartilhe arquivos com seus colegas na aba “Arquivos” dos grupos de estudo.</p>
-      <div class="sugs" style="justify-content:center">${["Resumos","Mapas mentais","Listas de exercícios","Provas anteriores","Videoaulas"].map(x=>`<span class="pill">${x}</span>`).join("")}</div>
-      <button class="btn" type="button" data-link="grupos">${ico("users")}Ir para os grupos</button>
-    </div></div>`;
-  $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
-}
 
 /* ================= Shell com barra lateral ================= */
 const NAV=[
-  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["questoes","Banco de questões","qbank"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["desafios","Desafios","trophy"],["estatisticas","Estatísticas","chart"],["mentoria","Mentoria com IA","mentor"],["biblioteca","Biblioteca","book"]]],
+  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["questoes","Banco de questões","qbank"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["desafios","Desafios","trophy"],["estatisticas","Estatísticas","chart"],["mentoria","Mentoria com IA","mentor"]]],
   ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
-  ["Comunidade",[["grupos","Grupos de estudo","users"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
+  ["Comunidade",[["grupos","Meus grupos","users"],...(STANDALONE?[["buscarGrupos","Buscar grupos","search"]]:[]),["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
   ["Conta",[["perfil","Meu perfil","user"],["aparencia","Aparência","palette"],["config","Configurações","gear"]]]];
 function renderShell(){
   $("#root").innerHTML=`
@@ -2355,7 +2480,7 @@ function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
 function renderView(){
   $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
-  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,questoes:renderQuestoes,mentoria:renderMentoria,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),buscarGrupos:()=>FBM()?renderBuscarGruposFB():(($("#main").innerHTML=bloqueado("Buscar grupos")),ligarBloqueado()),questoes:renderQuestoes,mentoria:renderMentoria,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
   f();
 }
 const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;
