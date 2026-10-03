@@ -449,7 +449,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .mentor-chat{display:flex;flex-direction:column;padding:0;overflow:hidden;height:calc(100dvh - 230px);min-height:360px}
 .mentor-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
 .mt{max-width:min(640px,88%);padding:10px 14px;border-radius:16px;line-height:1.55;overflow-wrap:anywhere}
-.mt p{margin:0 0 .5em}.mt p:last-child{margin:0}.mt ul{margin:.2em 0 .5em;padding-left:1.2em}
+.mt p{margin:0 0 .5em}.mt p:last-child{margin:0}.mt ul,.mt ol{margin:.2em 0 .6em;padding-left:1.3em}.mt li{margin:.15em 0}
 .mt.eu{align-self:flex-end;background:var(--accent);color:var(--accent-fg);border-bottom-right-radius:4px;white-space:pre-wrap}
 .mt.ia{align-self:flex-start;background:var(--sunken);border-bottom-left-radius:4px}
 .mentor-vazio{margin:auto;align-items:center;text-align:center;max-width:460px;color:var(--fg)}
@@ -2014,8 +2014,13 @@ async function renderMentoria(){
 function ajustarChatMentoria(){const c=$(".mentor-chat");if(!c)return;const tb=$(".tabbar"),baixo=tb&&getComputedStyle(tb).display!=="none"?tb.offsetHeight+12:24;
   c.style.height=Math.max(360,innerHeight-c.getBoundingClientRect().top-scrollY+scrollY-baixo-30)+"px"}
 addEventListener("resize",()=>{if(S.view==="mentoria")ajustarChatMentoria()});
-function mtFormatar(t){return esc(t).replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").split(/\n{2,}/).map(p=>{const l=p.split("\n");
-  if(l.every(x=>/^\s*([-*•]|\d+[.)])\s+/.test(x)))return `<ul>${l.map(x=>`<li>${x.replace(/^\s*([-*•]|\d+[.)])\s+/,"")}</li>`).join("")}</ul>`;return `<p>${l.join("<br>")}</p>`}).join("")}
+function mtFormatar(t){ // markdown simples das respostas: negrito, itálico, títulos e listas
+  const inl=x=>esc(x).replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/(^|[\s(])\*([^*\s][^*]*)\*(?=[\s.,;:)!?]|$)/g,"$1<i>$2</i>");
+  return String(t||"").split(/\n{2,}/).map(bl=>{let h="",lista=null;
+    bl.split("\n").forEach(l=>{const m=l.match(/^\s*(?:[-*•]|(\d+)[.)])\s+(.*)$/);
+      if(m&&!/^\s*\*\*/.test(l)){const tipo=m[1]?"ol":"ul";if(!lista||lista.tipo!==tipo){if(lista)h+=`</${lista.tipo}>`;lista={tipo};h+=`<${tipo}>`}h+=`<li>${inl(m[2])}</li>`}
+      else{if(lista){h+=`</${lista.tipo}>`;lista=null}const hd=l.match(/^\s*#{1,4}\s+(.*)$/);if(l.trim())h+=hd?`<p><b>${inl(hd[1])}</b></p>`:`<p>${inl(l)}</p>`}});
+    if(lista)h+=`</${lista.tipo}>`;return h}).join("")}
 async function mentorEnviar(t){
   const m=S.mentor;if(m.ocupado)return;m.msgs.push({r:"user",t});m.ocupado=true;renderMentoria();
   const sistema=`Você é a mentora de estudos do Logic Academy, um site brasileiro de organização de estudos. Responda em português do Brasil, de forma direta, acolhedora e prática, em no máximo 220 palavras, com listas curtas quando ajudar. Baseie-se nos dados do estudante abaixo; quando faltar informação, diga o que ele pode registrar no site. Pode sugerir abas do site: Minha semana, Pomodoro, Cronômetro, Banco de questões, Tópicos da prova, Desafios, Estatísticas. Não invente datas de provas nem conteúdo de editais.\n\nDADOS DO ESTUDANTE (hoje é ${new Date().toLocaleDateString("pt-BR")}):\n${contextoMentoria()}`;
