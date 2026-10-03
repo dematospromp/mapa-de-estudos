@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro, cronômetro, revisões, estatísticas, grupos de estudo, catálogo de provas e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro, cronômetro, desafios e recompensas, revisões, estatísticas, grupos de estudo e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -353,6 +353,27 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .tg:checked{background:var(--accent)} .tg:checked::after{transform:translateX(18px)}
 [data-perfil]{cursor:pointer}
 @media (max-width:860px){.perfil-grid{grid-template-columns:1fr}.perfil-grid>.sticky{position:static}}
+
+/* ===== Desafios e recompensas ===== */
+.fr{display:inline-grid;place-items:center;border-radius:50%;padding:2px;flex:none;line-height:0}
+.fr>.avatar{border:2px solid var(--surface)}
+.desafios{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.desafio{display:flex;flex-direction:column;gap:10px}
+.desafio.feito{opacity:.75}
+.desafio.bloq .des-ic{opacity:.5}
+.des-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.colecao{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.item{border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;background:var(--surface)}
+.item.bloq .item-prev{filter:grayscale(1);opacity:.4}
+.item.uso{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.item-prev{min-height:60px;display:grid;place-items:center}
+.nivel-card{background:linear-gradient(135deg,var(--accent-soft),transparent 60%),var(--surface)}
+.celebra{position:relative;overflow:hidden}
+.confete{position:absolute;inset:0;pointer-events:none}
+.confete i{position:absolute;top:-10px;left:50%;width:8px;height:12px;border-radius:2px;background:hsl(var(--h) 85% 60%);transform:translateX(var(--x));animation:cai 1.4s var(--d) ease-in forwards}
+@keyframes cai{to{transform:translate(calc(var(--x)*3),360px) rotate(540deg);opacity:0}}
+.titulo-pill{display:inline-flex;margin-top:4px}
+.emblemas{display:flex;gap:6px;flex-wrap:wrap}
 </style>
 
 </head><body><div id="root"></div>
@@ -829,16 +850,16 @@ async function entrar(modo){
     S.mode="nuvem";S.uid=id;try{nomeConta=(await S.userCap.me()).name||S.nomeCadastro||""}catch(e){}
   }else{S.mode="local";S.uid="local"}
   $("#root").innerHTML=`<div class="wizard"><div class="row muted"><span class="spinner"></span>Carregando seus dados…</div></div>`;
-  try{[S.perfil,S.plano,S.edital,S.pomoLog,S.revisoes]=await Promise.all(["perfil","plano","edital","pomo","revisoes"].map(ler));if(!S.revisoes||!Array.isArray(S.revisoes.itens))S.revisoes={itens:[]}}
+  try{[S.perfil,S.plano,S.edital,S.pomoLog,S.revisoes,S.conq]=await Promise.all(["perfil","plano","edital","pomo","revisoes","conquistas"].map(ler));if(!S.revisoes||!Array.isArray(S.revisoes.itens))S.revisoes={itens:[]}}
   catch(e){S.mode=null;renderLogin("Não foi possível ler seus dados ("+(e&&e.code||"erro")+").");return}
-  S.pomoLog=garantirTotais(S.pomoLog&&S.pomoLog.dias?S.pomoLog:{dias:{},sessoes:0});carregarCrono();if(S.edital&&!Array.isArray(S.edital.materias))S.edital=null;
+  S.pomoLog=garantirTotais(S.pomoLog&&S.pomoLog.dias?S.pomoLog:{dias:{},sessoes:0});carregarCrono();virarSemana();verificarConquistas(true);if(S.edital&&!Array.isArray(S.edital.materias))S.edital=null;
   if(S.perfil&&S.perfil.ui)aplicarUI(S.perfil.ui);else if(S.perfil&&S.perfil.tema)aplicarTema(S.perfil.tema);
   if(S.perfil&&S.perfil.pomo)Object.assign(P.dur,S.perfil.pomo);else if(S.perfil)Object.assign(P.dur,{foco:+S.perfil.bloco||50,curta:+S.perfil.pausa||10});P.restante=pomoTotal();
   if(S.mode==="nuvem"){assinarSocial();if(FBM())iniciarComunidadeFB()}
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
   else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
 }
-function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
+function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
   Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{}}});renderLogin()}
 
 function perfilPadrao(nome){
@@ -1224,7 +1245,7 @@ function registrar(min,materia,fonte){
   L.hist.unshift({em:Date.now(),min,mat:k,fonte});L.hist=L.hist.slice(0,40);
   const ks=Object.keys(L.dias).sort();while(ks.length>120){delete L.dias[ks.shift()]}
   gravar("pomo",L,true);
-  publicarRanking();
+  publicarRanking();verificarConquistas();atualizarBadgeDesafios();
 }
 let actx=null;
 function somPreparar(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){}}
@@ -1322,7 +1343,7 @@ function agendarRevisoes(assunto,materia){
   S.revisoes.itens=S.revisoes.itens.filter(r=>!r.feita||Date.now()-(r.feitaEm||0)<60*864e5).slice(-400);
   gravar("revisoes",S.revisoes,true);
 }
-function marcarRevisao(id,v){const r=((S.revisoes&&S.revisoes.itens)||[]).find(x=>x.id===id);if(!r)return;r.feita=v;r.feitaEm=v?Date.now():0;gravar("revisoes",S.revisoes)}
+function marcarRevisao(id,v){const r=((S.revisoes&&S.revisoes.itens)||[]).find(x=>x.id===id);if(!r)return;r.feita=v;r.feitaEm=v?Date.now():0;gravar("revisoes",S.revisoes);verificarConquistas();atualizarBadgeDesafios()}
 function revisaoLinha(r){const atras=r.quando<dataISO();return `<label class="li" style="grid-template-columns:auto minmax(0,1fr) auto;cursor:pointer"><input class="chk" type="checkbox" data-rev="${r.id}" ${r.feita?"checked":""}>
   <div style="min-width:0"><div class="nm">${esc(r.assunto)}</div><div class="small muted">${esc(r.materia||"Sem matéria")} · revisão de ${r.etapa} ${r.etapa===1?"dia":"dias"}</div></div>
   <span class="pill ${atras?"solid":""}">${atras?"atrasada":r.quando===dataISO()?"hoje":new Date(r.quando+"T12:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</span></label>`}
@@ -1348,7 +1369,7 @@ function modalSessao(min,materia){
     const L=garantirTotais(S.pomoLog),k=materia||"Sem matéria";
     if(q){L.q=L.q||{};L.q[k]=L.q[k]||{feitas:0,acertos:0};L.q[k].feitas+=q;L.q[k].acertos+=a;const h=L.dias[dataISO()];if(h){h.q=(h.q||0)+q;h.acertos=(h.acertos||0)+a}}
     if(L.hist&&L.hist[0]&&as)L.hist[0].assunto=as;
-    gravar("pomo",L,true);
+    gravar("pomo",L,true);verificarConquistas();atualizarBadgeDesafios();
     if(as&&bg.querySelector("#ms-rev").checked){agendarRevisoes(as,materia);toast("Revisões agendadas para 1, 7 e 30 dias.")}else toast("Sessão registrada.");
     fechar();if(["inicio","estatisticas","cronometro","pomodoro"].includes(S.view))renderView();
   });
@@ -1410,8 +1431,10 @@ function assinarSocial(){
 }
 const nomeDe=id=>(S.soc.perfis[id]&&S.soc.perfis[id].nome)||"Estudante";
 function avatar(id,cls){const p=S.soc.perfis[id]||{};const nm=id===S.uid&&S.mode!=="nuvem"?(S.perfil&&S.perfil.nome)||"Você":nomeDe(id);
-  if(p.foto&&/^data:image\/(jpeg|png|webp);base64,/.test(p.foto))return `<img class="avatar ${cls||""}" src="${p.foto}" alt="">`;
-  const ini=nm.split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase();return `<span class="avatar ${cls||""}" aria-hidden="true">${esc(ini||"?")}</span>`}
+  let h;if(p.foto&&/^data:image\/(jpeg|png|webp);base64,/.test(p.foto))h=`<img class="avatar ${cls||""}" src="${p.foto}" alt="">`;
+  else{const ini=nm.split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase();h=`<span class="avatar ${cls||""}" aria-hidden="true">${esc(ini||"?")}</span>`}
+  return comMoldura(p.moldura,h)}
+function comMoldura(k,h){return k&&typeof MOLDURAS!=="undefined"&&MOLDURAS[k]?`<span class="fr" style="background:${MOLDURAS[k][1]}">${h}</span>`:h}
 function atualizarSocial(col){
   renderSideUser();if(!$("#main")||!S.perfil)return;
   if(FBM()){if(col==="perfis"&&S.view==="amigos")renderAmigosFB();if(col==="perfis"&&S.view==="mensagens")listaConversas();if(["perfis","ranking"].includes(col)&&["ranking","inicio"].includes(S.view))renderView();return}
@@ -1661,7 +1684,7 @@ function renderBiblioteca(){
 
 /* ================= Shell com barra lateral ================= */
 const NAV=[
-  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["estatisticas","Estatísticas","chart"],["biblioteca","Biblioteca","book"]]],
+  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["desafios","Desafios","trophy"],["estatisticas","Estatísticas","chart"],["biblioteca","Biblioteca","book"]]],
   ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
   ["Comunidade",[["grupos","Grupos de estudo","users"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
   ["Conta",[["perfil","Meu perfil","user"],["aparencia","Aparência","palette"],["config","Configurações","gear"]]]];
@@ -1692,7 +1715,7 @@ function renderShell(){
   $("#mini-pomo").onclick=()=>go("pomodoro");$("#mini-crono").onclick=()=>go("cronometro");tickCrono();
   $("#menu-btn").onclick=()=>$("#shell").classList.add("open");
   $("#ovl").onclick=()=>$("#shell").classList.remove("open");
-  renderSideUser();renderView();tickPomo();
+  renderSideUser();renderView();tickPomo();atualizarBadgeDesafios();
 }
 function renderSideUser(){
   const el=$("#side-me");if(!el)return;
@@ -1703,7 +1726,7 @@ function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
 function renderView(){
   $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
-  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
   f();
 }
 const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;
@@ -1752,7 +1775,7 @@ function renderInicio(){
   ligarBlocos();ligarRevisoes(renderInicio);$$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
 }
 function acharBloco(ref){const [k,id]=ref.split("|");return (S.plano&&S.plano.semana[k]||[]).find(b=>b.id===id)}
-function marcarBloco(ref,v){const b=acharBloco(ref);if(!b)return;b.feito=v;gravar("plano",S.plano);if(["inicio","semana"].includes(S.view))renderView()}
+function marcarBloco(ref,v){const b=acharBloco(ref);if(!b)return;b.feito=v;b.feitoEm=v?Date.now():0;setTimeout(atualizarBadgeDesafios,50);gravar("plano",S.plano);if(["inicio","semana"].includes(S.view))renderView()}
 function prepararPomo(k,b){if(P.rodando)return;P.materia=b.materia;P.bloco=k+"|"+b.id;P.modo="foco";P.dur.foco=Math.max(5,Math.min(120,b.min||P.dur.foco));P.restante=pomoTotal();P.acumulado=0}
 function ligarBlocos(){
   $$("[data-chk]").forEach(c=>c.addEventListener("change",()=>marcarBloco(c.dataset.chk,c.checked)));
@@ -2021,7 +2044,7 @@ function renderTopicos(){
       </details>`}).join("")}</div>
     <div class="row" style="margin-top:20px"><button class="btn ghost danger sm" type="button" id="tp-del">Remover esta prova</button><span class="hint" id="tp-del-c"></span></div>
   </div>`;
-  $$("[data-top]").forEach(c=>c.addEventListener("change",()=>{const [mi,ti]=c.dataset.top.split("|");const m=ed.materias.find(x=>x.id===mi),t=m&&m.topicos.find(x=>x.id===ti);if(!t)return;t.feito=c.checked;gravar("edital",ed);renderTopicosKeepOpen()}));
+  $$("[data-top]").forEach(c=>c.addEventListener("change",()=>{const [mi,ti]=c.dataset.top.split("|");const m=ed.materias.find(x=>x.id===mi),t=m&&m.topicos.find(x=>x.id===ti);if(!t)return;t.feito=c.checked;t.feitoEm=c.checked?Date.now():0;setTimeout(atualizarBadgeDesafios,50);gravar("edital",ed);renderTopicosKeepOpen()}));
   $$("[data-addtop]").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();const i=f.querySelector("input"),v=i.value.trim();if(!v)return;ed.materias.find(x=>x.id===f.dataset.addtop).topicos.push({id:uid(),t:v,feito:false});gravar("edital",ed);renderTopicosKeepOpen()}));
   $("#tp-tri").onclick=()=>{S.triProva=null;go("triagemProva")};
   let conf=false;$("#tp-del").onclick=()=>{if(!conf){conf=true;$("#tp-del").textContent="Clique de novo para confirmar";$("#tp-del-c").textContent="Os tópicos e o progresso desta prova serão apagados.";return}
@@ -2233,14 +2256,15 @@ function renderAparencia(){
 
 /* ================= Perfil profissional ================= */
 const CAPAS={grafite:"linear-gradient(135deg,#1f2937,#4b5563)",oceano:"linear-gradient(135deg,#0ea5e9,#1e3a8a)",floresta:"linear-gradient(135deg,#065f46,#84cc16)",aurora:"linear-gradient(135deg,#7c3aed,#06b6d4)",entardecer:"linear-gradient(135deg,#f97316,#db2777)",lavanda:"linear-gradient(135deg,#c4b5fd,#f0abfc)",areia:"linear-gradient(135deg,#d6c3a3,#a8a29e)",noite:"linear-gradient(135deg,#020617,#312e81)"};
-function capaDe(p){return CAPAS[p&&p.capa]||`linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 45%,var(--bg)))`}
+function capaDe(p){return CAPAS[p&&p.capa]||(p&&CAPAS_ESP[p.capa]&&CAPAS_ESP[p.capa][1])||`linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 45%,var(--bg)))`}
 function sequenciaDe(id){const r=S.soc.ranking[id];if(!r||!r.dias)return 0;let n=0;for(let i=0;i<35;i++){if((r.dias[diasAtras(i)]||0)>0)n++;else if(i>0)break}return n}
 function cartaoPerfil(id,p,opts){
   p=p||{};const priv=p.privacidade||{};const mostrarHoras=priv.horas!==false||id===S.uid;
   const meta=[p.objetivo,p.instituicao,p.cidade].filter(Boolean).map(esc);
   const foto=p.foto&&/^data:image\/(jpeg|png|webp);base64,/.test(p.foto)?`<img class="avatar lg" src="${p.foto}" alt="">`:`<span class="avatar lg" aria-hidden="true">${esc(((p.nome||"?").split(/\s+/).map(w=>w[0]||"").join("").slice(0,2)).toUpperCase())}</span>`;
-  return `<div class="perfil-card"><div class="capa" style="background:${capaDe(p)}"></div><div class="corpo">${foto}
-    <div><h2 style="overflow-wrap:anywhere">${esc(p.nome||"Seu nome")}${ponto(id)}</h2>${p.usuario?`<div class="handle">@${esc(p.usuario)}</div>`:""}</div>
+  return `<div class="perfil-card"><div class="capa" style="background:${capaDe(p)}"></div><div class="corpo"><div class="row" style="justify-content:space-between;align-items:flex-end">${comMoldura(p.moldura,foto)}${p.nivel?`<span class="pill solid" style="margin-bottom:6px">Nível ${p.nivel}</span>`:""}</div>
+    <div><h2 style="overflow-wrap:anywhere">${esc(p.nome||"Seu nome")}${ponto(id)}</h2>${p.usuario?`<div class="handle">@${esc(p.usuario)}</div>`:""}${p.titulo&&TITULOS[p.titulo]?`<span class="pill titulo-pill">${ib("crown",12)} ${esc(TITULOS[p.titulo])}</span>`:""}</div>
+    ${(p.emblemas||[]).filter(k=>EMBLEMAS[k]).length?`<div class="emblemas">${p.emblemas.filter(k=>EMBLEMAS[k]).map(k=>`<span class="pill" style="gap:5px">${ib(EMBLEMAS[k][1],13)}${esc(EMBLEMAS[k][0])}</span>`).join("")}</div>`:""}
     ${meta.length?`<div class="meta">${meta.map(m=>`<span>${m}</span>`).join("")}</div>`:""}
     ${p.bio?`<p style="overflow-wrap:anywhere">${esc(p.bio)}</p>`:opts&&opts.preview?`<p class="small muted">Sua bio aparece aqui.</p>`:""}
     ${mostrarHoras?`<div class="nums"><div><b>${fmtH(minTotalR(id))}</b><span class="small muted">no total</span></div><div><b>${fmtH(minPeriodo(id,7))}</b><span class="small muted">7 dias</span></div><div><b>${sequenciaDe(id)}</b><span class="small muted">dias seguidos</span></div></div>`:`<p class="small muted">Esta pessoa prefere não mostrar o tempo de estudo.</p>`}
@@ -2287,7 +2311,15 @@ function renderPerfil(){
       <div class="stack">
         <div class="card stack"><div class="sec-t">Foto e capa</div>
           <div class="row" style="gap:14px"><label class="btn" for="pf-foto">${ico("user")}Trocar foto</label><button class="btn ghost" type="button" id="pf-rm" ${d.foto?"":"hidden"}>Remover foto</button><input type="file" id="pf-foto" accept="image/*" hidden><span class="hint">A foto é cortada no centro e reduzida para 256×256.</span></div>
-          <div class="field"><span class="lbl">Capa</span><div class="capas"><button type="button" class="capa-opt ${!d.capa?"on":""}" data-capa="" title="Cor de destaque" aria-label="Cor de destaque" style="background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 45%,var(--bg)))"></button>${Object.entries(CAPAS).map(([k,g])=>`<button type="button" class="capa-opt ${d.capa===k?"on":""}" data-capa="${k}" title="${k}" aria-label="Capa ${k}" style="background:${g}"></button>`).join("")}</div></div>
+          <div class="field"><span class="lbl">Capa</span><div class="capas"><button type="button" class="capa-opt ${!d.capa?"on":""}" data-capa="" title="Cor de destaque" aria-label="Cor de destaque" style="background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 45%,var(--bg)))"></button>${Object.entries(CAPAS).map(([k,g])=>`<button type="button" class="capa-opt ${d.capa===k?"on":""}" data-capa="${k}" title="${k}" aria-label="Capa ${k}" style="background:${g}"></button>`).join("")}${Object.entries(CAPAS_ESP).filter(([k])=>temItem("capa:"+k)).map(([k,[n,g]])=>`<button type="button" class="capa-opt ${d.capa===k?"on":""}" data-capa="${k}" title="${n} (exclusiva)" aria-label="Capa ${n}" style="background:${g}"></button>`).join("")}</div><span class="hint">Capas exclusivas aparecem aqui quando você ganha em Desafios.</span></div>
+        </div>
+        <div class="card stack"><div class="row" style="justify-content:space-between"><div class="sec-t">Acessórios</div><button class="btn sm" type="button" id="pf-colecao">${ib("medal",14)} Abrir coleção</button></div>
+          <div class="grid2" style="gap:10px">
+            <div class="field"><label for="pf-mold">Moldura da foto</label><select id="pf-mold"><option value="">Nenhuma</option>${Object.entries(MOLDURAS).filter(([k])=>temItem("moldura:"+k)).map(([k,[n]])=>`<option value="${k}" ${d.moldura===k?"selected":""}>${n}</option>`).join("")}</select></div>
+            <div class="field"><label for="pf-tit">Título</label><select id="pf-tit"><option value="">Nenhum</option>${Object.entries(TITULOS).filter(([k])=>temItem("titulo:"+k)).map(([k,n])=>`<option value="${k}" ${d.titulo===k?"selected":""}>${n}</option>`).join("")}</select></div>
+          </div>
+          <div class="field"><span class="lbl">Emblemas no perfil (até 3)</span>${Object.keys(EMBLEMAS).filter(k=>temItem("emblema:"+k)).length?`<div class="checks">${Object.entries(EMBLEMAS).filter(([k])=>temItem("emblema:"+k)).map(([k,[n,ic]])=>`<label>${'<input type="checkbox" data-emb="'+k+'" '+((d.emblemas||[]).includes(k)?"checked":"")+'>'}${ib(ic,14)}${n}</label>`).join("")}</div>`:`<span class="hint">Você ainda não tem emblemas. Ganhe completando conquistas em Desafios.</span>`}</div>
+          <span class="hint">Nível ${nivelDe(G().xp)} · ${Object.keys(G().itens).length} itens na coleção.</span>
         </div>
         <div class="card stack"><div class="sec-t">Informações públicas</div>
           <div class="grid2">
@@ -2313,6 +2345,9 @@ function renderPerfil(){
     </div></div>`;
   const prev=()=>{$("#pf-prev").innerHTML=cartaoPerfil(S.uid,d,{preview:true});$("#pf-st").textContent="Alterações não salvas"};
   $$("[data-k]").forEach(i=>i.addEventListener("input",()=>{d[i.dataset.k]=i.value;if(i.dataset.k==="bio")$("#pf-bio-c").textContent=i.value.length+"/160";if(i.dataset.k==="usuario"){i.value=i.value.toLowerCase().replace(/[^a-z0-9._]/g,"");d.usuario=i.value}prev()}));
+  $("#pf-colecao").onclick=()=>{S.desTab="colecao";go("desafios")};
+  $("#pf-mold").onchange=e=>{d.moldura=e.target.value;prev()};$("#pf-tit").onchange=e=>{d.titulo=e.target.value;prev()};
+  $$("[data-emb]").forEach(c=>c.onchange=()=>{const set=new Set(d.emblemas||[]);if(c.checked){if(set.size>=3){c.checked=false;toast("Até 3 emblemas.");return}set.add(c.dataset.emb)}else set.delete(c.dataset.emb);d.emblemas=[...set];prev()});
   $$("[data-capa]").forEach(b=>b.onclick=()=>{d.capa=b.dataset.capa;$$("[data-capa]").forEach(x=>x.classList.toggle("on",x===b));prev()});
   $$("[data-priv]").forEach(c=>c.onchange=()=>{d.privacidade[c.dataset.priv]=c.checked;prev()});
   $$("[data-dmp]").forEach(b=>b.onclick=()=>{d.privacidade.dm=b.dataset.dmp;$$("[data-dmp]").forEach(x=>x.classList.toggle("on",x===b));prev()});
@@ -2325,10 +2360,191 @@ function renderPerfil(){
     if(!d.nome.trim()){$("#pf-nome").focus();toast("Digite seu nome de exibição.");return}
     if(d.usuario){if(!/^[a-z0-9._]{3,20}$/.test(d.usuario)){$("#pf-user-h").textContent="Use de 3 a 20 letras, números, ponto ou _.";$("#pf-user-h").className="err";$("#pf-user").focus();return}
       const dono=Object.entries(S.soc.perfis).find(([id,p])=>id!==S.uid&&p&&p.usuario===d.usuario);if(dono){$("#pf-user-h").textContent="Este nome de usuário já está em uso.";$("#pf-user-h").className="err";$("#pf-user").focus();return}}
-    const doc={...d,nome:d.nome.trim(),bio:(d.bio||"").trim(),atualizado:Date.now(),desde:d.desde||Date.now()};
+    const doc={...d,nome:d.nome.trim(),bio:(d.bio||"").trim(),atualizado:Date.now(),desde:d.desde||Date.now(),nivel:nivelDe(G().xp)};
     if(await gravarPub("perfis",doc)){S.pub=doc;S.soc.perfis[S.uid]=doc;S.perfil.nome=doc.nome;gravar("perfil",S.perfil);S.pfRascunho=null;renderSideUser();publicarRanking();toast("Perfil salvo.");renderPerfil()}
   };
 }
+
+/* ================= Desafios, níveis, distintivos e recompensas ================= */
+const MOLDURAS={bronze:["Bronze","linear-gradient(135deg,#e7a46b,#8c5a2b)"],prata:["Prata","linear-gradient(135deg,#f3f4f6,#9ca3af)"],ouro:["Ouro","linear-gradient(135deg,#fde68a,#d97706)"],
+  diamante:["Diamante","linear-gradient(135deg,#a5f3fc,#e0f2fe,#93c5fd,#c4b5fd)"],chamas:["Chamas","linear-gradient(0deg,#ef4444,#f97316,#facc15)"],neon:["Neon","conic-gradient(#22d3ee,#e879f9,#22d3ee)"],
+  arcoiris:["Arco-íris","conic-gradient(#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#8b5cf6,#ef4444)"],floresta:["Floresta","linear-gradient(135deg,#86efac,#166534)"]};
+const CAPAS_ESP={galaxia:["Galáxia","radial-gradient(circle at 20% 30%,#f0abfc 0,transparent 25%),radial-gradient(circle at 75% 60%,#93c5fd 0,transparent 30%),linear-gradient(135deg,#0f0c29,#302b63,#24243e)"],
+  boreal:["Aurora boreal","linear-gradient(160deg,#0b132b 10%,#1c7c54 45%,#73e2a7 60%,#5b21b6 90%)"],fogo:["Fogo","linear-gradient(135deg,#450a0a,#dc2626 45%,#f59e0b 80%,#fde047)"],abismo:["Oceano profundo","linear-gradient(180deg,#0c4a6e,#082f49 60%,#020617)"]};
+const TITULOS={iniciante:"Iniciante",dedicado:"Dedicado",focado:"Focado",imparavel:"Imparável",lenda:"Lenda dos Estudos",maratonista:"Maratonista",madrugador:"Madrugador",coruja:"Coruja",mestre_rev:"Mestre das Revisões",elite:"Atirador de Elite",semana_perfeita:"Semana Perfeita"};
+const IB={medal:'<circle cx="12" cy="15" r="6"/><path d="M8.5 10 6 3h4l2 4 2-4h4l-2.5 7"/>',flame:'<path d="M12 22c4 0 7-3 7-7 0-4-3-6-4-10-2 2-3 4-3 6-1-1-2-2-2-4-3 2-5 5-5 8 0 4 3 7 7 7z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5"/>',repeat:'<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',crown:'<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>'};
+const ib=(n,sz)=>`<svg viewBox="0 0 24 24" width="${sz||16}" height="${sz||16}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IB[n]||IB.star}</svg>`;
+const EMBLEMAS={primeira:["Primeira sessão","star"],h10:["10 horas","clock"],h50:["50 horas","clock"],h100:["100 horas","crown"],seq7:["7 dias seguidos","flame"],seq30:["30 dias seguidos","flame"],
+  q100:["100 questões","target"],q500:["500 questões","target"],rev20:["20 revisões","repeat"],semana:["Semana perfeita","check"],materia:["Matéria concluída","book"],desafios10:["10 desafios","medal"],desafios50:["50 desafios","medal"]};
+// Itens que podem ser ganhos: tipo, chave e como desbloquear (para mostrar na coleção)
+const ITENS=[
+  ...Object.entries(MOLDURAS).map(([k,[n]])=>({id:"moldura:"+k,tipo:"moldura",k,n})),
+  ...Object.entries(CAPAS_ESP).map(([k,[n]])=>({id:"capa:"+k,tipo:"capa",k,n})),
+  ...Object.entries(TITULOS).map(([k,n])=>({id:"titulo:"+k,tipo:"titulo",k,n})),
+  ...Object.entries(EMBLEMAS).map(([k,[n]])=>({id:"emblema:"+k,tipo:"emblema",k,n}))];
+const NIVEL_ITENS={2:["titulo:iniciante"],3:["moldura:bronze","titulo:dedicado"],5:["moldura:prata","titulo:focado"],6:["capa:galaxia"],8:["moldura:ouro","titulo:imparavel"],12:["moldura:diamante","titulo:lenda"]};
+const COMO={"moldura:bronze":"Alcance o nível 3","moldura:prata":"Alcance o nível 5","moldura:ouro":"Alcance o nível 8","moldura:diamante":"Alcance o nível 12","moldura:chamas":"Estude 7 dias seguidos","moldura:neon":"Complete o desafio semanal de horas","moldura:arcoiris":"Finalize uma semana inteira do plano","moldura:floresta":"Some 50 horas de estudo",
+  "capa:galaxia":"Alcance o nível 6","capa:boreal":"Estude em 5 dias de uma mesma semana","capa:fogo":"Estude 30 dias seguidos","capa:abismo":"Faça 100 questões",
+  "titulo:iniciante":"Alcance o nível 2","titulo:dedicado":"Alcance o nível 3","titulo:focado":"Alcance o nível 5","titulo:imparavel":"Alcance o nível 8","titulo:lenda":"Alcance o nível 12","titulo:maratonista":"Estude 4 horas em um dia","titulo:madrugador":"Termine uma sessão antes das 7h","titulo:coruja":"Termine uma sessão depois das 23h","titulo:mestre_rev":"Faça 20 revisões","titulo:elite":"Acerte 80% em 100 questões ou mais","titulo:semana_perfeita":"Finalize uma semana inteira do plano"};
+// Conquistas permanentes: condição, emblema e itens extras
+const CONQ=[
+  {k:"primeira",teste:e=>e.sessoes>=1,xp:20},{k:"h10",teste:e=>e.horas>=10,xp:80},{k:"h50",teste:e=>e.horas>=50,xp:200,itens:["moldura:floresta"]},{k:"h100",teste:e=>e.horas>=100,xp:400},
+  {k:"seq7",teste:e=>e.seq>=7,xp:120,itens:["moldura:chamas"]},{k:"seq30",teste:e=>e.seq>=30,xp:400,itens:["capa:fogo"]},
+  {k:"q100",teste:e=>e.q>=100,xp:100,itens:["capa:abismo"]},{k:"q500",teste:e=>e.q>=500,xp:250},{k:"rev20",teste:e=>e.rev>=20,xp:150,itens:["titulo:mestre_rev"]},
+  {k:"desafios10",teste:e=>e.desafios>=10,xp:100},{k:"desafios50",teste:e=>e.desafios>=50,xp:300},
+  {k:"maratona",sem:true,teste:e=>e.maxDia>=240,xp:100,itens:["titulo:maratonista"]},{k:"madrugada",sem:true,teste:e=>e.madrugador,xp:40,itens:["titulo:madrugador"]},{k:"noite",sem:true,teste:e=>e.coruja,xp:40,itens:["titulo:coruja"]},
+  {k:"elite",sem:true,teste:e=>e.q>=100&&e.acertos/e.q>=.8,xp:150,itens:["titulo:elite"]}];
+const xpNivel=n=>50*n*(n-1);
+function nivelDe(xp){let n=1;while(xp>=xpNivel(n+1))n++;return n}
+function G(){S.conq=S.conq&&S.conq.resgatados?S.conq:{xp:0,itens:{},resgatados:{},distintivos:{}};return S.conq}
+const temItem=id=>!!G().itens[id];
+function segundaDaSemana(){const d=new Date();d.setDate(d.getDate()-hojeIdx());return dataISO(d)}
+function diasDaSemana(){const out=[];const seg=new Date(segundaDaSemana()+"T12:00");for(let i=0;i<7;i++){const d=new Date(seg);d.setDate(seg.getDate()+i);out.push(dataISO(d))}return out}
+function rng(seed){let h=1779033703^seed.length;for(let i=0;i<seed.length;i++){h=Math.imul(h^seed.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return((h^=h>>>16)>>>0)/4294967296}}
+function embaralhar(arr,seed){const r=rng(seed),a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function noDia(ts,iso){return ts&&dataISO(new Date(ts))===iso}
+function blocosPlano(){return S.plano?DIAS.flatMap(x=>S.plano.semana[x.k]||[]):[]}
+// ---- desafios do dia e da semana ----
+function desafiosDoDia(){
+  const hoje=dataISO(),L=garantirTotais(S.pomoLog),d=L.dias[hoje]||{min:0,mat:{}};
+  const alvoMin=Math.max(30,Math.min(180,Math.round(metaHoje()*0.6/10)*10));
+  const sess=(L.hist||[]).filter(h=>noDia(h.em,hoje)).length;
+  const mats=Object.keys(d.mat||{}).filter(m=>m!=="Sem matéria").length;
+  const blocosHoje=blocosPlano().filter(b=>b.feito&&noDia(b.feitoEm,hoje)).length;
+  const revHoje=((S.revisoes&&S.revisoes.itens)||[]).filter(r=>r.feita&&noDia(r.feitaEm,hoje)).length;
+  const topHoje=S.edital?S.edital.materias.flatMap(m=>m.topicos).filter(t=>t.feito&&noDia(t.feitoEm,hoje)).length:0;
+  const pool=[
+    {k:"sessoes",t:"Faça 3 sessões de estudo",d:"Cronômetro ou pomodoro: cada sessão finalizada conta.",ic:"repeat",p:sess,a:3,xp:30},
+    {k:"materias",t:"Estude 2 matérias diferentes",d:"Escolha a matéria no cronômetro ou no pomodoro.",ic:"book",p:mats,a:2,xp:30},
+    {k:"questoes",t:"Registre 10 questões",d:"Informe as questões ao finalizar uma sessão.",ic:"target",p:d.q||0,a:10,xp:30},
+    ...(blocosPlano().length?[{k:"blocos",t:"Conclua 2 blocos do seu plano",d:"Marque os blocos de hoje em Minha semana.",ic:"check",p:blocosHoje,a:2,xp:40}]:[]),
+    ...(revisoesPendentes().length||revHoje?[{k:"revisao",t:"Faça uma revisão programada",d:"Marque uma revisão de hoje como feita.",ic:"repeat",p:revHoje,a:1,xp:30}]:[]),
+    ...(S.edital?[{k:"topico",t:"Estude um tópico da prova",d:"Marque um tópico como estudado em Tópicos da prova.",ic:"book",p:topHoje,a:1,xp:30}]:[])];
+  const fixo={k:"tempo",t:`Estude ${fmtH(alvoMin)} hoje`,d:"Some o tempo do cronômetro e do pomodoro.",ic:"clock",p:d.min||0,a:alvoMin,xp:40,fmt:fmtH};
+  const meta={k:"meta",t:`Bata sua meta de hoje (${fmtH(metaHoje())})`,d:"A meta diária aparece no início.",ic:"flame",p:d.min||0,a:metaHoje(),xp:50,fmt:fmtH};
+  return [fixo,...embaralhar(pool,"d"+hoje+S.uid).slice(0,2),meta].map(x=>({...x,id:`d:${hoje}:${x.k}`}));
+}
+function desafiosDaSemana(){
+  const sem=segundaDaSemana(),dias=diasDaSemana(),L=garantirTotais(S.pomoLog);
+  const minSem=dias.reduce((a,d)=>a+minutosDia(d),0),diasEst=dias.filter(d=>minutosDia(d)>0).length,qSem=dias.reduce((a,d)=>a+((L.dias[d]||{}).q||0),0);
+  const desde=new Date(sem+"T00:00").getTime();
+  const revSem=((S.revisoes&&S.revisoes.itens)||[]).filter(r=>r.feita&&r.feitaEm>=desde).length;
+  const topSem=S.edital?S.edital.materias.flatMap(m=>m.topicos).filter(t=>t.feito&&t.feitoEm>=desde).length:0;
+  const bl=blocosPlano(),feitos=bl.filter(b=>b.feito).length;
+  const porMat={};bl.forEach(b=>{if(b.materia==="Simulado geral")return;const m=porMat[b.materia]=porMat[b.materia]||{t:0,f:0};m.t++;if(b.feito)m.f++});
+  const melhor=Object.entries(porMat).filter(([,v])=>v.t>=2).sort((a,b)=>(b[1].f/b[1].t)-(a[1].f/a[1].t))[0];
+  const planoMin=bl.reduce((a,b)=>a+(b.min||0),0);const alvoH=Math.max(3,Math.min(25,Math.round((planoMin?planoMin*0.7:300)/60)));
+  const lista=[
+    {k:"horas",t:`Estude ${alvoH}h nesta semana`,d:"Tempo do cronômetro e do pomodoro, de segunda a domingo.",ic:"clock",p:minSem,a:alvoH*60,xp:150,itens:["moldura:neon"],fmt:fmtH},
+    ...(bl.length?[{k:"semana",t:"Finalize a semana",d:`Conclua todos os ${bl.length} blocos do seu plano semanal.`,ic:"check",p:feitos,a:bl.length,xp:250,itens:["titulo:semana_perfeita","moldura:arcoiris","emblema:semana"]}]:[]),
+    ...(melhor?[{k:"materia",t:`Finalize uma matéria`,d:`Conclua todos os blocos de uma matéria nesta semana. Mais perto: ${melhor[0]} (${melhor[1].f}/${melhor[1].t}).`,ic:"book",p:melhor[1].f,a:melhor[1].t,xp:150,itens:["emblema:materia"]}]:[])];
+  const extra=[{k:"dias",t:"Estude em 5 dias diferentes",d:"Constância vale mais do que um dia longo.",ic:"flame",p:diasEst,a:5,xp:120,itens:["capa:boreal"]},
+    {k:"questoes",t:"Faça 50 questões",d:"Registre as questões ao finalizar cada sessão.",ic:"target",p:qSem,a:50,xp:120},
+    {k:"revisoes",t:"Faça 5 revisões",d:"Revisões programadas de 1, 7 e 30 dias.",ic:"repeat",p:revSem,a:5,xp:120},
+    ...(S.edital?[{k:"topicos",t:"Estude 5 tópicos da prova",d:"Marque os tópicos em Tópicos da prova.",ic:"book",p:topSem,a:5,xp:120}]:[])];
+  const escolhidos=lista.concat(embaralhar(extra,"w"+sem+S.uid).slice(0,Math.max(1,4-lista.length)));
+  return escolhidos.map(x=>({...x,id:`w:${sem}:${x.k}`}));
+}
+function prontosParaResgatar(){if(!S.pomoLog)return 0;const g=G();return desafiosDoDia().concat(desafiosDaSemana()).filter(c=>c.p>=c.a&&!g.resgatados[c.id]).length}
+// ---- conquistas ----
+function estatGamif(){const L=garantirTotais(S.pomoLog);const q=Object.values(L.q||{}).reduce((a,v)=>({f:a.f+v.feitas,c:a.c+v.acertos}),{f:0,c:0});
+  const hs=(L.hist||[]);return {sessoes:L.sessoes||0,horas:L.tot.min/60,seq:Math.max(sequencia(),recordeSequencia()),q:q.f,acertos:q.c,rev:((S.revisoes&&S.revisoes.itens)||[]).filter(r=>r.feita).length,
+    desafios:Object.keys(G().resgatados).length,maxDia:Math.max(0,...Object.values(L.dias).map(d=>d.min||0)),
+    madrugador:hs.some(h=>new Date(h.em).getHours()<7),coruja:hs.some(h=>new Date(h.em).getHours()>=23)}}
+function darItens(ids){const g=G(),novos=[];(ids||[]).forEach(id=>{if(!g.itens[id]){g.itens[id]=Date.now();novos.push(id)}});return novos}
+function ganharXP(n){const g=G(),antes=nivelDe(g.xp);g.xp+=n;const depois=nivelDe(g.xp);let novos=[];for(let k=antes+1;k<=depois;k++)novos=novos.concat(darItens(NIVEL_ITENS[k]));return {subiu:depois>antes,nivel:depois,novos}}
+function verificarConquistas(silencioso){
+  if(!S.pomoLog)return;const g=G(),e=estatGamif();let mudou=false;
+  CONQ.forEach(c=>{if(g.distintivos[c.k]||!c.teste(e))return;g.distintivos[c.k]=Date.now();mudou=true;
+    const novos=darItens((EMBLEMAS[c.k]?["emblema:"+c.k]:[]).concat(c.itens||[]));const r=ganharXP(c.xp);
+    if(!silencioso)toast(`Conquista desbloqueada: ${EMBLEMAS[c.k]?EMBLEMAS[c.k][0]:nomeItem(novos[0]||"")} (+${c.xp} XP)`)});
+  if(mudou){salvarConq()}
+}
+function salvarConq(){gravar("conquistas",G());publicarNivel()}
+function publicarNivel(){if(S.mode!=="nuvem")return;const n=nivelDe(G().xp);const p=S.pub||{nome:S.perfil.nome||"Estudante"};if(p.nivel===n)return;const d={...p,nivel:n};S.pub=d;S.soc.perfis[S.uid]=d;gravarPub("perfis",d)}
+function nomeItem(id){const it=ITENS.find(i=>i.id===id);return it?it.n:id}
+function tipoNome(t){return {moldura:"Moldura",capa:"Capa",titulo:"Título",emblema:"Emblema"}[t]}
+function resgatar(c){
+  const g=G();if(g.resgatados[c.id]||c.p<c.a)return;g.resgatados[c.id]=Date.now();
+  const novos=darItens(c.itens);const r=ganharXP(c.xp);verificarConquistas(true);salvarConq();
+  celebrar(`+${c.xp} XP`,c.t,novos.concat(r.novos),r.subiu?r.nivel:0);
+}
+function previaItem(id,grande){const [tipo,k]=id.split(":");const sz=grande?56:36;
+  if(tipo==="moldura")return `<span class="fr" style="background:${MOLDURAS[k][1]};padding:3px"><span class="avatar" style="width:${sz}px;height:${sz}px">${ib("star",sz/2.4)}</span></span>`;
+  if(tipo==="capa")return `<span style="display:block;width:${sz*1.6}px;height:${sz}px;border-radius:8px;background:${CAPAS_ESP[k][1]}"></span>`;
+  if(tipo==="titulo")return `<span class="pill solid">${esc(TITULOS[k])}</span>`;
+  return `<span class="pill" style="gap:6px">${ib(EMBLEMAS[k][1],14)}${esc(EMBLEMAS[k][0])}</span>`}
+function celebrar(titulo,sub,itens,nivel){
+  document.querySelectorAll(".modal-bg").forEach(m=>m.remove());const bg=document.createElement("div");bg.className="modal-bg";
+  bg.innerHTML=`<div class="card stack modal celebra" role="dialog" aria-modal="true" style="text-align:center;align-items:center">
+    <div class="confete" aria-hidden="true">${Array.from({length:18},(_,i)=>`<i style="--x:${(i*37%100)-50}px;--d:${(i%6)*60}ms;--h:${(i*53)%360}"></i>`).join("")}</div>
+    <span class="eyebrow">Recompensa resgatada</span><h2>${esc(titulo)}</h2><p class="muted">${esc(sub)}</p>
+    ${nivel?`<div class="pill solid" style="font-size:.9rem;padding:4px 12px">${ib("crown",14)} Você subiu para o nível ${nivel}!</div>`:""}
+    ${itens.length?`<div class="stack sm" style="align-items:center"><span class="small muted">Novos itens para o seu perfil</span><div class="row" style="justify-content:center;gap:14px">${itens.map(id=>`<div class="stack sm" style="align-items:center;gap:4px">${previaItem(id,true)}<span class="small">${tipoNome(id.split(":")[0])}: ${esc(nomeItem(id))}</span></div>`).join("")}</div>`:""}
+    <div class="row" style="justify-content:center">${itens.length?`<button class="btn primary" type="button" data-c="usar">Equipar no perfil</button>`:""}<button class="btn" type="button" data-c="ok">Continuar</button></div></div>`;
+  document.body.appendChild(bg);
+  bg.addEventListener("click",e=>{const a=e.target.closest("[data-c]");if(e.target===bg||(a&&a.dataset.c==="ok")){bg.remove();if(S.view==="desafios")renderDesafios()}if(a&&a.dataset.c==="usar"){bg.remove();S.desTab="colecao";go("desafios")}});
+}
+// ---- equipar itens no perfil público ----
+function equipado(){const p=S.pub||{};return {moldura:p.moldura||"",capa:p.capa||"",titulo:p.titulo||"",emblemas:p.emblemas||[]}}
+async function equipar(id){
+  if(S.mode!=="nuvem"){toast("Entre com uma conta para usar itens no perfil.");return}
+  const [tipo,k]=id.split(":");const p={...(S.pub||{nome:S.perfil.nome||"Estudante"})};
+  if(tipo==="moldura")p.moldura=p.moldura===k?"":k;
+  if(tipo==="capa")p.capa=p.capa===k?"":k;
+  if(tipo==="titulo")p.titulo=p.titulo===k?"":k;
+  if(tipo==="emblema"){const e=new Set(p.emblemas||[]);if(e.has(k))e.delete(k);else{if(e.size>=3){toast("Você pode exibir até 3 emblemas. Tire um antes.");return}e.add(k)}p.emblemas=[...e]}
+  p.nivel=nivelDe(G().xp);
+  if(await gravarPub("perfis",p)){S.pub=p;S.soc.perfis[S.uid]=p;S.pfRascunho=null;renderSideUser();toast("Perfil atualizado.");if(S.view==="desafios")renderDesafios()}
+}
+// ---- tela Desafios ----
+function tempoAte(fim){const ms=Math.max(0,fim-Date.now()),h=Math.floor(ms/3600e3),d=Math.floor(h/24);return d?`${d}d ${h%24}h`:`${h}h ${Math.floor(ms/60000)%60}min`}
+function cartaoDesafio(c){const g=G(),ok=c.p>=c.a,res=!!g.resgatados[c.id],pct=Math.min(100,Math.round(c.p/c.a*100)),f=c.fmt||(v=>Math.floor(v));
+  return `<div class="card desafio ${res?"feito":""}"><div class="row" style="flex-wrap:nowrap;align-items:flex-start;gap:12px"><span class="des-ic">${ib(c.ic,20)}</span>
+    <div style="flex:1;min-width:0"><b>${esc(c.t)}</b><div class="small muted">${esc(c.d)}</div></div></div>
+    <div class="row small" style="justify-content:space-between"><span class="mono">${f(Math.min(c.p,c.a))} / ${f(c.a)}</span><span class="muted">${pct}%</span></div><div class="prog"><i style="width:${pct}%"></i></div>
+    <div class="row" style="justify-content:space-between;gap:8px"><div class="row" style="gap:6px"><span class="pill">+${c.xp} XP</span>${(c.itens||[]).filter(i=>!temItem(i)).slice(0,2).map(i=>`<span class="pill" title="${tipoNome(i.split(":")[0])}">${ib("star",12)} ${esc(nomeItem(i))}</span>`).join("")}</div>
+      ${res?`<span class="small" style="color:var(--ok);font-weight:600">${ib("check",14)} Resgatado</span>`:ok?`<button class="btn sm primary" type="button" data-resgatar="${c.id}">Resgatar</button>`:""}</div></div>`}
+function renderDesafios(){
+  verificarConquistas(true);
+  const g=G(),n=nivelDe(g.xp),base=xpNivel(n),prox=xpNivel(n+1),pct=Math.round((g.xp-base)/(prox-base)*100),tab=S.desTab||"diarios";
+  const dia=desafiosDoDia(),sem=desafiosDaSemana();
+  const fimDia=new Date();fimDia.setHours(24,0,0,0);const fimSem=new Date(segundaDaSemana()+"T00:00");fimSem.setDate(fimSem.getDate()+7);
+  const prontos=dia.concat(sem).filter(c=>c.p>=c.a&&!g.resgatados[c.id]).length;
+  const tit=(S.pub&&S.pub.titulo&&TITULOS[S.pub.titulo])||"";
+  let corpo="";
+  if(tab==="diarios")corpo=`<p class="small muted" style="margin-bottom:10px">Novos desafios em ${tempoAte(fimDia)}.</p><div class="desafios">${dia.map(cartaoDesafio).join("")}</div>`;
+  else if(tab==="semanais")corpo=`<p class="small muted" style="margin-bottom:10px">A semana termina em ${tempoAte(fimSem)}. Os blocos do plano são desmarcados toda segunda-feira.</p><div class="desafios">${sem.map(cartaoDesafio).join("")}</div>`;
+  else if(tab==="conquistas"){const e=estatGamif();corpo=`<div class="desafios">${CONQ.map(c=>{const tem=!!g.distintivos[c.k];const nome=EMBLEMAS[c.k]?EMBLEMAS[c.k][0]:nomeItem((c.itens||[])[0]);const como=EMBLEMAS[c.k]?"":"";
+      const desc={primeira:"Finalize sua primeira sessão de estudo.",h10:"Some 10 horas de estudo no app.",h50:"Some 50 horas de estudo.",h100:"Some 100 horas de estudo.",seq7:"Estude 7 dias seguidos.",seq30:"Estude 30 dias seguidos.",q100:"Registre 100 questões.",q500:"Registre 500 questões.",rev20:"Faça 20 revisões programadas.",desafios10:"Resgate 10 desafios.",desafios50:"Resgate 50 desafios.",maratona:"Estude 4 horas em um único dia.",madrugada:"Termine uma sessão antes das 7h.",noite:"Termine uma sessão depois das 23h.",elite:"Acerte 80% de 100 questões ou mais."}[c.k];
+      return `<div class="card desafio ${tem?"":"bloq"}"><div class="row" style="flex-wrap:nowrap;gap:12px"><span class="des-ic" style="${tem?"background:var(--accent);color:var(--accent-fg)":""}">${ib(EMBLEMAS[c.k]?EMBLEMAS[c.k][1]:"medal",20)}</span><div style="min-width:0"><b>${esc(nome)}</b><div class="small muted">${desc}</div></div></div>
+        <div class="row" style="justify-content:space-between"><span class="pill">+${c.xp} XP</span>${tem?`<span class="small" style="color:var(--ok);font-weight:600">${ib("check",14)} ${new Date(g.distintivos[c.k]).toLocaleDateString("pt-BR")}</span>`:`<span class="small muted">${ib("target",13)} bloqueado</span>`}</div></div>`}).join("")}</div>`}
+  else{const eq=equipado();const grupos=[["moldura","Molduras da foto"],["capa","Capas exclusivas"],["titulo","Títulos"],["emblema","Emblemas (até 3 no perfil)"]];
+    corpo=grupos.map(([t,nm])=>`<div class="card" style="margin-bottom:14px"><div class="card-h"><h3>${nm}</h3><span class="small muted">${ITENS.filter(i=>i.tipo===t&&temItem(i.id)).length} de ${ITENS.filter(i=>i.tipo===t).length}</span></div>
+      <div class="colecao">${ITENS.filter(i=>i.tipo===t).map(i=>{const tem=temItem(i.id);const uso=t==="emblema"?eq.emblemas.includes(i.k):eq[t]===i.k;
+        return `<div class="item ${tem?"":"bloq"} ${uso?"uso":""}"><div class="item-prev">${previaItem(i.id)}</div><b class="small">${esc(i.n)}</b>
+          ${tem?`<button class="btn sm ${uso?"":"primary"}" type="button" data-equipar="${i.id}">${uso?"Em uso ✓":"Usar"}</button>`:`<span class="small muted" style="text-align:center">${esc(COMO[i.id]||(EMBLEMAS[i.k]?"Desbloqueie a conquista":"Bloqueado"))}</span>`}</div>`}).join("")}</div></div>`).join("")}
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Desafios","Complete desafios diários e semanais, suba de nível e ganhe itens para personalizar seu perfil.")}
+    <div class="card nivel-card" style="margin-bottom:16px"><div class="row" style="flex-wrap:nowrap;gap:16px">${S.mode==="nuvem"?avatar(S.uid,"lg"):`<span class="avatar lg">${ib("star",28)}</span>`}
+      <div style="flex:1;min-width:0"><div class="row" style="gap:8px"><h2>Nível ${n}</h2>${tit?`<span class="pill solid">${esc(tit)}</span>`:""}</div>
+        <div class="small muted" style="margin:4px 0 8px">${g.xp} XP · faltam ${prox-g.xp} XP para o nível ${n+1}</div><div class="prog" style="height:10px"><i style="width:${pct}%"></i></div>
+        <div class="row small muted" style="margin-top:8px;gap:14px"><span>${Object.keys(g.distintivos).length} conquistas</span><span>${Object.keys(g.itens).length} itens</span><span>${Object.keys(g.resgatados).length} desafios resgatados</span></div></div></div></div>
+    <div class="tabs" role="tablist">${[["diarios","Diários"],["semanais","Semanais"],["conquistas","Conquistas"],["colecao","Coleção"]].map(([k,nm])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-dtab="${k}">${nm}${k==="diarios"&&dia.some(c=>c.p>=c.a&&!g.resgatados[c.id])||k==="semanais"&&sem.some(c=>c.p>=c.a&&!g.resgatados[c.id])?' <span class="pill solid" style="padding:0 6px">!</span>':""}</button>`).join("")}</div>
+    ${corpo}
+    ${S.mode!=="nuvem"?`<p class="hint" style="margin-top:12px">Como visitante, o progresso fica só neste navegador e os itens não aparecem para outras pessoas.</p>`:""}
+  </div>`;
+  $$("[data-dtab]").forEach(b=>b.onclick=()=>{S.desTab=b.dataset.dtab;renderDesafios()});
+  $$("[data-resgatar]").forEach(b=>b.onclick=()=>{const c=dia.concat(sem).find(x=>x.id===b.dataset.resgatar);if(c)resgatar(c)});
+  $$("[data-equipar]").forEach(b=>b.onclick=()=>equipar(b.dataset.equipar));
+  atualizarBadgeDesafios(prontos);
+}
+function atualizarBadgeDesafios(n){if(n==null)n=prontosParaResgatar();$$('[data-go="desafios"]').forEach(a=>{let b=a.querySelector(".badge");if(n){if(!b){a.insertAdjacentHTML("beforeend",'<span class="badge"></span>');b=a.querySelector(".badge")}b.textContent=n}else if(b)b.remove()})}
+// semana nova: desmarca os blocos do plano toda segunda-feira
+function virarSemana(){if(!S.plano)return;const sem=segundaDaSemana();if(!S.plano.semanaRef){S.plano.semanaRef=sem;gravar("plano",S.plano);return}
+  if(S.plano.semanaRef!==sem){DIAS.forEach(x=>(S.plano.semana[x.k]||[]).forEach(b=>{b.feito=false;delete b.feitoEm}));S.plano.semanaRef=sem;gravar("plano",S.plano,true)}}
 
 /* ================= Configurações ================= */
 function renderConfig(){
