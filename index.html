@@ -1965,18 +1965,33 @@ function contextoMentoria(){
     `Prova/edital: ${S.edital?(S.edital.nome||"prova")+" — "+ed:"nenhuma"}`,
     `Banco de questões (feitas/acertos por tópico): ${Object.entries(porTop).map(([k,[f,c]])=>`${k}: ${c}/${f}`).join("; ")||"nenhuma resolvida"}`,
     `Plano da semana: ${pl}`].join("\n")}
+// No site oficial (GitHub Pages), a IA vem do Firebase AI Logic com a Gemini Developer API (plano gratuito, sem chave no código)
+const IA_FB_VERSAO="12.19.0",IA_FB_MODELOS=["gemini-3.8-flash","gemini-3.5-flash-lite"];
+let iaFBPromessa=null;
+function iaMentoriaDisponivel(){return !!S.sample||(FBM()&&!!window.MAPA_FIREBASE_CONFIG)}
+function iaFirebase(){
+  if(!iaFBPromessa)iaFBPromessa=(async()=>{const b=`https://www.gstatic.com/firebasejs/${IA_FB_VERSAO}/`;
+    const {initializeApp}=await import(b+"firebase-app.js"),{getAI,getGenerativeModel,GoogleAIBackend}=await import(b+"firebase-ai.js");
+    const ai=getAI(initializeApp(window.MAPA_FIREBASE_CONFIG,"mentoria"),{backend:new GoogleAIBackend()});let mi=0;
+    return async(turns,opts)=>{const contents=turns.map(t=>({role:t.role==="assistant"?"model":"user",parts:[{text:t.content}]}));
+      for(;;){try{const r=await getGenerativeModel(ai,{model:IA_FB_MODELOS[mi]}).generateContentStream({contents});let text="";
+          for await(const ch of r.stream){let d="";try{d=ch.text()}catch(e){}text+=d;if(opts&&opts.onText)opts.onText({text,delta:d})}return {text,truncated:false}}
+        catch(e){const m=String(e&&e.message||e);if(mi<IA_FB_MODELOS.length-1&&/not found|404|not supported|unknown model/i.test(m)){mi++;continue}
+          throw {code:/429|quota|RESOURCE_EXHAUSTED/i.test(m)?"rate_limited":/403|PERMISSION|not been used|disabled|api-not-enabled|firebasevertexai|firebaseml/i.test(m)?"ia_desativada":"erro",message:m}}}}})();
+  iaFBPromessa.catch(()=>{iaFBPromessa=null});return iaFBPromessa}
+async function iaMentoria(){return S.sample||await iaFirebase()}
 async function renderMentoria(){
-  if(!S.sample){
+  if(!iaMentoriaDisponivel()){
     $("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Mentoria com IA")}
       <div class="card stack" style="align-items:center;text-align:center;padding:40px 24px">
         <span class="logo" style="width:56px;height:56px;border-radius:14px">${ico("mentor")}</span>
         <span class="pill">Em breve</span>
-        <h2>Esta aba receberá atualizações futuras</h2>
+        ${STANDALONE&&window.MAPA_FIREBASE_CONFIG&&S.mode!=="nuvem"?`<h2>Entre com sua conta para usar a mentoria</h2><p class="muted" style="max-width:56ch">A mentoria com IA conversa com você usando seus dados salvos na nuvem.</p><button class="btn primary" type="button" id="mt-entrar">Sair e entrar com a conta</button>`:`<h2>Esta aba receberá atualizações futuras</h2>`}
         <p class="muted" style="max-width:56ch">A mentoria vai conversar com você sobre seus estudos usando seus dados do Logic Academy: horas por matéria, desempenho no banco de questões, tópicos da prova e o plano da semana. Ela indicará o que revisar, como ajustar a rotina e quais questões praticar.</p>
         <div class="sugs" style="justify-content:center">${["Diagnóstico da semana","O que revisar hoje","Plano para a reta final","Análise dos erros","Dicas de método"].map(x=>`<span class="pill">${x}</span>`).join("")}</div>
         <button class="btn" type="button" data-link="questoes">${ico("qbank")}Praticar no banco de questões</button>
       </div></div>`;
-    $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));return}
+    $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));const me=$("#mt-entrar");if(me)me.onclick=sair;return}
   if(!S.mentor){let d=null;try{d=await ler("mentoria")}catch(e){}S.mentor={msgs:Array.isArray(d&&d.msgs)?d.msgs:[],ocupado:false}}
   if(S.qb&&!S.qb.doc)await qbDoc();else if(!S.qb){qbEstado();await qbDoc()}
   if(S.view!=="mentoria")return;
@@ -2007,10 +2022,10 @@ async function mentorEnviar(t){
   const hist=m.msgs.slice(-12).map(x=>({role:x.r==="user"?"user":"assistant",content:x.t}));while(hist.length&&hist[0].role!=="user")hist.shift();
   hist[0]={...hist[0],content:sistema+"\n\nPERGUNTA:\n"+hist[0].content};
   try{
-    const r=await S.sample(hist,{modelTier:"default",cache:false,onText:({text})=>{const el=$("#mt-escrevendo");if(el){el.innerHTML=mtFormatar(text);const b=$("#mt-msgs");if(b)b.scrollTop=b.scrollHeight}}});
+    const ia=await iaMentoria();const r=await ia(hist,{modelTier:"default",cache:false,onText:({text})=>{const el=$("#mt-escrevendo");if(el){el.innerHTML=mtFormatar(text);const b=$("#mt-msgs");if(b)b.scrollTop=b.scrollHeight}}});
     m.msgs.push({r:"ia",t:(r&&r.text||"").trim()||"Não consegui responder agora. Tente de novo."});
-  }catch(e){
-    m.msgs.push({r:"ia",t:e&&e.code==="rate_limited"?"Muitas perguntas seguidas. Espere um pouco e tente de novo.":e&&e.code==="not_granted"?"A IA não foi liberada nesta visualização.":"Não consegui responder agora ("+(e&&e.code||"erro")+"). Tente de novo."+(e&&e.text?"\n\n"+e.text:"")})}
+  }catch(e){console.warn("mentoria",e&&e.code,e&&e.message);
+    m.msgs.push({r:"ia",t:e&&e.code==="rate_limited"?"Muitas perguntas seguidas. Espere um pouco e tente de novo.":e&&e.code==="not_granted"?"A IA não foi liberada nesta visualização.":e&&e.code==="ia_desativada"?"A mentoria ainda não foi ativada no Firebase deste site. Quem administra o site precisa abrir o console do Firebase em AI Logic e ativar a Gemini Developer API.":"Não consegui responder agora ("+(e&&e.code||"erro")+"). Tente de novo."+(e&&e.text?"\n\n"+e.text:"")})}
   m.ocupado=false;m.msgs=m.msgs.slice(-40);gravar("mentoria",{msgs:m.msgs});if(S.view==="mentoria")renderMentoria();
 }
 
