@@ -16,3 +16,14 @@ Site: https://dematospromp.github.io/mapa-de-estudos/
 4. Em **Configurações do projeto → Seus apps**, crie um app da Web e copie o objeto `firebaseConfig` para `firebase-config.js`.
 
 Opcional: para mostrar também o botão "Entrar com Google", ative o provedor Google, adicione `dematospromp.github.io` em **Authentication → Configurações → Domínios autorizados** e acrescente `google: true` ao objeto em `firebase-config.js`.
+
+## Desafios conferidos pelo servidor
+
+XP, nível, itens e resgates ficam nas coleções `conquistas/{uid}` e `resgates/{uid}/itens/{id}`. As regras em `firestore.rules` conferem cada resgate:
+
+- a tabela oficial de XP e itens (`defs()`), que precisa ser igual à `DEF_SRV` do site;
+- o período (dia, semana e mês no horário de Brasília, pela hora do servidor);
+- o tempo de estudo que o próprio servidor registrou no `ranking` nesse período;
+- um resgate por desafio e período, sem apagar nem editar depois.
+
+O perfil público só aceita molduras, capas, títulos, emblemas e nível que estejam em `conquistas/{uid}`. Sempre que mudar as regras, cole o arquivo inteiro de novo no console do Firebase.

@@ -7,9 +7,35 @@ service cloud.firestore {
     // Dados privados de cada pessoa: triagem, plano, edital, tempo de estudo, grupos e conversas vistas
     match /data/users/{uid}/{doc=**} { allow read, write: if eu(uid); }
 
-    // Perfil público (nome, foto, bio, amigos) e ranking: todos leem, cada um escreve o seu
-    match /perfis/{uid} { allow read: if logado(); allow write: if eu(uid); }
-    // Ranking: o servidor não aceita somar mais tempo do que o tempo real que passou desde a última vez que o total mudou
+    // Perfil público (nome, foto, bio, amigos): itens equipados precisam estar na coleção verificada da pessoa
+    match /perfis/{uid} {
+      function capaLivre(c) { return c in ['', 'grafite', 'oceano', 'floresta', 'aurora', 'entardecer', 'lavanda', 'areia', 'noite']; }
+      function semItens() {
+        let d = request.resource.data;
+        return d.get('moldura', '') == '' && d.get('titulo', '') == '' && capaLivre(d.get('capa', ''))
+          && d.get('emblemas', []).size() == 0 && d.get('nivel', 1) == 1;
+      }
+      function possui(id) { return conqDe(uid).itens.get(id, false) == true; }
+      function itensOk() {
+        let d = request.resource.data;
+        let e = d.get('emblemas', []);
+        return (d.get('moldura', '') == '' || possui('moldura:' + d.moldura))
+          && (d.get('titulo', '') == '' || possui('titulo:' + d.titulo))
+          && (capaLivre(d.get('capa', '')) || possui('capa:' + d.capa))
+          && e.size() <= 3 && (e.size() < 1 || possui('emblema:' + e[0]))
+          && (e.size() < 2 || possui('emblema:' + e[1])) && (e.size() < 3 || possui('emblema:' + e[2]))
+          && d.get('nivel', 1) == conqDe(uid).nivel;
+      }
+      allow read: if logado();
+      allow write: if eu(uid) && (semItens() || itensOk());
+    }
+    // Datas do servidor no horário de Brasília (UTC-3)
+    function diaBR() { return math.floor((request.time.toMillis() - 10800000) / 86400000); }
+    function semanaBR() { return math.floor((diaBR() + 3) / 7); }
+    function mesBR() { return (request.time - duration.value(3, 'h')).year() * 12 + (request.time - duration.value(3, 'h')).month(); }
+
+    // Ranking: o servidor não aceita somar mais tempo do que o tempo real que passou desde a última vez que o total mudou,
+    // e guarda o total no início do dia, da semana e do mês para conferir os desafios
     match /ranking/{uid} {
       function refAntes() { return resource.data.get('ref', resource.data.atualizado); }
       function folgaOk() {
@@ -21,15 +47,137 @@ service cloud.firestore {
       function valido() {
         let d = request.resource.data;
         return d.atualizado == request.time && d.total is number && d.total >= 0 && d.total <= 300000
-          && (!('hojeMin' in d) || (d.hojeMin is number && d.hojeMin >= 0 && d.hojeMin <= 960));
+          && (!('hojeMin' in d) || (d.hojeMin is number && d.hojeMin >= 0 && d.hojeMin <= 960))
+          && d.dia == diaBR() && d.semana == semanaBR() && d.mes == mesBR();
+      }
+      function basesOk() {
+        let d = request.resource.data;
+        let v = resource.data;
+        return ((d.dia == v.get('dia', -1) && d.diaBase == v.get('diaBase', -1)) || (d.dia != v.get('dia', -1) && d.diaBase == v.total))
+          && ((d.semana == v.get('semana', -1) && d.semanaBase == v.get('semanaBase', -1)) || (d.semana != v.get('semana', -1) && d.semanaBase == v.total))
+          && ((d.mes == v.get('mes', -1) && d.mesBase == v.get('mesBase', -1)) || (d.mes != v.get('mes', -1) && d.mesBase == v.total))
+          && d.total - d.diaBase <= 960
+          && (!('hojeMin' in d) || d.hojeMin <= d.total - d.diaBase + 1);
       }
       allow read: if logado();
-      allow create: if eu(uid) && valido() && request.resource.data.total <= 720 && request.resource.data.ref == request.time;
-      allow update: if eu(uid) && valido()
+      allow create: if eu(uid) && valido() && request.resource.data.total <= 720 && request.resource.data.ref == request.time
+        && request.resource.data.diaBase == 0 && request.resource.data.semanaBase == 0 && request.resource.data.mesBase == 0;
+      allow update: if eu(uid) && valido() && basesOk()
         && ((request.resource.data.total == resource.data.total && request.resource.data.get('ref', null) == resource.data.get('ref', null))
-            || (request.resource.data.total > resource.data.total && request.resource.data.ref == request.time && folgaOk()))
-        && (request.resource.data.get('hojeData', '') != resource.data.get('hojeData', '')
-            || request.resource.data.get('hojeMin', 0) <= resource.data.get('hojeMin', 0) + (request.resource.data.total - resource.data.total) + 1);
+            || (request.resource.data.total > resource.data.total && request.resource.data.ref == request.time && folgaOk()));
+      allow delete: if false;
+    }
+
+    // Tabela oficial de desafios: XP, itens e o mínimo de estudo conferido pelo servidor (minutos)
+    function defs() { return {
+      'd-tempo': {'xp': 40, 'itens': [], 'alvo': true, 'alvoMin': 30, 'min': 0},
+      'd-meta': {'xp': 50, 'itens': [], 'alvo': true, 'alvoMin': 30, 'min': 0},
+      'd-sessoes': {'xp': 30, 'itens': [], 'min': 15}, 'd-materias': {'xp': 30, 'itens': [], 'min': 10},
+      'd-questoes': {'xp': 30, 'itens': [], 'min': 10}, 'd-blocos': {'xp': 40, 'itens': [], 'min': 20},
+      'd-revisao': {'xp': 30, 'itens': [], 'min': 5}, 'd-topico': {'xp': 30, 'itens': [], 'min': 5},
+      'd-cedo': {'xp': 35, 'itens': [], 'min': 5}, 'd-longa': {'xp': 35, 'itens': [], 'min': 45},
+      'd-acerto': {'xp': 40, 'itens': [], 'min': 10}, 'd-cronometro': {'xp': 20, 'itens': [], 'min': 5},
+      'd-pomodoros': {'xp': 30, 'itens': [], 'min': 20}, 'd-fds': {'xp': 45, 'itens': [], 'min': 60},
+      'w-horas': {'xp': 150, 'itens': ['moldura:neon'], 'alvo': true, 'alvoMin': 180, 'min': 0},
+      'w-semana': {'xp': 250, 'itens': ['titulo:semana_perfeita', 'moldura:arcoiris', 'emblema:semana'], 'min': 120},
+      'w-materia': {'xp': 150, 'itens': ['emblema:materia'], 'min': 60},
+      'w-dias': {'xp': 120, 'itens': ['capa:boreal'], 'min': 25},
+      'w-questoes': {'xp': 120, 'itens': [], 'min': 60}, 'w-revisoes': {'xp': 120, 'itens': [], 'min': 30},
+      'w-topicos': {'xp': 120, 'itens': [], 'min': 30},
+      'w-todos7': {'xp': 220, 'itens': ['moldura:esmeralda'], 'min': 35},
+      'w-longas': {'xp': 150, 'itens': ['capa:sakura'], 'min': 180},
+      'w-mats3': {'xp': 120, 'itens': ['titulo:explorador'], 'min': 30},
+      'w-acerto75': {'xp': 160, 'itens': ['moldura:rubi'], 'min': 60},
+      'w-diarios10': {'xp': 150, 'itens': ['emblema:colecionador'], 'min': 60},
+      'm-horas': {'xp': 400, 'itens': ['capa:cristal', 'emblema:mes30'], 'alvo': true, 'alvoMin': 1800, 'min': 0},
+      'm-dias': {'xp': 400, 'itens': ['moldura:holografica', 'titulo:constante', 'emblema:dias20'], 'min': 100},
+      'm-questoes': {'xp': 350, 'itens': ['titulo:campeao_mes'], 'min': 300},
+      'm-semanas': {'xp': 350, 'itens': ['capa:pixel'], 'min': 240},
+      'm-desafios': {'xp': 400, 'itens': ['moldura:ametista'], 'min': 300},
+      'c-primeira': {'xp': 20, 'itens': ['emblema:primeira'], 'tot': 1},
+      'c-h10': {'xp': 80, 'itens': ['emblema:h10'], 'tot': 600},
+      'c-h50': {'xp': 200, 'itens': ['emblema:h50', 'moldura:floresta'], 'tot': 3000},
+      'c-h100': {'xp': 400, 'itens': ['emblema:h100'], 'tot': 6000},
+      'c-h250': {'xp': 600, 'itens': ['emblema:h250', 'moldura:safira'], 'tot': 15000},
+      'c-seq7': {'xp': 120, 'itens': ['emblema:seq7', 'moldura:chamas'], 'tot': 35},
+      'c-seq30': {'xp': 400, 'itens': ['emblema:seq30', 'capa:fogo'], 'tot': 150},
+      'c-seq60': {'xp': 600, 'itens': ['emblema:seq60', 'capa:cidade'], 'tot': 300},
+      'c-q100': {'xp': 100, 'itens': ['emblema:q100', 'capa:abismo'], 'tot': 120},
+      'c-q500': {'xp': 250, 'itens': ['emblema:q500'], 'tot': 600},
+      'c-q1000': {'xp': 400, 'itens': ['emblema:q1000', 'titulo:mestre_q'], 'tot': 1200},
+      'c-rev20': {'xp': 150, 'itens': ['emblema:rev20', 'titulo:mestre_rev'], 'tot': 200},
+      'c-desafios10': {'xp': 100, 'itens': ['emblema:desafios10'], 'tot': 0, 'n': 10},
+      'c-desafios50': {'xp': 300, 'itens': ['emblema:desafios50'], 'tot': 0, 'n': 50},
+      'c-maratona': {'xp': 100, 'itens': ['titulo:maratonista'], 'tot': 240, 'hoje': 240},
+      'c-madrugada': {'xp': 40, 'itens': ['titulo:madrugador'], 'tot': 15},
+      'c-noite': {'xp': 40, 'itens': ['titulo:coruja'], 'tot': 15},
+      'c-elite': {'xp': 150, 'itens': ['titulo:elite'], 'tot': 300},
+      'c-foco3h': {'xp': 120, 'itens': ['titulo:mestre_foco'], 'tot': 180, 'hoje': 180},
+      'c-limpo': {'xp': 150, 'itens': ['titulo:jogo_limpo'], 'tot': 420},
+      'n-n2': {'xp': 0, 'itens': ['titulo:iniciante'], 'nivel': 2},
+      'n-n3': {'xp': 0, 'itens': ['moldura:bronze', 'titulo:dedicado'], 'nivel': 3},
+      'n-n5': {'xp': 0, 'itens': ['moldura:prata', 'titulo:focado'], 'nivel': 5},
+      'n-n6': {'xp': 0, 'itens': ['capa:galaxia'], 'nivel': 6},
+      'n-n8': {'xp': 0, 'itens': ['moldura:ouro', 'titulo:imparavel'], 'nivel': 8},
+      'n-n10': {'xp': 0, 'itens': ['capa:deserto', 'emblema:nivel10'], 'nivel': 10},
+      'n-n12': {'xp': 0, 'itens': ['moldura:diamante', 'titulo:lenda'], 'nivel': 12},
+      'n-n15': {'xp': 0, 'itens': ['moldura:sakura'], 'nivel': 15},
+      'n-n20': {'xp': 0, 'itens': ['titulo:lenda_viva'], 'nivel': 20}
+    }; }
+    function rankDe(uid) { return get(/databases/$(database)/documents/ranking/$(uid)).data; }
+    function conqDe(uid) { return get(/databases/$(database)/documents/conquistas/$(uid)).data; }
+    function hojeAtinge(rk, x) { return rk.get('dia', -1) == diaBR() && rk.total - rk.get('diaBase', rk.total) >= x; }
+    function semanaAtinge(rk, x) { return rk.get('semana', -1) == semanaBR() && rk.total - rk.get('semanaBase', rk.total) >= x; }
+    function mesAtinge(rk, x) { return rk.get('mes', -1) == mesBR() && rk.total - rk.get('mesBase', rk.total) >= x; }
+    function periodoAtinge(tipo, rk, x) { return (tipo == 'd' && hojeAtinge(rk, x)) || (tipo == 'w' && semanaAtinge(rk, x)) || (tipo == 'm' && mesAtinge(rk, x)); }
+    function periodoOk(r) {
+      return (r.tipo == 'd' && r.periodo == diaBR()) || (r.tipo == 'w' && r.periodo == semanaBR())
+          || (r.tipo == 'm' && r.periodo == mesBR()) || ((r.tipo == 'c' || r.tipo == 'n') && r.periodo == 0);
+    }
+    function condOk(uid, r, def) {
+      return ((r.tipo == 'd' || r.tipo == 'w' || r.tipo == 'm')
+                && ((def.get('alvo', false) == true && r.alvo is int && r.alvo >= def.alvoMin && periodoAtinge(r.tipo, rankDe(uid), r.alvo))
+                    || (def.get('alvo', false) == false && periodoAtinge(r.tipo, rankDe(uid), def.min))))
+          || (r.tipo == 'c' && rankDe(uid).total >= def.tot
+                && (def.get('hoje', 0) == 0 || hojeAtinge(rankDe(uid), def.hoje))
+                && (def.get('n', 0) == 0 || conqDe(uid).get('n', 0) >= def.n))
+          || (r.tipo == 'n' && conqDe(uid).xp >= 50 * def.nivel * (def.nivel - 1));
+    }
+
+    // Resgates de desafios: um registro por desafio e período, conferido pelo servidor
+    match /resgates/{uid}/itens/{rid} {
+      function resgateOk() {
+        let r = request.resource.data;
+        let def = defs()[r.tipo + '-' + r.k];
+        return rid == r.tipo + '-' + string(r.periodo) + '-' + r.k
+          && r.xp == def.xp && r.itens == def.itens && periodoOk(r) && condOk(uid, r, def);
+      }
+      allow read: if eu(uid);
+      allow create: if eu(uid) && resgateOk();
+    }
+
+    // XP, nível e itens: só mudam junto com um resgate válido no mesmo envio
+    match /conquistas/{uid} {
+      function nivelOk() {
+        let n = request.resource.data.nivel;
+        let x = request.resource.data.xp;
+        return n is int && n >= 1 && 50 * n * (n - 1) <= x && x < 50 * (n + 1) * n;
+      }
+      function ganhoOk() {
+        let rid = request.resource.data.ultimo;
+        let caminho = /databases/$(database)/documents/resgates/$(uid)/itens/$(rid);
+        let g = getAfter(caminho).data;
+        return !exists(caminho) && existsAfter(caminho)
+          && request.resource.data.xp == resource.data.xp + g.xp
+          && request.resource.data.n == resource.data.n + 1
+          && request.resource.data.itens.diff(resource.data.itens).affectedKeys().hasOnly(g.itens)
+          && request.resource.data.itens.keys().hasAll(g.itens)
+          && nivelOk();
+      }
+      allow read: if logado();
+      allow create: if eu(uid) && request.resource.data.xp == 0 && request.resource.data.n == 0
+        && request.resource.data.nivel == 1 && request.resource.data.itens.size() == 0;
+      allow update: if eu(uid) && ganhoOk();
       allow delete: if false;
     }
 

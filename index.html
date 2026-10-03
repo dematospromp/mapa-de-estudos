@@ -706,7 +706,7 @@ const LINK_CLAUDE="https://claude.ai/artifact/C8W4hBGnukzP5zcs2aU3cp";
 const S={mode:null,uid:null,db:null,userCap:null,sample:null,caps:false,
   perfil:null,plano:null,edital:null,pomoLog:null,pub:null,
   view:"inicio",draft:null,step:0,
-  soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{}},unsub:[],
+  soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{},conquistas:{}},unsub:[],
   grupoAberto:null,proposta:null,triProva:null,editalTab:"arquivo",editalTexto:null,rankTab:"hoje",rankGrupo:"todos"};
 
 /* ================= Tema ================= */
@@ -733,6 +733,7 @@ function gravar(k,v,ja){
 }
 async function gravarPub(col,data){ // documentos públicos, um por usuário
   if(S.mode!=="nuvem")return false;
+  if(col==="perfis"&&FBM()){if(S.srv===undefined){toast("Carregando suas conquistas. Tente de novo em instantes.");return false}Object.assign(data,perfilVerificado(S.uid,data))}
   try{await S.db.collection(col).doc(S.uid).set(clone(data));return true}
   catch(e){toast(e&&e.code==="invalid_argument"?"Sua permissão nesta página não permite publicar. Peça acesso de Colaborador ao dono.":"Não foi possível salvar ("+(e&&e.code||"erro")+").");return false}
 }
@@ -855,12 +856,12 @@ async function entrar(modo){
   S.pomoLog=garantirTotais(S.pomoLog&&S.pomoLog.dias?S.pomoLog:{dias:{},sessoes:0});carregarCrono();virarSemana();verificarConquistas(true);if(S.edital&&!Array.isArray(S.edital.materias))S.edital=null;
   if(S.perfil&&S.perfil.ui)aplicarUI(S.perfil.ui);else if(S.perfil&&S.perfil.tema)aplicarTema(S.perfil.tema);
   if(S.perfil&&S.perfil.pomo)Object.assign(P.dur,S.perfil.pomo);else if(S.perfil)Object.assign(P.dur,{foco:+S.perfil.bloco||50,curta:+S.perfil.pausa||10});P.restante=pomoTotal();
-  if(S.mode==="nuvem"){assinarSocial();if(FBM())iniciarComunidadeFB()}
+  if(S.mode==="nuvem"){assinarSocial();if(FBM()){iniciarComunidadeFB();iniciarConquistasSrv()}}
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
   else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
 }
-function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
-  Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{}}});renderLogin()}
+function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;Object.assign(S,{srv:undefined,resg:{},resgOk:false,rankOk:false,gCache:null,dt:0});SRV.tentados={};SRV.fila=Promise.resolve();S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
+  Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{},conquistas:{}}});renderLogin()}
 
 function perfilPadrao(nome){
   return {nome:nome?nome.split(" ")[0]:"",categoria:"",serie:"",turno:"manha",detalhe:"",temProva:false,nomeProva:"",dataProva:"",materias:[],
@@ -1320,18 +1321,24 @@ function agoraEstudando(){
   return null;
 }
 function publicarRanking(){
-  if(S.mode!=="nuvem"||!S.pomoLog)return;
+  if(S.mode!=="nuvem"||!S.pomoLog||(FBM()&&!S.rankOk))return Promise.resolve();
   const L=garantirTotais(S.pomoLog),loc=docRankingLocal(),hoje=dataISO(),agora=Date.now();
   const prev=S.soc.ranking[S.uid];let total=Math.round(L.tot.min*100)/100,hojeMin=Math.min(LIMITE_DIA,Math.round(((L.dias[hoje]||{}).min||0)*100)/100);
   if(prev&&typeof prev.total==="number"){const folga=(agora-tsMs(prev.ref!=null?prev.ref:prev.atualizado))/60000+4;total=Math.max(prev.total,Math.min(total,Math.round((prev.total+folga)*100)/100));
     if(prev.hojeData===hoje&&typeof prev.hojeMin==="number")hojeMin=Math.min(hojeMin,Math.round((prev.hojeMin+(total-prev.total)+0.5)*100)/100)}
   else total=Math.min(total,700);
+  let per=null;
+  if(FBM()){ // início do dia, da semana e do mês (horário de Brasília), conferidos pelas regras do servidor
+    const p=periodosBR(),base=c=>prev&&typeof prev.total==="number"?(prev[c]===p[c]&&typeof prev[c+"Base"]==="number"?prev[c+"Base"]:prev.total):0;
+    per={...p,diaBase:base("dia"),semanaBase:base("semana"),mesBase:base("mes")};
+    total=Math.min(total,per.diaBase+LIMITE_DIA);if(prev&&typeof prev.total==="number")total=Math.max(total,prev.total);
+    hojeMin=Math.max(0,Math.min(hojeMin,Math.floor((total-per.diaBase)*100)/100))}
   const mudou=!prev||prev.total!==total;
-  const doc={dias:loc.dias,total,hojeData:hoje,hojeMin,ult:loc.ult,agora:agoraEstudando()};
+  const doc={dias:loc.dias,total,hojeData:hoje,hojeMin,ult:loc.ult,agora:agoraEstudando(),...(per||{})};
   S.soc.ranking[S.uid]={...(prev||{}),...doc,atualizado:agora,ref:mudou?agora:(prev&&(prev.ref!=null?prev.ref:prev.atualizado))};
   if(FBM()){const SV=firebase.firestore.FieldValue.serverTimestamp();const env={...doc,atualizado:SV};if(mudou)env.ref=SV;
-    S.db.collection("ranking").doc(S.uid).set(env,{merge:true}).catch(e=>console.warn("ranking",e&&e.code))}
-  else gravarPub("ranking",{...doc,atualizado:agora});
+    S.envioRank=Date.now();return S.db.collection("ranking").doc(S.uid).set(env,{merge:true}).catch(e=>console.warn("ranking",e&&e.code))}
+  return gravarPub("ranking",{...doc,atualizado:agora});
 }
 const estudandoAgora=id=>{const r=S.soc.ranking[id];const a=r&&r.agora;return a&&a.desde&&Date.now()-a.desde<8*3600e3?a:null};
 const ponto=id=>estudandoAgora(id)?`<span title="Estudando agora" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-left:6px;vertical-align:middle"></span>`:"";
@@ -1433,9 +1440,12 @@ function renderEstatisticas(){
 
 /* ================= Comunidade (nuvem) ================= */
 function assinarSocial(){
-  (FBM()?["perfis","ranking"]:["perfis","ranking","msgs","grupos","membros"]).forEach(col=>{
-    try{S.unsub.push(S.db.collection(col).limit(1000).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>{const v=d.data();if(v)m[d.id]=v});S.soc[col]=m;
-      if(col==="perfis")S.pub=m[S.uid]||null;atualizarSocial(col)},()=>{}))}catch(e){}
+  (FBM()?["perfis","ranking","conquistas"]:["perfis","ranking","msgs","grupos","membros"]).forEach(col=>{
+    try{S.unsub.push(S.db.collection(col).limit(1000).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>{const v=d.data();if(v)m[d.id]=v});
+      if(col==="ranking"&&FBM()){S.rankOk=true;const eu=m[S.uid];if(eu&&eu.atualizado&&typeof eu.atualizado.toMillis==="function"&&S.envioRank&&Date.now()-S.envioRank<20000){S.dt=eu.atualizado.toMillis()-S.envioRank;S.envioRank=0}}
+      if(col==="perfis"||col==="conquistas"){if(col==="perfis")S.soc.perfisBrutos=m;else{S.soc.conquistas=m;S.soc.conquistasOk=true}
+        const b=S.soc.perfisBrutos||{},v={};Object.keys(b).forEach(id=>v[id]=perfilVerificado(id,b[id]));S.soc.perfis=v;S.pub=v[S.uid]||null;atualizarSocial("perfis");return}
+      S.soc[col]=m;atualizarSocial(col)},()=>{}))}catch(e){}
   });
 }
 const nomeDe=id=>(S.soc.perfis[id]&&S.soc.perfis[id].nome)||"Estudante";
@@ -2420,7 +2430,7 @@ const CONQ=[
   {k:"foco3h",sem:true,teste:e=>e.maxSessao>=180,xp:120,itens:["titulo:mestre_foco"]},{k:"limpo",sem:true,teste:e=>e.diasLimpos>=14,xp:150,itens:["titulo:jogo_limpo"]}];
 const xpNivel=n=>50*n*(n-1);
 function nivelDe(xp){let n=1;while(xp>=xpNivel(n+1))n++;return n}
-function G(){S.conq=S.conq&&S.conq.resgatados?S.conq:{xp:0,itens:{},resgatados:{},distintivos:{}};return S.conq}
+function G(){if(FBM())return gServidor();S.conq=S.conq&&S.conq.resgatados?S.conq:{xp:0,itens:{},resgatados:{},distintivos:{}};return S.conq}
 const temItem=id=>!!G().itens[id];
 function segundaDaSemana(){const d=new Date();d.setDate(d.getDate()-hojeIdx());return dataISO(d)}
 function diasDaSemana(){const out=[];const seg=new Date(segundaDaSemana()+"T12:00");for(let i=0;i<7;i++){const d=new Date(seg);d.setDate(seg.getDate()+i);out.push(dataISO(d))}return out}
@@ -2451,7 +2461,7 @@ function desafiosDoDia(){
     {k:"pomodoros",t:"Complete 2 pomodoros",d:"Cada foco concluído conta.",ic:"repeat",p:(L.hist||[]).filter(h=>noDia(h.em,hoje)&&h.fonte==="pomodoro").length,a:2,xp:30},
     ...(hojeIdx()>=5?[{k:"fds",t:"Estude no fim de semana",d:"Some 1 hora de estudo hoje.",ic:"flame",p:d.min||0,a:60,xp:45,fmt:fmtH}]:[])];
   const fixo={k:"tempo",t:`Estude ${fmtH(alvoMin)} hoje`,d:"Some o tempo do cronômetro e do pomodoro.",ic:"clock",p:d.min||0,a:alvoMin,xp:40,fmt:fmtH};
-  const meta={k:"meta",t:`Bata sua meta de hoje (${fmtH(metaHoje())})`,d:"A meta diária aparece no início.",ic:"flame",p:d.min||0,a:metaHoje(),xp:50,fmt:fmtH};
+  const metaMin=Math.max(30,metaHoje());const meta={k:"meta",t:`Bata sua meta de hoje (${fmtH(metaMin)})`,d:"A meta diária aparece no início.",ic:"flame",p:d.min||0,a:metaMin,xp:50,fmt:fmtH};
   return [fixo,...embaralhar(pool,"d"+hoje+S.uid).slice(0,3),meta].map(x=>({...x,id:`d:${hoje}:${x.k}`}));
 }
 function desafiosDaSemana(){
@@ -2490,7 +2500,7 @@ function desafiosDoMes(){
     {k:"semanas",t:"Finalize 2 semanas do plano",d:"Resgate o desafio “Finalize a semana” duas vezes neste mês.",ic:"check",p:semanas,a:2,xp:350,itens:["capa:pixel"]},
     {k:"desafios",t:"Resgate 60 desafios neste mês",d:"Diários, semanais e mensais contam.",ic:"medal",p:desMes,a:60,xp:400,itens:["moldura:ametista"]}].map(x=>({...x,id:`m:${mes}:${x.k}`}));
 }
-function prontosParaResgatar(){if(!S.pomoLog)return 0;const g=G();return desafiosDoDia().concat(desafiosDaSemana(),desafiosDoMes()).filter(c=>c.p>=c.a&&!g.resgatados[c.id]).length}
+function prontosParaResgatar(){if(!S.pomoLog)return 0;const g=G();return desafiosDoDia().concat(desafiosDaSemana(),desafiosDoMes()).filter(c=>pronto(c)&&!g.resgatados[c.id]).length}
 // ---- conquistas ----
 function estatGamif(){const L=garantirTotais(S.pomoLog);const q=Object.values(L.q||{}).reduce((a,v)=>({f:a.f+v.feitas,c:a.c+v.acertos}),{f:0,c:0});
   const hs=(L.hist||[]);return {sessoes:L.sessoes||0,horas:L.tot.min/60,seq:Math.max(sequencia(),recordeSequencia()),q:q.f,acertos:q.c,rev:((S.revisoes&&S.revisoes.itens)||[]).filter(r=>r.feita).length,
@@ -2500,6 +2510,7 @@ function estatGamif(){const L=garantirTotais(S.pomoLog);const q=Object.values(L.
 function darItens(ids){const g=G(),novos=[];(ids||[]).forEach(id=>{if(!g.itens[id]){g.itens[id]=Date.now();novos.push(id)}});return novos}
 function ganharXP(n){const g=G(),antes=nivelDe(g.xp);g.xp+=n;const depois=nivelDe(g.xp);let novos=[];for(let k=antes+1;k<=depois;k++)novos=novos.concat(darItens(NIVEL_ITENS[k]));return {subiu:depois>antes,nivel:depois,novos}}
 function verificarConquistas(silencioso){
+  if(FBM())return verificarConquistasSrv(silencioso);
   if(!S.pomoLog)return;const g=G(),e=estatGamif();let mudou=false;
   CONQ.forEach(c=>{if(g.distintivos[c.k]||!c.teste(e))return;g.distintivos[c.k]=Date.now();mudou=true;
     const novos=darItens((EMBLEMAS[c.k]?["emblema:"+c.k]:[]).concat(c.itens||[]));const r=ganharXP(c.xp);
@@ -2507,12 +2518,19 @@ function verificarConquistas(silencioso){
   if(mudou){salvarConq()}
 }
 function salvarConq(){gravar("conquistas",G());publicarNivel()}
-function publicarNivel(){if(S.mode!=="nuvem")return;const n=nivelDe(G().xp);const p=S.pub||{nome:S.perfil.nome||"Estudante"};if(p.nivel===n)return;const d={...p,nivel:n};S.pub=d;S.soc.perfis[S.uid]=d;gravarPub("perfis",d)}
+function publicarNivel(){if(S.mode!=="nuvem"||!S.perfil||(FBM()&&!S.srv))return;const n=FBM()?S.srv.nivel:nivelDe(G().xp);const p=S.pub||{nome:S.perfil.nome||"Estudante"};if(p.nivel===n)return;const d={...p,nivel:n};S.pub=d;S.soc.perfis[S.uid]=d;gravarPub("perfis",d)}
 function nomeItem(id){const it=ITENS.find(i=>i.id===id);return it?it.n:id}
 function tipoNome(t){return {moldura:"Moldura",capa:"Capa",titulo:"Título",emblema:"Emblema"}[t]}
-function resgatar(c){
+async function resgatar(c,btn){
   const g=G();if(g.resgatados[c.id]||c.p<c.a)return;
   const rk=riscoProprio();if(rk.nivel==="alto"){toast("Resgate bloqueado: encontramos atividade fora do normal na sua conta. Veja a aba Jogo limpo.");return}
+  if(FBM()){const tipo=c.id[0],def=DEF_SRV[tipo+"-"+c.k],rq=reqServidor(c);if(!def)return;if(btn){btn.disabled=true;btn.textContent="Conferindo…"}
+    await publicarRanking();
+    try{const r=await resgatarSrv(tipo,c.k,def.alvo?{alvo:Math.max(def.alvoMin,Math.round(c.a))}:{});
+      if(r.ja){toast("Este desafio já foi resgatado.");renderDesafios();return}
+      celebrar(`+${r.xp} XP`,c.t,r.novos,r.subiu?r.nivel:0);verificarConquistas(true);publicarNivel()}
+    catch(e){toast(e&&e.code==="permission-denied"?`O servidor ainda não confirmou ${fmtH(rq?rq.need:30)} de estudo neste período. Continue estudando com o cronômetro ou o pomodoro e tente de novo.`:"Não foi possível resgatar agora ("+(e&&e.code||"erro")+").");if(S.view==="desafios")renderDesafios()}
+    return}
   g.resgatados[c.id]=Date.now();if(c.id.startsWith("w:")&&c.id.endsWith(":semana")){g.semanasFinalizadas=g.semanasFinalizadas||{};g.semanasFinalizadas[dataISO().slice(0,7)+":"+c.id.slice(2,12)]=true}
   const novos=darItens(c.itens);const r=ganharXP(c.xp);verificarConquistas(true);salvarConq();
   celebrar(`+${c.xp} XP`,c.t,novos.concat(r.novos),r.subiu?r.nivel:0);
@@ -2542,15 +2560,16 @@ async function equipar(id){
   if(tipo==="capa")p.capa=p.capa===k?"":k;
   if(tipo==="titulo")p.titulo=p.titulo===k?"":k;
   if(tipo==="emblema"){const e=new Set(p.emblemas||[]);if(e.has(k))e.delete(k);else{if(e.size>=3){toast("Você pode exibir até 3 emblemas. Tire um antes.");return}e.add(k)}p.emblemas=[...e]}
-  p.nivel=nivelDe(G().xp);
+  p.nivel=FBM()?((S.srv&&S.srv.nivel)||1):nivelDe(G().xp);
   if(await gravarPub("perfis",p)){S.pub=p;S.soc.perfis[S.uid]=p;S.pfRascunho=null;renderSideUser();toast("Perfil atualizado.");if(S.view==="desafios")renderDesafios()}
 }
 // ---- tela Desafios ----
 function tempoAte(fim){const ms=Math.max(0,fim-Date.now()),h=Math.floor(ms/3600e3),d=Math.floor(h/24);return d?`${d}d ${h%24}h`:`${h}h ${Math.floor(ms/60000)%60}min`}
-function cartaoDesafio(c){const g=G(),ok=c.p>=c.a,res=!!g.resgatados[c.id],pct=Math.min(100,Math.round(c.p/c.a*100)),f=c.fmt||(v=>Math.floor(v));
+function cartaoDesafio(c){const g=G(),rq=reqServidor(c),ok=pronto(c),res=!!g.resgatados[c.id],pct=Math.min(100,Math.round(c.p/c.a*100)),f=c.fmt||(v=>Math.floor(v));
   return `<div class="card desafio ${res?"feito":""}"><div class="row" style="flex-wrap:nowrap;align-items:flex-start;gap:12px"><span class="des-ic">${ib(c.ic,20)}</span>
     <div style="flex:1;min-width:0"><b>${esc(c.t)}</b><div class="small muted">${esc(c.d)}</div></div></div>
     <div class="row small" style="justify-content:space-between"><span class="mono">${f(Math.min(c.p,c.a))} / ${f(c.a)}</span><span class="muted">${pct}%</span></div><div class="prog"><i style="width:${pct}%"></i></div>
+    ${!res&&rq&&c.p>=c.a&&rq.tem<rq.need?`<div class="small muted">${ib("clock",13)} Aguardando o servidor confirmar ${fmtH(rq.need)} de estudo neste período (${fmtH(Math.floor(rq.tem))} até agora).</div>`:""}
     <div class="row" style="justify-content:space-between;gap:8px"><div class="row" style="gap:6px"><span class="pill">+${c.xp} XP</span>${(c.itens||[]).filter(i=>!temItem(i)).slice(0,2).map(i=>`<span class="pill" title="${tipoNome(i.split(":")[0])}">${ib("star",12)} ${esc(nomeItem(i))}</span>`).join("")}</div>
       ${res?`<span class="small" style="color:var(--ok);font-weight:600">${ib("check",14)} Resgatado</span>`:ok?`<button class="btn sm primary" type="button" data-resgatar="${c.id}">Resgatar</button>`:""}</div></div>`}
 function renderDesafios(){
@@ -2558,7 +2577,7 @@ function renderDesafios(){
   const g=G(),n=nivelDe(g.xp),base=xpNivel(n),prox=xpNivel(n+1),pct=Math.round((g.xp-base)/(prox-base)*100),tab=S.desTab||"diarios";
   const dia=desafiosDoDia(),sem=desafiosDaSemana(),mesD=desafiosDoMes();const fimMes=new Date();fimMes.setMonth(fimMes.getMonth()+1,1);fimMes.setHours(0,0,0,0);
   const fimDia=new Date();fimDia.setHours(24,0,0,0);const fimSem=new Date(segundaDaSemana()+"T00:00");fimSem.setDate(fimSem.getDate()+7);
-  const prontos=dia.concat(sem,mesD).filter(c=>c.p>=c.a&&!g.resgatados[c.id]).length;
+  const prontos=dia.concat(sem,mesD).filter(c=>pronto(c)&&!g.resgatados[c.id]).length;
   const tit=(S.pub&&S.pub.titulo&&TITULOS[S.pub.titulo])||"";
   let corpo="";
   if(tab==="diarios")corpo=`<p class="small muted" style="margin-bottom:10px">Novos desafios em ${tempoAte(fimDia)}.</p><div class="desafios">${dia.map(cartaoDesafio).join("")}</div>`;
@@ -2580,12 +2599,13 @@ function renderDesafios(){
       <div style="flex:1;min-width:0"><div class="row" style="gap:8px"><h2>Nível ${n}</h2>${tit?`<span class="pill solid">${esc(tit)}</span>`:""}</div>
         <div class="small muted" style="margin:4px 0 8px">${g.xp} XP · faltam ${prox-g.xp} XP para o nível ${n+1}</div><div class="prog" style="height:10px"><i style="width:${pct}%"></i></div>
         <div class="row small muted" style="margin-top:8px;gap:14px"><span>${Object.keys(g.distintivos).length} conquistas</span><span>${Object.keys(g.itens).length} itens</span><span>${Object.keys(g.resgatados).length} desafios resgatados</span></div></div></div></div>
-    <div class="tabs" role="tablist">${[["diarios","Diários"],["semanais","Semanais"],["mensais","Mensais"],["conquistas","Conquistas"],["colecao","Coleção"],["limpo","Jogo limpo"]].map(([k,nm])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-dtab="${k}">${nm}${k==="diarios"&&dia.some(c=>c.p>=c.a&&!g.resgatados[c.id])||k==="semanais"&&sem.some(c=>c.p>=c.a&&!g.resgatados[c.id])||k==="mensais"&&mesD.some(c=>c.p>=c.a&&!g.resgatados[c.id])?' <span class="pill solid" style="padding:0 6px">!</span>':""}</button>`).join("")}</div>
+    <div class="tabs" role="tablist">${[["diarios","Diários"],["semanais","Semanais"],["mensais","Mensais"],["conquistas","Conquistas"],["colecao","Coleção"],["limpo","Jogo limpo"]].map(([k,nm])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-dtab="${k}">${nm}${k==="diarios"&&dia.some(c=>pronto(c)&&!g.resgatados[c.id])||k==="semanais"&&sem.some(c=>pronto(c)&&!g.resgatados[c.id])||k==="mensais"&&mesD.some(c=>pronto(c)&&!g.resgatados[c.id])?' <span class="pill solid" style="padding:0 6px">!</span>':""}</button>`).join("")}</div>
     ${corpo}
+    ${FBM()?`<p class="hint" style="margin-top:12px">${ib("check",13)} XP, nível e itens ficam guardados no servidor. Cada resgate é conferido pelas regras do Firebase com o tempo de estudo que o próprio servidor registrou, e o perfil público só aceita itens que você realmente ganhou.</p>`:""}
     ${S.mode!=="nuvem"?`<p class="hint" style="margin-top:12px">Como visitante, o progresso fica só neste navegador e os itens não aparecem para outras pessoas.</p>`:""}
   </div>`;
   $$("[data-dtab]").forEach(b=>b.onclick=()=>{S.desTab=b.dataset.dtab;renderDesafios()});
-  $$("[data-resgatar]").forEach(b=>b.onclick=()=>{const c=dia.concat(sem,mesD).find(x=>x.id===b.dataset.resgatar);if(c)resgatar(c)});
+  $$("[data-resgatar]").forEach(b=>b.onclick=()=>{const c=dia.concat(sem,mesD).find(x=>x.id===b.dataset.resgatar);if(c)resgatar(c,b)});
   ligarJogoLimpo();
   $$("[data-equipar]").forEach(b=>b.onclick=()=>equipar(b.dataset.equipar));
   atualizarBadgeDesafios(prontos);
@@ -2594,6 +2614,79 @@ function atualizarBadgeDesafios(n){if(n==null)n=prontosParaResgatar();$$('[data-
 // semana nova: desmarca os blocos do plano toda segunda-feira
 function virarSemana(){if(!S.plano)return;const sem=segundaDaSemana();if(!S.plano.semanaRef){S.plano.semanaRef=sem;gravar("plano",S.plano);return}
   if(S.plano.semanaRef!==sem){DIAS.forEach(x=>(S.plano.semana[x.k]||[]).forEach(b=>{b.feito=false;delete b.feitoEm}));S.plano.semanaRef=sem;gravar("plano",S.plano,true)}}
+
+/* ================= Desafios conferidos pelo servidor (Firebase) ================= */
+// Mesma tabela das regras do Firestore (firestore.rules → defs()): o servidor confere XP, itens e o tempo mínimo de estudo
+const DEF_SRV={"d-tempo":{"xp":40,"itens":[],"alvo":true,"alvoMin":30,"min":0},"d-meta":{"xp":50,"itens":[],"alvo":true,"alvoMin":30,"min":0},"d-sessoes":{"xp":30,"itens":[],"min":15},"d-materias":{"xp":30,"itens":[],"min":10},"d-questoes":{"xp":30,"itens":[],"min":10},"d-blocos":{"xp":40,"itens":[],"min":20},"d-revisao":{"xp":30,"itens":[],"min":5},"d-topico":{"xp":30,"itens":[],"min":5},"d-cedo":{"xp":35,"itens":[],"min":5},"d-longa":{"xp":35,"itens":[],"min":45},"d-acerto":{"xp":40,"itens":[],"min":10},"d-cronometro":{"xp":20,"itens":[],"min":5},"d-pomodoros":{"xp":30,"itens":[],"min":20},"d-fds":{"xp":45,"itens":[],"min":60},"w-horas":{"xp":150,"itens":["moldura:neon"],"alvo":true,"alvoMin":180,"min":0},"w-semana":{"xp":250,"itens":["titulo:semana_perfeita","moldura:arcoiris","emblema:semana"],"min":120},"w-materia":{"xp":150,"itens":["emblema:materia"],"min":60},"w-dias":{"xp":120,"itens":["capa:boreal"],"min":25},"w-questoes":{"xp":120,"itens":[],"min":60},"w-revisoes":{"xp":120,"itens":[],"min":30},"w-topicos":{"xp":120,"itens":[],"min":30},"w-todos7":{"xp":220,"itens":["moldura:esmeralda"],"min":35},"w-longas":{"xp":150,"itens":["capa:sakura"],"min":180},"w-mats3":{"xp":120,"itens":["titulo:explorador"],"min":30},"w-acerto75":{"xp":160,"itens":["moldura:rubi"],"min":60},"w-diarios10":{"xp":150,"itens":["emblema:colecionador"],"min":60},"m-horas":{"xp":400,"itens":["capa:cristal","emblema:mes30"],"alvo":true,"alvoMin":1800,"min":0},"m-dias":{"xp":400,"itens":["moldura:holografica","titulo:constante","emblema:dias20"],"min":100},"m-questoes":{"xp":350,"itens":["titulo:campeao_mes"],"min":300},"m-semanas":{"xp":350,"itens":["capa:pixel"],"min":240},"m-desafios":{"xp":400,"itens":["moldura:ametista"],"min":300},"c-primeira":{"xp":20,"itens":["emblema:primeira"],"tot":1},"c-h10":{"xp":80,"itens":["emblema:h10"],"tot":600},"c-h50":{"xp":200,"itens":["emblema:h50","moldura:floresta"],"tot":3000},"c-h100":{"xp":400,"itens":["emblema:h100"],"tot":6000},"c-h250":{"xp":600,"itens":["emblema:h250","moldura:safira"],"tot":15000},"c-seq7":{"xp":120,"itens":["emblema:seq7","moldura:chamas"],"tot":35},"c-seq30":{"xp":400,"itens":["emblema:seq30","capa:fogo"],"tot":150},"c-seq60":{"xp":600,"itens":["emblema:seq60","capa:cidade"],"tot":300},"c-q100":{"xp":100,"itens":["emblema:q100","capa:abismo"],"tot":120},"c-q500":{"xp":250,"itens":["emblema:q500"],"tot":600},"c-q1000":{"xp":400,"itens":["emblema:q1000","titulo:mestre_q"],"tot":1200},"c-rev20":{"xp":150,"itens":["emblema:rev20","titulo:mestre_rev"],"tot":200},"c-desafios10":{"xp":100,"itens":["emblema:desafios10"],"tot":0,"n":10},"c-desafios50":{"xp":300,"itens":["emblema:desafios50"],"tot":0,"n":50},"c-maratona":{"xp":100,"itens":["titulo:maratonista"],"tot":240,"hoje":240},"c-madrugada":{"xp":40,"itens":["titulo:madrugador"],"tot":15},"c-noite":{"xp":40,"itens":["titulo:coruja"],"tot":15},"c-elite":{"xp":150,"itens":["titulo:elite"],"tot":300},"c-foco3h":{"xp":120,"itens":["titulo:mestre_foco"],"tot":180,"hoje":180},"c-limpo":{"xp":150,"itens":["titulo:jogo_limpo"],"tot":420},"n-n2":{"xp":0,"itens":["titulo:iniciante"],"nivel":2},"n-n3":{"xp":0,"itens":["moldura:bronze","titulo:dedicado"],"nivel":3},"n-n5":{"xp":0,"itens":["moldura:prata","titulo:focado"],"nivel":5},"n-n6":{"xp":0,"itens":["capa:galaxia"],"nivel":6},"n-n8":{"xp":0,"itens":["moldura:ouro","titulo:imparavel"],"nivel":8},"n-n10":{"xp":0,"itens":["capa:deserto","emblema:nivel10"],"nivel":10},"n-n12":{"xp":0,"itens":["moldura:diamante","titulo:lenda"],"nivel":12},"n-n15":{"xp":0,"itens":["moldura:sakura"],"nivel":15},"n-n20":{"xp":0,"itens":["titulo:lenda_viva"],"nivel":20}};
+const SRV={fila:Promise.resolve(),tentados:{}};
+const agoraSrv=()=>Date.now()+(S.dt||0);
+function periodosBR(t){const b=(t||agoraSrv())-10800000,dia=Math.floor(b/864e5),d=new Date(b);return {dia,semana:Math.floor((dia+3)/7),mes:d.getUTCFullYear()*12+d.getUTCMonth()+1}}
+const isoDia=n=>new Date(n*864e5).toISOString().slice(0,10);
+const isoMes=m=>`${Math.floor((m-1)/12)}-${String((m-1)%12+1).padStart(2,"0")}`;
+function idCliente(rid){const [t,p,k]=rid.split("-"),n=+p;
+  return t==="d"?`d:${isoDia(n)}:${k}`:t==="w"?`w:${isoDia(n*7-3)}:${k}`:t==="m"?`m:${isoMes(n)}:${k}`:`${t}:${k}`}
+// minutos que o servidor já registrou no dia, na semana ou no mês atual
+function minServidor(tipo){const r=S.soc.ranking[S.uid];if(!r||typeof r.total!=="number")return 0;const c={d:"dia",w:"semana",m:"mes"}[tipo];if(!c)return r.total;
+  return r[c]===periodosBR()[c]?Math.max(0,r.total-(r[c+"Base"]||0)):0}
+function reqServidor(c){if(!FBM())return null;const t=c.id[0],def=DEF_SRV[t+"-"+c.k];if(!def)return null;return {need:def.alvo?Math.max(def.alvoMin,c.a):def.min,tem:minServidor(t)}}
+function pronto(c){if(c.p<c.a)return false;const r=reqServidor(c);return !r||r.tem>=r.need}
+// visão das conquistas a partir do servidor (XP, itens e resgates)
+function gServidor(){if(S.gCache)return S.gCache;const s=S.srv||{},res={},dist={},semF={};
+  Object.entries(S.resg||{}).forEach(([rid,v])=>{const em=tsMs(v.em),t=rid[0];if(t==="c")dist[v.k]=em;else if(t!=="n"){const id=idCliente(rid);res[id]=em;if(t==="w"&&v.k==="semana")semF[dataISO(new Date(em)).slice(0,7)+":"+id.slice(2,12)]=true}});
+  const itens={};Object.keys(s.itens||{}).forEach(k=>{if(s.itens[k]===true)itens[k]=1});
+  return S.gCache={xp:s.xp||0,itens,resgatados:res,distintivos:dist,semanasFinalizadas:semF}}
+// perfil público só mostra itens e nível confirmados no servidor
+function perfilVerificado(id,p){if(!FBM()||!p)return p;const c=id===S.uid&&S.srv!==undefined?S.srv:S.soc.conquistasOk?S.soc.conquistas[id]:undefined;if(c===undefined)return p;
+  const it=(c&&c.itens)||{},tem=x=>it[x]===true,q={...p,nivel:(c&&c.nivel)||1};
+  if(q.moldura&&!tem("moldura:"+q.moldura))q.moldura="";if(q.titulo&&!tem("titulo:"+q.titulo))q.titulo="";
+  if(q.capa&&!CAPAS[q.capa]&&!tem("capa:"+q.capa))q.capa="";q.emblemas=(q.emblemas||[]).filter(e=>tem("emblema:"+e)).slice(0,3);return q}
+function aposMudarSrv(){S.gCache=null;const b=S.soc.perfisBrutos||{};if(b[S.uid]){S.soc.perfis[S.uid]=perfilVerificado(S.uid,b[S.uid]);S.pub=S.soc.perfis[S.uid]}
+  if(!S.perfil||!$("#main"))return;renderSideUser();if(S.view==="desafios"&&!document.querySelector(".modal-bg"))renderDesafios();else atualizarBadgeDesafios()}
+function iniciarConquistasSrv(){
+  Object.assign(S,{srv:undefined,resg:{},resgOk:false,gCache:null});
+  const ref=S.db.collection("conquistas").doc(S.uid);
+  S.unsub.push(ref.onSnapshot(d=>{if(d.metadata.hasPendingWrites)return;if(!d.exists){if(!d.metadata.fromCache&&S.srv===undefined){S.srv=null;criarConquistasSrv(ref)}return}
+    S.srv=d.data();aposMudarSrv();verificarConquistas(true);publicarNivel()},e=>console.warn("conquistas",e&&e.code)));
+  S.unsub.push(S.db.collection("resgates").doc(S.uid).collection("itens").onSnapshot(s=>{if(s.metadata.hasPendingWrites)return;const m={};s.docs.forEach(x=>m[x.id]=x.data());S.resg=m;S.resgOk=true;aposMudarSrv();verificarConquistas(true)},e=>console.warn("resgates",e&&e.code)));
+}
+async function criarConquistasSrv(ref){
+  const zero={xp:0,n:0,nivel:1,itens:{},ultimo:""};try{await ref.set(zero)}catch(e){console.warn("conquistas",e&&e.code);return}
+  if(!S.srv)S.srv={...zero};
+  // migração: desafios já resgatados neste período (no aparelho) são conferidos de novo pelo servidor
+  const ant=(S.conq&&S.conq.resgatados)||{},hoje=dataISO(),seg=segundaDaSemana(),mes=hoje.slice(0,7);
+  Object.keys(ant).forEach(id=>{const [t,per,k]=id.split(":");if(!(t==="d"&&per===hoje||t==="w"&&per===seg||t==="m"&&per===mes))return;const def=DEF_SRV[t+"-"+k];if(!def)return;
+    resgatarSrv(t,k,def.alvo?{alvo:def.alvoMin}:{}).catch(()=>{})});
+  if(S.conq&&S.conq.xp)toast("Seus desafios agora são guardados e conferidos pelo servidor. Conquistas permanentes são reaplicadas a partir do tempo de estudo registrado.");
+}
+// um resgate por vez: o XP enviado precisa bater com o que está no servidor
+function resgatarSrv(tipo,k,extra){
+  const job=SRV.fila.then(async()=>{
+    const def=DEF_SRV[tipo+"-"+k];if(!def)throw {code:"desafio-desconhecido"};if(!S.srv)throw {code:"sem-conquistas"};
+    const p=periodosBR(),periodo=tipo==="d"?p.dia:tipo==="w"?p.semana:tipo==="m"?p.mes:0,rid=`${tipo}-${periodo}-${k}`;
+    if(S.resg[rid])return {ja:true,rid};
+    const antes=S.srv.xp||0,xp=antes+def.xp,nivel=nivelDe(xp),n=(S.srv.n||0)+1,FV=firebase.firestore.FieldValue;
+    const doc={tipo,k,periodo,xp:def.xp,itens:def.itens,em:FV.serverTimestamp(),...(extra||{})},up={ultimo:rid,xp,n,nivel};def.itens.forEach(i=>up["itens."+i]=true);
+    const b=S.db.batch();b.set(S.db.collection("resgates").doc(S.uid).collection("itens").doc(rid),doc);b.update(S.db.collection("conquistas").doc(S.uid),up);
+    await b.commit();
+    const novos=def.itens.filter(i=>!(S.srv.itens||{})[i]);
+    S.srv={...S.srv,xp,n,nivel,ultimo:rid,itens:{...(S.srv.itens||{}),...Object.fromEntries(def.itens.map(i=>[i,true]))}};S.resg={...S.resg,[rid]:{...doc,em:Date.now()}};S.gCache=null;
+    return {rid,novos,xp:def.xp,nivel,subiu:nivel>nivelDe(antes)};
+  });
+  SRV.fila=job.catch(()=>{});return job;
+}
+// conquistas permanentes e itens de nível: resgatados sozinhos quando o servidor já pode confirmar
+function verificarConquistasSrv(silencioso){
+  if(!S.srv||!S.resgOk||!S.rankOk||!S.pomoLog)return;
+  const e=estatGamif(),r=S.soc.ranking[S.uid]||{},g=G(),agora=Date.now(),tarefas=[],livre=id=>!SRV.tentados[id]||agora-SRV.tentados[id]>120000;
+  CONQ.forEach(c=>{const d=DEF_SRV["c-"+c.k];if(!d||g.distintivos[c.k]||!livre("c-"+c.k)||!c.teste(e))return;
+    if((r.total||0)<d.tot||(d.hoje&&minServidor("d")<d.hoje)||(d.n&&(S.srv.n||0)<d.n))return;tarefas.push(["c",c.k,c])});
+  Object.keys(NIVEL_ITENS).forEach(L=>{const k="n"+L;if(+L<=(S.srv.nivel||1)&&!S.resg["n-0-"+k]&&livre("n-"+k))tarefas.push(["n",k])});
+  tarefas.forEach(([t,k,c])=>{SRV.tentados[t+"-"+k]=agora;
+    resgatarSrv(t,k).then(res=>{if(!res||res.ja)return;publicarNivel();
+      if(t==="c"&&tarefas.length<=3)toast(`Conquista desbloqueada: ${EMBLEMAS[k]?EMBLEMAS[k][0]:nomeItem((c.itens||[])[0]||"")} (+${res.xp} XP)`);
+      else if(t==="n"&&res.novos.length&&tarefas.length<=3)toast(`Novos itens do nível ${k.slice(1)}: ${res.novos.map(nomeItem).join(", ")}`);
+      if(res.subiu)toast(`Você subiu para o nível ${res.nivel}!`)}).catch(err=>console.warn("conquista",k,err&&err.code))});
+}
 
 /* ================= Jogo limpo: anti-trapaça ================= */
 const LIMITE_DIA=960; // 16 horas
