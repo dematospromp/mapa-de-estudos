@@ -1,0 +1,1403 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro e tópicos de provas e editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app de produtividade — barra lateral fixa à esquerda com a navegação, área principal com cartões discretos; monocromático preto/branco */
+:root{
+  --bg:#fafafa; --surface:#ffffff; --sunken:#f4f4f5; --fg:#0a0a0a; --muted:#71717a; --line:#e4e4e7; --line-2:#d4d4d8;
+  --inv-bg:#0a0a0a; --inv-fg:#fafafa; --hover:#f4f4f5; --ring:rgba(10,10,10,.12); --danger:#dc2626; --ok:#16a34a;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 1px rgba(0,0,0,.02);
+  --f-body:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:10px; --r-sm:7px; --side:252px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#09090b; --surface:#111113; --sunken:#18181b; --fg:#fafafa; --muted:#a1a1aa; --line:#27272a; --line-2:#3f3f46;
+  --inv-bg:#fafafa; --inv-fg:#09090b; --hover:#1c1c1f; --ring:rgba(250,250,250,.16); --danger:#f87171; --ok:#4ade80;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#09090b; --surface:#111113; --sunken:#18181b; --fg:#fafafa; --muted:#a1a1aa; --line:#27272a; --line-2:#3f3f46;
+  --inv-bg:#fafafa; --inv-fg:#09090b; --hover:#1c1c1f; --ring:rgba(250,250,250,.16); --danger:#f87171; --ok:#4ade80;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+#root{min-height:100%;display:grid}
+a{color:inherit}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;line-height:1.2;text-wrap:balance;letter-spacing:-.015em}
+h1{font-size:1.75rem;font-weight:700}
+h2{font-size:1.2rem;font-weight:600}
+h3{font-size:1rem;font-weight:600}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.eyebrow{font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Botões e campos */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--fg);
+  padding:8px 14px;border-radius:var(--r-sm);cursor:pointer;font-weight:500;font-size:.9rem;box-shadow:var(--shadow);transition:background .12s,border-color .12s;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--inv-bg);color:var(--inv-fg);border-color:var(--inv-bg)}
+.btn.primary:hover{opacity:.88}
+.btn.ghost{border-color:transparent;box-shadow:none;background:transparent}
+.btn.ghost:hover{background:var(--hover)}
+.btn.sm{padding:5px 10px;font-size:.82rem}
+.btn.icon{padding:7px}
+.btn.danger{color:var(--danger)}
+input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:8px 11px;min-width:0;width:100%;transition:border-color .12s,box-shadow .12s}
+input:focus,select:focus,textarea:focus{border-color:var(--fg);box-shadow:0 0 0 3px var(--ring);outline:none}
+textarea{min-height:88px;resize:vertical}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>label,.field>.lbl{font-weight:500;font-size:.88rem}
+.hint{font-size:.8rem;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:16px}
+.stack.sm{gap:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);min-width:0}
+.card.flat{box-shadow:none}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:500;border:1px solid var(--line-2);border-radius:999px;padding:2px 9px;white-space:nowrap;color:var(--muted)}
+.pill.solid{background:var(--inv-bg);color:var(--inv-fg);border-color:var(--inv-bg)}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.seg{display:inline-flex;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px;gap:2px}
+.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-size:.8rem;border-radius:5px;color:var(--muted);font-weight:500}
+.seg button.on{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.prog{height:6px;background:var(--sunken);border-radius:3px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--fg);border-radius:3px;transition:width .3s}
+.avatar{width:32px;height:32px;border-radius:50%;flex:none;object-fit:cover;background:var(--sunken);display:inline-grid;place-items:center;font-size:.78rem;font-weight:600;color:var(--fg);border:1px solid var(--line);overflow:hidden}
+.avatar.lg{width:88px;height:88px;font-size:1.6rem}
+.avatar.sm{width:24px;height:24px;font-size:.66rem}
+.empty-state{border:1px dashed var(--line-2);border-radius:var(--r);padding:28px 20px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+[hidden]{display:none!important}
+.toasts{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;flex-direction:column;gap:8px;align-items:flex-end;max-width:calc(100% - 40px)}
+.toast{background:var(--inv-bg);color:var(--inv-fg);padding:10px 16px;border-radius:var(--r-sm);font-size:.88rem;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.err{color:var(--danger);font-size:.86rem}
+
+/* Login */
+.auth{min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.auth-l{padding:48px clamp(16px,5vw,64px);display:flex;flex-direction:column;justify-content:center;gap:28px;max-width:620px;margin-left:auto;width:100%}
+.auth-r{background:var(--inv-bg);color:var(--inv-fg);padding:48px clamp(16px,5vw,56px);display:flex;flex-direction:column;justify-content:center;gap:18px}
+.auth-r .feat{display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:start}
+.auth-r .feat span{width:36px;height:36px;border-radius:9px;border:1px solid color-mix(in srgb,var(--inv-fg) 25%,transparent);display:grid;place-items:center}
+.auth-r p{opacity:.72;font-size:.9rem}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--inv-bg);color:var(--inv-fg);display:grid;place-items:center}
+.logo svg{width:16px;height:16px}
+.auth-r .logo{background:var(--inv-fg);color:var(--inv-bg)}
+.auth h1{font-size:clamp(1.9rem,3.6vw,2.6rem);font-weight:700;letter-spacing:-.03em}
+
+/* Shell com barra lateral */
+.shell{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:0;height:100vh;height:100dvh;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;padding:14px 12px;gap:6px;overflow-y:auto}
+.side .brand{padding:6px 8px 12px}
+.nav-sec{font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:12px 10px 4px}
+.nav a{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--r-sm);color:var(--muted);text-decoration:none;font-weight:500;font-size:.9rem;cursor:pointer}
+.nav a:hover{background:var(--hover);color:var(--fg)}
+.nav a.on{background:var(--sunken);color:var(--fg)}
+.nav a .badge{margin-left:auto;font-size:.7rem;font-family:var(--f-mono)}
+.side-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.me{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:var(--r-sm);cursor:pointer}
+.me:hover{background:var(--hover)}
+.me .nm{font-weight:600;font-size:.88rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.me .sub{font-size:.75rem;color:var(--muted)}
+.mini-pomo{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);background:var(--inv-bg);color:var(--inv-fg);cursor:pointer;font-size:.84rem}
+.mini-pomo b{font-family:var(--f-mono);font-size:1rem}
+.main{min-width:0}
+.topbar-m{display:none}
+.page{max-width:1120px;margin:0 auto;padding-inline:clamp(16px,3.5vw,36px);padding-block:28px 64px}
+.page-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.page-h p{color:var(--muted);margin-top:4px}
+
+/* Estatísticas */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);min-width:0}
+.stat .v{font-size:1.6rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:4px;line-height:1.2}
+.stat .s{font-size:.78rem;color:var(--muted);margin-top:2px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+
+/* Blocos de estudo */
+.blist{display:flex;flex-direction:column}
+.bitem{display:grid;grid-template-columns:auto 92px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.bitem:first-child{border-top:0}
+.bitem.done .bt{text-decoration:line-through;color:var(--muted)}
+.chk{width:18px;height:18px;accent-color:var(--fg);cursor:pointer}
+.tipo{font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.week-wrap{overflow-x:auto;padding-bottom:4px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(158px,1fr));gap:10px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.day header{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.day.hoje{border-color:var(--fg)}
+.day.hoje header{background:var(--inv-bg);color:var(--inv-fg);border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0}
+.day.hoje header .muted{color:var(--inv-fg);opacity:.7}
+.day .lst{display:flex;flex-direction:column;gap:6px;padding:8px}
+.blk{border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 9px;display:flex;flex-direction:column;gap:3px;font-size:.82rem;position:relative;background:var(--surface)}
+.blk.t-revisão{background:var(--sunken)}
+.blk.t-simulado{border-style:dashed;border-color:var(--fg)}
+.blk .tm{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.blk .mt{font-weight:600;line-height:1.25;padding-right:20px;overflow-wrap:break-word}
+.blk .tk{color:var(--muted);font-size:.78rem;line-height:1.35;overflow-wrap:anywhere}
+.blk .chk{position:absolute;top:8px;right:8px;width:15px;height:15px}
+.blk .play{align-self:flex-start;margin-top:4px}
+.blk.done .mt,.blk.done .tk{text-decoration:line-through;opacity:.55}
+.day .empty{padding:12px;color:var(--muted);font-size:.8rem}
+.bars-h{display:flex;flex-direction:column;gap:10px}
+.bars-h .r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;font-size:.86rem}
+.bars-h .prog{grid-column:1/-1}
+
+/* Questionário */
+.wizard{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:32px 64px}
+.steps{display:flex;gap:6px}
+.steps span{flex:1;height:4px;background:var(--line);border-radius:2px}
+.steps span.on{background:var(--fg)}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.opt{border:1px solid var(--line-2);border-radius:var(--r);padding:14px;cursor:pointer;background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:6px;transition:border-color .12s,box-shadow .12s}
+.opt:hover{border-color:var(--fg)}
+.opt.on{border-color:var(--fg);box-shadow:0 0 0 3px var(--ring)}
+.opt b{font-size:.92rem}
+.opt span{font-size:.78rem;color:var(--muted);line-height:1.35}
+.sugs{display:flex;gap:6px;flex-wrap:wrap}
+.sug{background:transparent;border:1px dashed var(--line-2);border-radius:999px;padding:4px 11px;cursor:pointer;font-size:.82rem;color:var(--muted)}
+.sug:hover{border-color:var(--fg);color:var(--fg)}
+.mat{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.mat .nm{font-weight:500;overflow-wrap:anywhere}
+.x{border:0;background:transparent;cursor:pointer;color:var(--muted);padding:4px 6px;border-radius:5px}
+.x:hover{background:var(--hover);color:var(--fg)}
+.dayrow{display:grid;grid-template-columns:90px minmax(0,1fr) 60px 108px;gap:14px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+input[type=range]{width:100%;accent-color:var(--fg)}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+.checks label{display:flex;gap:7px;align-items:center;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:6px 11px;cursor:pointer;font-size:.86rem;background:var(--surface)}
+.checks input{accent-color:var(--fg)}
+.navq{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:4px}
+
+/* Pomodoro */
+.pomo{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.pomo-main{display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 20px}
+.ring{position:relative;width:min(300px,72vw);aspect-ratio:1;max-width:100%}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:6}
+.ring .bgc{stroke:var(--line)}
+.ring .fgc{stroke:var(--fg);stroke-linecap:round;transition:stroke-dashoffset .25s linear}
+.ring .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.ring .t{font-family:var(--f-mono);font-size:clamp(2.6rem,9vw,3.8rem);font-weight:500;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:6px}
+.dots i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--fg)}
+.dots i.on{background:var(--fg)}
+
+/* Tópicos */
+.mat-acc{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow)}
+.mat-acc>summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) 140px auto;gap:14px;align-items:center}
+.mat-acc>summary::-webkit-details-marker{display:none}
+.mat-acc[open]>summary{border-bottom:1px solid var(--line)}
+.tops{padding:8px 16px 14px;display:flex;flex-direction:column}
+.top{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:.88rem}
+.top:first-child{border-top:0}
+.top.done span{color:var(--muted);text-decoration:line-through}
+.top .chk{margin-top:2px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:9px 12px;cursor:pointer;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button.on{color:var(--fg);border-bottom-color:var(--fg)}
+.drop{border:1.5px dashed var(--line-2);border-radius:var(--r);padding:34px 20px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;background:var(--sunken);cursor:pointer}
+.drop.over{border-color:var(--fg)}
+.loadbox{display:flex;flex-direction:column;gap:10px}
+.spinner{width:18px;height:18px;border:2px solid var(--line-2);border-top-color:var(--fg);border-radius:50%;animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* Chat e comunidade */
+.chat{display:flex;flex-direction:column;height:min(640px,calc(100dvh - 210px));min-height:380px;padding:0;overflow:hidden}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px}
+.msg .h{display:flex;gap:8px;align-items:baseline;font-size:.84rem}
+.msg .h b{font-weight:600}
+.msg .h time{font-size:.72rem;color:var(--muted)}
+.msg .b{overflow-wrap:anywhere;white-space:pre-wrap;font-size:.9rem}
+.msg.mine .h b::after{content:" (você)";font-weight:400;color:var(--muted)}
+.composer{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:var(--surface)}
+.composer input{flex:1}
+.list{display:flex;flex-direction:column}
+.li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.li .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pos{font-family:var(--f-mono);width:26px;text-align:center;color:var(--muted);font-weight:500}
+.li.me-row{background:var(--sunken);border-radius:var(--r-sm);padding-inline:8px}
+.podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.podium .card{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.gcard{display:flex;flex-direction:column;gap:10px}
+.gcard .stack-av{display:flex}
+.gcard .stack-av .avatar{margin-left:-8px;border:2px solid var(--surface)}
+.gcard .stack-av .avatar:first-child{margin-left:0}
+pre.prompt{white-space:pre-wrap;font-family:var(--f-mono);font-size:.76rem;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;max-height:420px;overflow:auto;margin:12px 0 0}
+details>summary{cursor:pointer;font-weight:500}
+.lock{max-width:520px;margin:40px auto}
+.overlay{display:none}
+
+@media (max-width:1100px){
+  .cols,.pomo{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;bottom:0;width:min(280px,86vw);z-index:40;transform:translateX(-100%);transition:transform .2s;padding-top:calc(14px + env(safe-area-inset-top,0px))}
+  .shell.open .side{transform:none;box-shadow:0 0 40px rgba(0,0,0,.25)}
+  .shell.open .overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30}
+  .topbar-m{display:flex;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 16px}
+  .auth{grid-template-columns:1fr}
+  .auth-l{margin:0;max-width:none}
+}
+@media (max-width:640px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .opts{grid-template-columns:1fr 1fr}
+  .mat{grid-template-columns:minmax(0,1fr) auto;row-gap:8px}
+  .mat .x{grid-row:1;grid-column:2}
+  .dayrow{grid-template-columns:70px minmax(0,1fr) 54px;row-gap:4px}
+  .dayrow input[type=time]{grid-column:2/-1}
+  .bitem{grid-template-columns:auto minmax(0,1fr) auto}
+  .bitem .tmc{grid-column:2;grid-row:2}
+  .mat-acc>summary{grid-template-columns:minmax(0,1fr) auto}
+  .mat-acc>summary .prog{grid-column:1/-1;grid-row:2}
+  .podium{grid-template-columns:1fr}
+}
+@media (max-width:640px){ .week{grid-template-columns:1fr} }
+@media (max-width:480px){ .stats{grid-template-columns:1fr 1fr} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+
+</head><body><div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ================= Constantes ================= */
+const DIAS=[{k:"seg",n:"Segunda",c:"Seg"},{k:"ter",n:"Terça",c:"Ter"},{k:"qua",n:"Quarta",c:"Qua"},{k:"qui",n:"Quinta",c:"Qui"},{k:"sex",n:"Sexta",c:"Sex"},{k:"sab",n:"Sábado",c:"Sáb"},{k:"dom",n:"Domingo",c:"Dom"}];
+const CATEGORIAS=[
+  {k:"colegio",n:"Colégio",d:"Ensino fundamental ou médio, provas e trabalhos da escola"},
+  {k:"vestibular",n:"ENEM / vestibular",d:"Preparação para entrar na faculdade"},
+  {k:"concurso",n:"Concurso",d:"Público, militar (EsPCEx, ESA…) ou outro processo seletivo"},
+  {k:"faculdade",n:"Faculdade",d:"Disciplinas do semestre, provas e trabalhos"},
+  {k:"idiomas",n:"Idioma / certificação",d:"Inglês, espanhol, certificações técnicas"},
+  {k:"outro",n:"Outro",d:"Escreva o que você está estudando"}];
+const SERIES=["6º ano (EF)","7º ano (EF)","8º ano (EF)","9º ano (EF)","1ª série (EM)","2ª série (EM)","3ª série (EM)"];
+const SUGS={
+  colegio_ef:["Matemática","Português","Ciências","História","Geografia","Inglês","Artes","Educação Física"],
+  colegio_em:["Matemática","Português","Literatura","Redação","Física","Química","Biologia","História","Geografia","Inglês","Filosofia","Sociologia"],
+  vestibular:["Matemática","Português","Redação","Física","Química","Biologia","História","Geografia","Inglês","Filosofia","Sociologia","Literatura"],
+  concurso:["Português","Matemática","Raciocínio lógico","Informática","Direito Constitucional","Direito Administrativo","Física","Química","História","Geografia","Inglês","Redação"],
+  faculdade:["Cálculo","Estatística","Programação","Anatomia","Contabilidade","Direito Civil","Física","Metodologia científica"],
+  idiomas:["Gramática","Vocabulário","Listening","Speaking","Reading","Writing"],
+  outro:["Leitura","Exercícios","Projeto prático"]};
+const METODOS=[["exercicios","Resolver exercícios"],["resumos","Fazer resumos"],["flashcards","Flashcards"],["videoaulas","Videoaulas"],["leitura","Livro ou apostila"],["mapas","Mapas mentais"]];
+const PRIO={baixa:.75,media:1,alta:1.35};
+const TIPOS=["teoria","exercícios","revisão","simulado"];
+
+/* Conteúdo verificado da EsPCEx — fonte: edital EsPCEx 2026 (prova em 12 e 13/09/2026), resumido pelo Estratégia Militares */
+const PRESET_ESPCEX={nome:"EsPCEx",banca:"Exército Brasileiro (DECEx)",dataProva:"",
+  referencia:"Edital EsPCEx 2026 (prova aplicada em 12 e 13/09/2026). Confira o próximo edital quando for publicado.",
+  fonteUrl:"https://militares.estrategia.com/portal/escolas-militares/exercito/espcex/o-que-cai-na-prova-da-espcex/",
+  materias:[
+  ["Matemática",20,["Teoria dos conjuntos: conjuntos numéricos, operações e intervalos","Funções: domínio, imagem, composta, inversa, translação e reflexão","Funções afim, quadrática, modular, exponencial e logarítmica","Trigonometria: triângulos, leis dos senos e cossenos, círculo trigonométrico, identidades e equações","Análise combinatória: fatorial, arranjos, combinações, permutações, binômio de Newton","Probabilidade: espaço amostral, eventos, probabilidade condicional","Matrizes, determinantes e sistemas lineares","Sequências: progressões aritméticas e geométricas","Geometria plana: ângulos, semelhança, polígonos, áreas, Tales e Pitágoras","Geometria espacial: posições relativas, poliedros, prismas, pirâmides, cilindros, cones e esferas","Geometria analítica: ponto, reta, circunferência e cônicas","Polinômios e equações algébricas: divisão, teorema do resto, relações entre coeficientes e raízes"]],
+  ["Português",20,["Leitura e interpretação de textos","Fonética: fonemas, sílaba, tonicidade, ortoépia, prosódia, ortografia e acentuação","Morfologia: estrutura e formação de palavras, classes e flexão","Semântica: significação das palavras","Sintaxe: análise sintática, concordância, regência, colocação e pontuação","Literatura brasileira: do Trovadorismo ao Modernismo e gêneros literários"]],
+  ["Redação",0,["Texto dissertativo-argumentativo de 25 a 30 linhas, em 3ª pessoa","Estrutura: introdução, desenvolvimento e conclusão com intenção persuasiva","Coerência, coesão, clareza, concisão e norma culta"]],
+  ["Física",12,["Cinemática: movimentos uniformes e variados","Dinâmica, trabalho, energia, impulso, quantidade de movimento e choques","Estática, hidrostática e gravitação","Termologia: termometria, calorimetria, mudanças de fase, propagação de calor e dilatação","Gases ideais e termodinâmica","Óptica: reflexão, espelhos, refração, lentes, instrumentos e defeitos da visão","Ondas: MHS, fenômenos ondulatórios, som e efeito Doppler","Eletrostática: carga, força, campo e potencial elétricos","Eletrodinâmica: corrente, resistência e circuitos","Magnetismo, indução eletromagnética e ondas eletromagnéticas"]],
+  ["Química",12,["Matéria e substância: estados físicos, misturas e separação","Estrutura atômica, modelos atômicos, configuração eletrônica e leis ponderais","Ligações químicas, geometria molecular e polaridade","Funções inorgânicas: ácidos, bases, sais e óxidos","Reações químicas, oxirredução e balanceamento","Grandezas químicas: mol, massa molar, volume molar e Avogadro","Estequiometria: reagente limitante e rendimento","Gases, termoquímica e cinética química","Soluções e equilíbrio químico: concentrações, diluição, Le Chatelier, pH e hidrólise","Eletroquímica: Nox, pilhas, eletrólise e leis de Faraday","Química orgânica: cadeias, funções, isomeria, reações e polímeros"]],
+  ["Geografia",12,["Cartografia: coordenadas geográficas e projeções","Estrutura da Terra, placas tectônicas, relevo e solos","Hidrografia, oceanos e clima","Vegetação e impactos ambientais","Indústria, agropecuária e globalização","Demografia, urbanização e indicadores socioeconômicos","Brasil: posição, relevo, clima, domínios naturais e recursos hídricos","Brasil: industrialização, recursos minerais e agricultura","Brasil: fronteiras, divisão regional e organização político-administrativa","Brasil: população, migrações, urbanização e rede urbana"]],
+  ["História",12,["Sociedade feudal (séculos V a XV)","Renascimento e formação dos Estados nacionais europeus","Expansão marítima e colonização da América","Sistema colonial português","Iluminismo, Revoluções Inglesas e Revolução Industrial","Independência dos EUA e Revolução Francesa","Brasil: período joanino, Primeiro e Segundo Reinados","Brasil República","Pensamento dos séculos XIX e XX: Romantismo, Socialismo, Positivismo","Primeira e Segunda Guerras Mundiais","Guerra Fria","Fim do século XX e início do XXI: queda do socialismo, conflitos, globalização e Brasil contemporâneo"]],
+  ["Inglês",12,["Compreensão geral de textos (livros, revistas, jornais e internet)","Compreensão de expressões e palavras no contexto","Substantivos, adjetivos, advérbios e formação de palavras","Artigos, conjunções, preposições e pronomes","Verbos: tempos, modos, voz ativa e passiva","Perguntas (wh-questions)"]]
+  ]};
+
+/* ================= Utilidades ================= */
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const toMin=t=>{const m=/^(\d{1,2}):(\d{2})/.exec(t||"");return m?(+m[1])*60+(+m[2]):null};
+const toHHMM=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const fmtH=min=>{min=Math.round(min||0);const h=Math.floor(min/60),m=min%60;return h?h+"h"+(m?String(m).padStart(2,"0"):""):m+"min"};
+const uid=()=>Date.now().toString(36).slice(-4)+Math.random().toString(36).slice(2,7);
+const hojeIdx=()=>(new Date().getDay()+6)%7;
+const dataISO=(d=new Date())=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const diasAtras=n=>{const d=new Date();d.setDate(d.getDate()-n);return dataISO(d)};
+const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ").trim();
+const clone=o=>JSON.parse(JSON.stringify(o));
+const hora=ts=>{const d=new Date(ts);const hoje=dataISO()===dataISO(d);return (hoje?"":d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+" ")+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})};
+function toast(msg){let box=document.querySelector(".toasts");if(!box){box=document.createElement("div");box.className="toasts";box.setAttribute("role","status");document.body.appendChild(box)}const t=document.createElement("div");t.className="toast";t.textContent=msg;box.appendChild(t);setTimeout(()=>t.remove(),3400)}
+const I={
+  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+  cal:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
+  timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/>',
+  scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.7 3.1 2.4 3.5 5.2"/>',
+  chat:'<path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/>',
+  trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5v1.5A3.5 3.5 0 0 0 8 11M16 6h3.5v1.5A3.5 3.5 0 0 1 16 11M12 13v4M8.5 21h7M10 17h4v4h-4z"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  play:'<path d="M7 4.5v15l12-7.5z"/>',pause:'<path d="M8 4.5v15M16 4.5v15"/>',reset:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',skip:'<path d="m5 4.5 10 7.5-10 7.5zM19 5v14"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',out:'<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/>',
+  send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>',spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',plus:'<path d="M12 5v14M5 12h14"/>',
+  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M19 19v2H6"/>'};
+const ico=(n,cls)=>`<svg class="i ${cls||""}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+const LOGO=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 18V8l7 5 7-5v10"/></svg>`;
+
+/* ================= Estado ================= */
+const STANDALONE=!(window.claude&&window.claude.use);
+const LINK_CLAUDE="https://claude.ai/artifact/C8W4hBGnukzP5zcs2aU3cp";
+const S={mode:null,uid:null,db:null,userCap:null,sample:null,caps:false,
+  perfil:null,plano:null,edital:null,pomoLog:null,pub:null,
+  view:"inicio",draft:null,step:0,
+  soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{}},unsub:[],
+  grupoAberto:null,proposta:null,triProva:null,editalTab:"arquivo",editalTexto:null,rankTab:"hoje",rankGrupo:"todos"};
+
+/* ================= Tema ================= */
+function temaAtual(){const t=document.documentElement.getAttribute("data-theme");if(t)return t;return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}
+function aplicarTema(t){if(t)document.documentElement.setAttribute("data-theme",t);$$("[data-theme-lbl]").forEach(e=>e.innerHTML=temaBtnHtml())}
+const temaBtnHtml=()=>temaAtual()==="dark"?ico("sun")+"<span>Tema branco</span>":ico("moon")+"<span>Tema preto</span>";
+function trocarTema(){const n=temaAtual()==="dark"?"light":"dark";aplicarTema(n);try{localStorage.setItem("mapa_tema",n)}catch(e){}
+  if(S.perfil){S.perfil.tema=n;gravar("perfil",S.perfil)}}
+try{aplicarTema(localStorage.getItem("mapa_tema"))}catch(e){}
+
+/* ================= Armazenamento ================= */
+const meuDoc=k=>S.db.collection("data/users/"+S.uid).doc(k);
+async function ler(k){
+  if(S.mode==="nuvem"){const s=await meuDoc(k).get();return s.exists?s.data():null}
+  try{return JSON.parse(localStorage.getItem("mapa_"+k)||"null")}catch(e){return null}
+}
+const pend={};
+function gravar(k,v,ja){
+  clearTimeout(pend[k]);
+  const run=async()=>{
+    if(S.mode==="nuvem"){try{await meuDoc(k).set(clone(v))}catch(e){toast("Não foi possível salvar na nuvem ("+(e&&e.code||"erro")+"). Tente de novo em instantes.")}}
+    else{try{localStorage.setItem("mapa_"+k,JSON.stringify(v))}catch(e){toast("O navegador bloqueou o salvamento local.")}}
+  };
+  if(ja)return run();pend[k]=setTimeout(run,500);
+}
+async function gravarPub(col,data){ // documentos públicos, um por usuário
+  if(S.mode!=="nuvem")return false;
+  try{await S.db.collection(col).doc(S.uid).set(clone(data));return true}
+  catch(e){toast(e&&e.code==="invalid_argument"?"Sua permissão nesta página não permite publicar. Peça acesso de Colaborador ao dono.":"Não foi possível salvar ("+(e&&e.code||"erro")+").");return false}
+}
+
+/* ================= Capacidades ================= */
+const cap=n=>(window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null));
+Promise.all([cap("user"),cap("db"),cap("sample")]).then(([u,d,s])=>{S.userCap=u;S.db=d;S.sample=s;S.caps=true;if(!S.mode)renderLogin()});
+
+/* ================= Login ================= */
+function renderLogin(erro){
+  const ok=S.caps&&S.userCap&&S.db;
+  $("#root").innerHTML=`
+  <div class="auth">
+    <section class="auth-l">
+      <div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div>
+      <div class="stack sm">
+        <h1>Organize seus estudos com ajuda da IA.</h1>
+        <p class="muted" style="font-size:1.02rem;max-width:48ch">Do colégio ao concurso: responda algumas perguntas e receba uma semana de estudos montada para você, com pomodoro, tópicos do edital e grupos de estudo.</p>
+      </div>
+      <div class="card stack" style="max-width:420px">
+        <button class="btn primary" id="btnNuvem" type="button" ${ok?"":"disabled"} style="padding:11px">${ico("user")}Entrar com minha conta</button>
+        <p class="hint">${!S.caps?'<span class="row"><span class="spinner"></span>Verificando a conexão com sua conta…</span>':ok?"Seu perfil, plano e progresso ficam salvos na nuvem e abrem em qualquer dispositivo. Grupos, chat e ranking exigem login.":STANDALONE?`Esta é a versão pública do site: seus dados ficam salvos neste navegador. Login na nuvem, IA, grupos, chat e ranking funcionam na <a href="${LINK_CLAUDE}" target="_blank" rel="noopener">versão completa no claude.ai</a>.`:"Login indisponível nesta visualização. Abra a página no claude.ai com sua conta conectada."}</p>
+        <div class="row" style="gap:8px;color:var(--muted);font-size:.78rem"><span style="flex:1;height:1px;background:var(--line)"></span>ou<span style="flex:1;height:1px;background:var(--line)"></span></div>
+        <button class="btn" id="btnLocal" type="button">Continuar como visitante</button>
+        <p class="hint">Como visitante, tudo fica só neste navegador e a parte de comunidade fica bloqueada.</p>
+        ${erro?`<p class="err">${esc(erro)}</p>`:""}
+      </div>
+      <button class="btn ghost sm" type="button" data-theme-lbl style="align-self:flex-start">${temaBtnHtml()}</button>
+    </section>
+    <aside class="auth-r">
+      <div class="brand"><span class="logo">${LOGO}</span></div>
+      ${[["spark","Plano semanal por IA","Distribui suas horas por matéria conforme a dificuldade, a prioridade e o tempo livre de cada dia."],
+         ["timer","Pomodoro integrado","Cada sessão concluída entra no seu histórico e no ranking diário."],
+         ["scan","Leitura de edital","Envie o PDF do edital ou só o nome da prova e receba os tópicos organizados por matéria."],
+         ["users","Grupos e ranking","Crie grupos de estudo, converse no chat do grupo ou no chat geral e compare horas estudadas."]]
+        .map(([i,t,d])=>`<div class="feat"><span>${ico(i)}</span><div><b>${t}</b><p>${d}</p></div></div>`).join("")}
+    </aside>
+  </div>`;
+  $("#btnLocal").onclick=()=>entrar("local");
+  $("#btnNuvem").onclick=()=>entrar("nuvem");
+  $("[data-theme-lbl]").onclick=trocarTema;
+}
+
+async function entrar(modo){
+  let nomeConta="";
+  if(modo==="nuvem"){
+    const id=await S.userCap.id();
+    if(!id){renderLogin("Não encontramos uma conta conectada. Entre no claude.ai e abra a página de novo, ou continue como visitante.");return}
+    S.mode="nuvem";S.uid=id;try{nomeConta=(await S.userCap.me()).name||""}catch(e){}
+  }else{S.mode="local";S.uid="local"}
+  $("#root").innerHTML=`<div class="wizard"><div class="row muted"><span class="spinner"></span>Carregando seus dados…</div></div>`;
+  try{[S.perfil,S.plano,S.edital,S.pomoLog]=await Promise.all(["perfil","plano","edital","pomo"].map(ler))}
+  catch(e){S.mode=null;renderLogin("Não foi possível ler seus dados ("+(e&&e.code||"erro")+").");return}
+  S.pomoLog=S.pomoLog&&S.pomoLog.dias?S.pomoLog:{dias:{},sessoes:0};if(S.edital&&!Array.isArray(S.edital.materias))S.edital=null;
+  if(S.perfil&&S.perfil.tema)aplicarTema(S.perfil.tema);
+  if(S.perfil&&S.perfil.pomo)Object.assign(P.dur,S.perfil.pomo);else if(S.perfil)Object.assign(P.dur,{foco:+S.perfil.bloco||50,curta:+S.perfil.pausa||10});P.restante=pomoTotal();
+  if(S.mode==="nuvem")assinarSocial();
+  if(S.perfil&&S.plano){S.view="inicio";renderShell()}
+  else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
+}
+function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pausarPomo();
+  Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{}}});renderLogin()}
+
+function perfilPadrao(nome){
+  return {nome:nome?nome.split(" ")[0]:"",categoria:"",serie:"",turno:"manha",detalhe:"",temProva:false,nomeProva:"",dataProva:"",materias:[],
+    horas:{seg:2,ter:2,qua:2,qui:2,sex:1.5,sab:3,dom:0},
+    inicio:{seg:"19:00",ter:"19:00",qua:"19:00",qui:"19:00",sex:"19:00",sab:"09:00",dom:"10:00"},
+    bloco:50,pausa:10,metodos:["exercicios","resumos"],periodo:"noite",obs:""};
+}
+function migrar(p){ // perfis salvos pela primeira versão do site
+  if(!p.categoria){p.categoria=/ENEM|vestib/i.test(p.objetivo||"")?"vestibular":/Concurso/i.test(p.objetivo||"")?"concurso":/Faculdade/i.test(p.objetivo||"")?"faculdade":/médio|escola/i.test(p.objetivo||"")?"colegio":"outro";p.temProva=!!p.dataProva}
+  return Object.assign(perfilPadrao(""),p);
+}
+function descObjetivo(p){
+  const c=CATEGORIAS.find(c=>c.k===p.categoria);let s=c?c.n:"Estudos";
+  if(p.categoria==="colegio"&&p.serie)s+=" · "+p.serie;
+  if(p.detalhe)s+=" · "+p.detalhe;
+  return s;
+}
+
+/* ================= Questionário inicial ================= */
+const PASSOS=["O que você estuda","Matérias e dificuldade","Horas por dia","Como você estuda"];
+function sugestoes(d){if(d.categoria==="colegio")return /EM/.test(d.serie)?SUGS.colegio_em:SUGS.colegio_ef;return SUGS[d.categoria]||SUGS.vestibular}
+function renderWizard(){
+  const d=S.draft,st=S.step;let corpo="";
+  if(st===0){
+    corpo=`
+      <div class="field"><label for="q-nome">Como podemos te chamar?</label><input type="text" id="q-nome" value="${esc(d.nome)}" placeholder="Seu nome" maxlength="40"></div>
+      <div class="field"><span class="lbl">Para que você está estudando?</span>
+        <div class="opts" role="radiogroup">${CATEGORIAS.map(c=>`<button type="button" class="opt ${d.categoria===c.k?"on":""}" data-cat="${c.k}" role="radio" aria-checked="${d.categoria===c.k}"><b>${c.n}</b><span>${c.d}</span></button>`).join("")}</div></div>
+      ${d.categoria==="colegio"?`<div class="grid2">
+        <div class="field"><label for="q-serie">Série</label><select id="q-serie"><option value="">Selecione</option>${SERIES.map(s=>`<option ${s===d.serie?"selected":""}>${s}</option>`).join("")}</select></div>
+        <div class="field"><label for="q-turno">Turno das aulas</label><select id="q-turno">${[["manha","Manhã"],["tarde","Tarde"],["integral","Integral"],["noite","Noite"]].map(([v,n])=>`<option value="${v}" ${v===d.turno?"selected":""}>${n}</option>`).join("")}</select></div></div>`:""}
+      ${["concurso","faculdade","idiomas","outro","vestibular"].includes(d.categoria)?`<div class="field"><label for="q-det">${{concurso:"Qual concurso? (ex.: EsPCEx, Polícia Federal)",faculdade:"Qual curso e período?",idiomas:"Qual idioma ou certificação?",outro:"Descreva o que você está estudando",vestibular:"Quais vestibulares? (opcional)"}[d.categoria]}</label><input type="text" id="q-det" value="${esc(d.detalhe)}" maxlength="80"></div>`:""}
+      <div class="field"><span class="lbl">Você tem uma prova ou meta com data marcada?</span>
+        <div class="seg" role="group"><button type="button" data-prova="1" class="${d.temProva?"on":""}">Sim</button><button type="button" data-prova="0" class="${d.temProva?"":"on"}">Não, quero estudar com constância</button></div></div>
+      ${d.temProva?`<div class="grid2"><div class="field"><label for="q-np">Nome da prova</label><input type="text" id="q-np" value="${esc(d.nomeProva)}" placeholder="Ex.: prova bimestral, ENEM, EsPCEx"></div>
+        <div class="field"><label for="q-data">Data</label><input type="date" id="q-data" value="${esc(d.dataProva)}"></div></div>`:""}
+      <div class="field"><label for="q-per">Em que período você rende mais?</label><select id="q-per">${[["manha","Manhã"],["tarde","Tarde"],["noite","Noite"]].map(([v,n])=>`<option value="${v}" ${v===d.periodo?"selected":""}>${n}</option>`).join("")}</select></div>`;
+  }else if(st===1){
+    const sg=sugestoes(d).filter(s=>!d.materias.some(m=>norm(m.nome)===norm(s)));
+    corpo=`
+      <div class="field"><label for="q-mat">Escreva suas matérias</label>
+        <div class="row" style="flex-wrap:nowrap"><input type="text" id="q-mat" placeholder="Ex.: Cálculo II, Anatomia, Matemática…" maxlength="50"><button class="btn" id="q-add" type="button">${ico("plus")}Adicionar</button></div>
+        <span class="hint">Digite qualquer matéria e aperte Enter, ou toque nas sugestões abaixo.</span></div>
+      ${sg.length?`<div class="sugs">${sg.map(s=>`<button class="sug" type="button" data-sug="${esc(s)}">+ ${esc(s)}</button>`).join("")}</div>`:""}
+      ${d.materias.length?`<div><div class="row eyebrow" style="justify-content:space-between;margin-bottom:6px"><span>Matéria</span><span>Dificuldade · Prioridade</span></div>
+        ${d.materias.map(m=>`
+        <div class="mat" data-id="${m.id}">
+          <span class="nm">${esc(m.nome)}</span>
+          <span class="seg" role="group" aria-label="Dificuldade em ${esc(m.nome)}">${[1,2,3,4,5].map(n=>`<button type="button" data-dif="${n}" class="${m.dif===n?"on":""}" aria-pressed="${m.dif===n}">${n}</button>`).join("")}</span>
+          <span class="seg" role="group" aria-label="Prioridade de ${esc(m.nome)}">${[["baixa","Baixa"],["media","Média"],["alta","Alta"]].map(([v,n])=>`<button type="button" data-prio="${v}" class="${m.prio===v?"on":""}" aria-pressed="${m.prio===v}">${n}</button>`).join("")}</span>
+          <button class="x" type="button" data-del="1" aria-label="Remover ${esc(m.nome)}">✕</button>
+        </div>`).join("")}
+        <p class="hint" style="margin-top:8px">Dificuldade: 1 = muito fácil, 5 = muito difícil. Prioridade: o peso da matéria no seu objetivo.</p></div>`
+      :`<div class="empty-state">Nenhuma matéria ainda. Adicione pelo menos uma para continuar.</div>`}`;
+  }else if(st===2){
+    const tot=DIAS.reduce((a,x)=>a+(+d.horas[x.k]||0),0);
+    corpo=`
+      <p class="muted">Quantas horas livres você tem para estudar em cada dia, e a que horas começa?${d.categoria==="colegio"?" Conte só o tempo fora da escola.":""}</p>
+      <div>${DIAS.map(x=>`
+        <div class="dayrow">
+          <label for="h-${x.k}" style="font-weight:500">${x.n}</label>
+          <input type="range" id="h-${x.k}" min="0" max="10" step="0.5" value="${+d.horas[x.k]||0}" data-dia="${x.k}">
+          <span class="mono" id="hv-${x.k}">${(+d.horas[x.k]||0)?fmtH((+d.horas[x.k])*60):"livre"}</span>
+          <input type="time" id="t-${x.k}" value="${esc(d.inicio[x.k])}" aria-label="Início em ${x.n}">
+        </div>`).join("")}</div>
+      <p><span class="eyebrow">Total na semana</span> <b class="mono" id="h-tot">${fmtH(tot*60)}</b></p>`;
+  }else{
+    corpo=`
+      <div class="grid2">
+        <div class="field"><label for="q-bloco">Quanto tempo você foca sem parar?</label><select id="q-bloco">${[25,30,40,50,60,90].map(n=>`<option value="${n}" ${+d.bloco===n?"selected":""}>${n} minutos</option>`).join("")}</select><span class="hint">Também vira a duração do seu pomodoro.</span></div>
+        <div class="field"><label for="q-pausa">Pausa entre blocos</label><select id="q-pausa">${[5,10,15,20].map(n=>`<option value="${n}" ${+d.pausa===n?"selected":""}>${n} minutos</option>`).join("")}</select></div>
+      </div>
+      <div class="field"><span class="lbl">Métodos que funcionam para você</span>
+        <div class="checks">${METODOS.map(([v,n])=>`<label><input type="checkbox" data-met="${v}" ${d.metodos.includes(v)?"checked":""}>${n}</label>`).join("")}</div></div>
+      <div class="field"><label for="q-obs">Algo mais que a IA deve saber?</label>
+        <textarea id="q-obs" placeholder="Ex.: tenho trabalho de História para entregar na sexta; às quartas tenho treino; quero revisar Redação todo domingo.">${esc(d.obs)}</textarea></div>`;
+  }
+  const pode=st===0?!!d.categoria:st===1?d.materias.length>0:st===2?DIAS.some(x=>(+d.horas[x.k]||0)>0):true;
+  $("#root").innerHTML=`
+    <div class="wizard stack">
+      <div class="row" style="justify-content:space-between"><div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div>
+        <button class="btn ghost sm" type="button" data-theme-lbl>${temaBtnHtml()}</button></div>
+      <div class="steps" aria-hidden="true">${PASSOS.map((_,i)=>`<span class="${i<=st?"on":""}"></span>`).join("")}</div>
+      <div><span class="eyebrow">Passo ${st+1} de ${PASSOS.length}</span><h1 style="margin-top:4px">${PASSOS[st]}</h1></div>
+      <form class="card stack" id="qform" novalidate>${corpo}
+        <div class="navq">
+          <button class="btn ghost" type="button" id="q-back" ${st===0&&!S.plano?"hidden":""}>${st===0?"Cancelar":"Voltar"}</button>
+          <button class="btn primary" type="submit" id="q-next" ${pode?"":"disabled"}>${st===PASSOS.length-1?ico("spark")+"Gerar meu plano com IA":"Continuar"}</button>
+        </div>
+      </form>
+    </div>`;
+  ligarWizard();
+}
+function ligarWizard(){
+  const d=S.draft,f=$("#qform");
+  $("[data-theme-lbl]").onclick=trocarTema;
+  f.addEventListener("submit",e=>{e.preventDefault();lerWizard();
+    if(S.step<PASSOS.length-1){S.step++;renderWizard();scrollTo(0,0);return}
+    const novo=!S.plano;S.perfil=clone(d);S.perfil.tema=temaAtual();Object.assign(P.dur,{foco:+d.bloco,curta:+d.pausa});if(!P.rodando)P.restante=pomoTotal();
+    gravar("perfil",S.perfil,true);
+    if(S.mode==="nuvem"&&!S.soc.perfis[S.uid])gravarPub("perfis",{nome:d.nome||"Estudante",bio:"",foto:"",objetivo:descObjetivo(d),desde:Date.now()});
+    S.view="semana";renderShell();gerar({novo});
+  });
+  $("#q-back").onclick=()=>{lerWizard();if(S.step===0){renderShell()}else{S.step--;renderWizard()}};
+  if(S.step===0){
+    $$("[data-cat]",f).forEach(b=>b.onclick=()=>{lerWizard();d.categoria=b.dataset.cat;renderWizard()});
+    $$("[data-prova]",f).forEach(b=>b.onclick=()=>{lerWizard();d.temProva=b.dataset.prova==="1";renderWizard()});
+    const sr=$("#q-serie");if(sr)sr.onchange=()=>{lerWizard()};
+  }
+  if(S.step===1){
+    const add=nome=>{nome=(nome||"").trim();if(!nome||d.materias.some(m=>norm(m.nome)===norm(nome)))return;d.materias.push({id:uid(),nome,dif:3,prio:"media"});renderWizard();$("#q-mat").focus()};
+    $("#q-add").onclick=()=>add($("#q-mat").value);
+    $("#q-mat").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();add(e.target.value)}});
+    $$("[data-sug]",f).forEach(b=>b.onclick=()=>add(b.dataset.sug));
+    $$(".mat",f).forEach(row=>{const m=d.materias.find(x=>x.id===row.dataset.id);
+      $$("[data-dif]",row).forEach(b=>b.onclick=()=>{m.dif=+b.dataset.dif;renderWizard()});
+      $$("[data-prio]",row).forEach(b=>b.onclick=()=>{m.prio=b.dataset.prio;renderWizard()});
+      $("[data-del]",row).onclick=()=>{d.materias=d.materias.filter(x=>x!==m);renderWizard()}});
+  }
+  if(S.step===2){
+    $$("[data-dia]",f).forEach(r=>r.addEventListener("input",()=>{d.horas[r.dataset.dia]=+r.value;$("#hv-"+r.dataset.dia).textContent=+r.value?fmtH(+r.value*60):"livre";
+      const tot=DIAS.reduce((a,x)=>a+(+d.horas[x.k]||0),0);$("#h-tot").textContent=fmtH(tot*60);$("#q-next").disabled=tot<=0}));
+  }
+}
+function lerWizard(){
+  const d=S.draft,v=id=>{const e=document.getElementById(id);return e?e.value:undefined};
+  if(S.step===0){d.nome=(v("q-nome")||"").trim();if(v("q-serie")!==undefined)d.serie=v("q-serie");if(v("q-turno")!==undefined)d.turno=v("q-turno");
+    if(v("q-det")!==undefined)d.detalhe=v("q-det").trim();if(v("q-np")!==undefined)d.nomeProva=v("q-np").trim();if(v("q-data")!==undefined)d.dataProva=v("q-data");d.periodo=v("q-per")}
+  if(S.step===2)DIAS.forEach(x=>{const t=v("t-"+x.k);if(t)d.inicio[x.k]=t});
+  if(S.step===3){d.bloco=+v("q-bloco");d.pausa=+v("q-pausa");d.obs=v("q-obs");d.metodos=$$("[data-met]").filter(c=>c.checked).map(c=>c.dataset.met)}
+}
+
+/* ================= Prompts da IA ================= */
+function contextoAluno(p){
+  const met=(p.metodos||[]).map(k=>(METODOS.find(m=>m[0]===k)||[k,k])[1]).join(", ")||"não informado";
+  return `Nome: ${p.nome||"não informado"}
+Perfil: ${descObjetivo(p)}${p.categoria==="colegio"?` (aulas no turno: ${p.turno})`:""}
+Prova ou meta com data: ${p.temProva?`${p.nomeProva||"prova"} em ${p.dataProva||"data não informada"}`:"não, quer estudar com constância"} (hoje é ${dataISO()})
+Período em que rende mais: ${p.periodo}
+Duração de foco por bloco: ${p.bloco} min; pausa entre blocos: ${p.pausa} min
+Métodos preferidos: ${met}
+Observações do aluno: ${p.obs||"nenhuma"}`;
+}
+function montarPrompt(p,o){
+  o=o||{};
+  const mats=p.materias.map(m=>`- ${m.nome}: dificuldade ${m.dif}/5, prioridade ${m.prio}`).join("\n");
+  const dias=DIAS.map(x=>`- ${x.k} (${x.n}): ${(+p.horas[x.k]||0)}h disponíveis, começando às ${p.inicio[x.k]||"19:00"}`).join("\n");
+  let provaTxt="";
+  if(o.prova){const {ed,tri}=o.prova;
+    provaTxt=`
+
+## Preparação para a prova "${ed.nome}"${tri.dataProva?` (data: ${tri.dataProva})`:""}
+Fase do aluno: ${{zero:"começando do zero",revisar:"já estudou, quer revisar e aprofundar",reta:"reta final: questões e simulados"}[tri.fase]}
+Reserve cerca de ${tri.pct}% do tempo semanal para esta prova${tri.pct<100?" e o restante para as matérias do dia a dia listadas acima":""}.
+Matérias da prova (domínio do aluno de 1 a 5, nº de questões e próximos tópicos ainda não estudados, na ordem do edital):
+${ed.materias.map(m=>{const t=tri.mats[m.id]||{dom:3};const prox=m.topicos.filter(x=>!x.feito).slice(0,8).map(x=>x.t);return `- ${m.nome}: domínio ${t.dom}/5${m.questoes?`, ${m.questoes} questões`:""}${t.fora?" (aluno pediu para não incluir)":""}. Próximos tópicos: ${prox.join("; ")||"todos estudados, só revisão"}`}).join("\n")}
+Regras extras: matérias com domínio baixo e muitas questões recebem mais tempo; cada bloco da prova deve citar um tópico específico na "tarefa", seguindo a ordem acima; não inclua matérias marcadas como "não incluir".`}
+  let txt=`Você é um planejador de estudos experiente, especialista em ciência da aprendizagem (prática de recuperação, repetição espaçada e intercalação). Monte o plano semanal de estudos do aluno abaixo.
+
+## Dados do aluno
+${contextoAluno(p)}
+
+Matérias do dia a dia:
+${mats||"- nenhuma informada"}
+
+Disponibilidade por dia:
+${dias}${provaTxt}
+
+## Regras do plano
+1. Respeite a disponibilidade de cada dia: o último bloco termina até o horário de início + horas disponíveis. Dia com 0h fica com lista vazia.
+2. Use blocos de ${p.bloco} minutos com ${p.pausa} minutos de pausa entre eles, a partir do horário informado. Se sobrar entre 20 min e um bloco inteiro no fim do dia, crie um bloco curto de revisão.
+3. Distribua o tempo semanal proporcional a dificuldade × peso da prioridade (baixa 0,75; média 1; alta 1,35). Matérias difíceis aparecem em mais dias, em vez de blocos longos num dia só.
+4. A matéria mais difícil do dia vai no primeiro bloco.
+5. Não repita a mesma matéria em blocos seguidos, a não ser que só exista uma.
+6. Alterne os tipos: "teoria" (conteúdo novo), "exercícios" (questões e correção dos erros) e "revisão" (repetição espaçada do que foi visto 1 a 3 dias antes). Dificuldade 4–5 pede mais "exercícios".
+7. ${p.categoria==="colegio"?"Para aluno de colégio, reserve tempo para tarefas e trabalhos citados nas observações e mantenha a carga leve nos dias de aula.":"Se o aluno tem prova e algum dia do fim de semana tem 2h ou mais, inclua um bloco \"simulado\"."}
+8. Em cada "tarefa", escreva uma ação concreta e curta (até 110 caracteres) usando os métodos preferidos do aluno.
+9. Siga as observações do aluno quando não contradisserem a disponibilidade.
+
+## Formato da resposta
+Responda SOMENTE com um objeto JSON válido, sem texto antes ou depois:
+{
+  "resumo": "2 a 3 frases explicando a lógica do plano, em português",
+  "semana": {
+    "seg": [{"inicio":"19:00","fim":"19:50","materia":"Matemática","tipo":"teoria","tarefa":"..."}],
+    "ter": [], "qua": [], "qui": [], "sex": [], "sab": [], "dom": []
+  },
+  "dicas": ["3 a 5 dicas curtas e específicas para este aluno"]
+}
+"tipo" é um destes: "teoria", "exercícios", "revisão", "simulado". Use exatamente os nomes de matérias informados (ou "Simulado geral").`;
+  if(o.pedido&&o.atual){
+    const c={};DIAS.forEach(x=>c[x.k]=(o.atual.semana[x.k]||[]).map(b=>({inicio:b.inicio,fim:b.fim,materia:b.materia,tipo:b.tipo,tarefa:b.tarefa})));
+    txt+=`
+
+## Ajuste pedido
+Plano atual: ${JSON.stringify(c)}
+Pedido do aluno: "${o.pedido}"
+Altere só o necessário para atender o pedido, mantendo as regras. No "resumo", explique em 1 a 2 frases o que mudou.`;
+  }
+  return txt;
+}
+const FORMATO_EDITAL=`{
+  "prova": {"nome": "", "banca": "", "dataProva": "AAAA-MM-DD ou vazio", "cargo": ""},
+  "materias": [{"nome": "Matemática", "questoes": 20, "topicos": ["Funções: domínio, imagem, composta e inversa", "..."]}]
+}`;
+function promptEditalTrecho(txt,i,n){
+  return `Você está lendo a parte ${i+1} de ${n} de um edital de prova ou concurso. Extraia SOMENTE o que aparece neste trecho:
+- dados da prova: nome, banca organizadora, data da prova objetiva (AAAA-MM-DD) e cargo/curso;
+- o conteúdo programático: cada disciplina e seus tópicos, na ordem em que aparecem no edital.
+
+Regras:
+- Seja fiel ao texto do edital. Não invente tópicos.
+- Agrupe subitens curtos num mesmo tópico (ex.: "Funções: domínio, imagem, composta e inversa"), com no máximo 160 caracteres por tópico.
+- Informe o número de questões da disciplina se o trecho disser; senão use 0.
+- Se o trecho não tiver conteúdo programático, devolva "materias": [].
+- Ignore regras de inscrição, taxas, recursos e documentos.
+
+Responda SOMENTE com JSON válido neste formato:
+${FORMATO_EDITAL}
+
+TRECHO DO EDITAL:
+"""
+${txt}
+"""`;
+}
+function promptPorNome(nome,extra){
+  return `Um estudante vai prestar "${nome}" e não tem o edital em mãos. ${extra?`Informações extras dele: ${extra}. `:""}Com base no edital mais recente que você conhece dessa prova, liste o conteúdo programático cobrado, disciplina por disciplina, com os tópicos na ordem do edital.
+
+Regras:
+- Use o seu conhecimento do edital oficial; não invente disciplinas. Se não conhecer a prova com segurança, devolva "materias": [] e explique em "observacao".
+- Em "referencia", diga qual edital/ano serviu de base. Em "confianca", use "alta", "media" ou "baixa".
+- Agrupe subitens curtos num mesmo tópico, com no máximo 160 caracteres por tópico, e informe o nº de questões por disciplina quando souber (senão 0).
+
+Responda SOMENTE com JSON válido:
+{"prova":{"nome":"","banca":"","dataProva":"","cargo":""},"referencia":"","confianca":"media","observacao":"","materias":[{"nome":"","questoes":0,"topicos":[""]}]}`;
+}
+
+/* ================= Validação de planos ================= */
+function normalizarPlano(raw,nomesValidos){
+  if(!raw||typeof raw!=="object")return null;
+  let sem=raw.semana;
+  if(Array.isArray(sem)){const o={};sem.forEach((d,i)=>{const k=norm(d&&d.dia||DIAS[i]&&DIAS[i].k).slice(0,3);o[k]=d.blocos||[]});sem=o}
+  if(!sem||typeof sem!=="object")return null;
+  const out={};let total=0;
+  DIAS.forEach(x=>{
+    out[x.k]=(Array.isArray(sem[x.k])?sem[x.k]:[]).map(b=>{
+      const i=toMin(b.inicio),f=toMin(b.fim);if(i==null||f==null||f<=i)return null;
+      let tipo=norm(b.tipo||"teoria");tipo=tipo.startsWith("exerc")?"exercícios":tipo.startsWith("revis")?"revisão":tipo.startsWith("simul")?"simulado":"teoria";
+      const ok=nomesValidos.find(n=>norm(n)===norm(b.materia));
+      return {id:uid(),inicio:toHHMM(i),fim:toHHMM(f),min:f-i,materia:ok||String(b.materia||"Estudo").slice(0,60),tipo,tarefa:String(b.tarefa||"").slice(0,180),feito:false};
+    }).filter(Boolean).sort((a,b)=>toMin(a.inicio)-toMin(b.inicio));
+    total+=out[x.k].length;
+  });
+  if(!total)return null;
+  return {resumo:String(raw.resumo||""),semana:out,dicas:Array.isArray(raw.dicas)?raw.dicas.slice(0,6).map(String):[]};
+}
+
+/* ================= Algoritmo local (sem IA) ================= */
+function planoLocal(p,prova){
+  let mats=p.materias.map(m=>({nome:m.nome,dif:m.dif,peso:m.dif*(PRIO[m.prio]||1),tops:null}));
+  if(prova){
+    const {ed,tri}=prova,pct=tri.pct/100;
+    const ex=ed.materias.filter(m=>!(tri.mats[m.id]||{}).fora).map(m=>{const dom=(tri.mats[m.id]||{dom:3}).dom;return {nome:m.nome,dif:6-dom,peso:(6-dom)*(1+(m.questoes||8)/20),tops:m.topicos.filter(t=>!t.feito).map(t=>t.t)}});
+    mats=mats.filter(m=>!ex.some(e=>norm(e.nome)===norm(m.nome)));
+    const sb=mats.reduce((a,m)=>a+m.peso,0)||1,se=ex.reduce((a,m)=>a+m.peso,0)||1;
+    mats=pct>=1?ex:mats.map(m=>({...m,peso:m.peso/sb*(1-pct)})).concat(ex.map(m=>({...m,peso:m.peso/se*pct})));
+  }
+  if(!mats.length)mats=[{nome:"Estudo livre",dif:3,peso:1,tops:null}];
+  mats.forEach((m,i)=>m.id=i);
+  const somaPeso=mats.reduce((a,m)=>a+m.peso,0);
+  const slots={};let totalSlots=0;
+  DIAS.forEach(x=>{const min=Math.round((+p.horas[x.k]||0)*60);const n=Math.floor((min+p.pausa)/(p.bloco+p.pausa));const resto=min-(n*(p.bloco+p.pausa)-p.pausa);
+    slots[x.k]={n,curto:n>0&&resto>=20+p.pausa?resto-p.pausa:(n===0&&min>=20?min:0)};totalSlots+=n});
+  const alvo={},usados={},cont={},ptr={};mats.forEach(m=>{alvo[m.id]=somaPeso?m.peso/somaPeso*totalSlots:0;usados[m.id]=0;cont[m.id]=0;ptr[m.id]=0});
+  const comProva=!!prova||p.temProva;const met=p.metodos||[];
+  const tarefa=(m,t)=>{
+    if(m.tops&&m.tops.length){const top=m.tops[ptr[m.id]%m.tops.length];
+      if(t==="teoria"){ptr[m.id]++;return "Teoria: "+top}
+      if(t==="exercícios")return "Questões sobre: "+m.tops[Math.max(0,ptr[m.id]-1)%m.tops.length];
+      if(t==="revisão")return "Revisar: "+m.tops[Math.max(0,ptr[m.id]-1)%m.tops.length]}
+    if(t==="teoria")return met.includes("videoaulas")?`Assistir aula de um tópico novo de ${m.nome} e anotar os pontos-chave`:met.includes("mapas")?`Estudar um tópico novo de ${m.nome} e montar um mapa mental`:`Estudar um tópico novo de ${m.nome} e fazer um resumo de 1 página`;
+    if(t==="exercícios")return `Resolver 15–20 questões de ${m.nome} e refazer as que errou`;
+    if(t==="revisão")return met.includes("flashcards")?`Revisar ${m.nome} com flashcards do que viu nos últimos dias`:`Revisar o resumo de ${m.nome} e responder de memória 5 perguntas`;
+    return "Simulado cronometrado com questões das matérias da semana";
+  };
+  const semana={};
+  DIAS.forEach((x,di)=>{
+    const {n,curto}=slots[x.k];let t=toMin(p.inicio[x.k]);if(t==null)t=19*60;const sel=[];let ult=null;
+    for(let s=0;s<n;s++){const c=mats.filter(m=>mats.length===1||m.id!==ult).sort((a,b)=>(alvo[b.id]-usados[b.id])-(alvo[a.id]-usados[a.id])||b.dif-a.dif)[0];usados[c.id]++;ult=c.id;sel.push(c)}
+    sel.sort((a,b)=>b.dif-a.dif);
+    for(let i=1;i<sel.length;i++){if(sel[i].id===sel[i-1].id){const j=sel.findIndex((e,k)=>k>i&&e.id!==sel[i].id);if(j>0)[sel[i],sel[j]]=[sel[j],sel[i]]}}
+    const lista=[];
+    sel.forEach((m,i)=>{
+      let tipo;
+      if(comProva&&di>=5&&n>=3&&i===n-1)tipo="simulado";
+      else{const ciclo=m.dif>=4?["teoria","exercícios","exercícios","revisão"]:["teoria","exercícios","revisão"];tipo=ciclo[cont[m.id]%ciclo.length];cont[m.id]++}
+      lista.push({id:uid(),inicio:toHHMM(t),fim:toHHMM(t+p.bloco),min:+p.bloco,materia:tipo==="simulado"?"Simulado geral":m.nome,tipo,tarefa:tarefa(m,tipo),feito:false});
+      t+=+p.bloco+ +p.pausa;
+    });
+    if(curto){const m=mats.slice().sort((a,b)=>b.dif-a.dif)[di%mats.length];lista.push({id:uid(),inicio:toHHMM(t),fim:toHHMM(t+curto),min:curto,materia:m.nome,tipo:"revisão",tarefa:tarefa(m,"revisão"),feito:false})}
+    semana[x.k]=lista;
+  });
+  const top=mats.slice().sort((a,b)=>b.peso-a.peso)[0];
+  return {resumo:`O tempo foi dividido pelo peso de cada matéria${prova?" (para a prova: domínio e número de questões)":" (dificuldade × prioridade)"}. ${top.nome} recebe mais blocos e abre os dias em que aparece, quando você tem mais energia. Cada matéria passa por teoria, exercícios e revisão ao longo da semana.`,
+    semana,dicas:["Comece pelo bloco mais difícil do dia e deixe as revisões para o fim.","Use o pomodoro: nas pausas, levante e fique longe do celular.","Anote as questões que errar; elas são o conteúdo da próxima revisão.",(p.temProva||prova)?"Nas duas semanas antes da prova, troque parte da teoria por simulados.":"Uma vez por semana, confira se o plano ainda cabe na sua rotina."]};
+}
+
+/* ================= Geração e ajuste do plano ================= */
+function telaCarregando(titulo,sub){$("#main").innerHTML=`<div class="page"><div class="card loadbox" style="max-width:560px;margin:60px auto"><div class="row"><span class="spinner"></span><h2>${esc(titulo)}</h2></div><p class="muted" id="ld">${esc(sub)}</p><div class="prog"><i id="ldp" style="width:8%"></i></div></div></div>`}
+async function pedirPlano(p,o){
+  const nomes=p.materias.map(m=>m.nome).concat(o.prova?o.prova.ed.materias.map(m=>m.nome):[]).concat(["Simulado geral"]);
+  let plano=null,aviso="";
+  if(S.sample){
+    try{
+      const raw=await S.sample.json(montarPrompt(p,o),{modelTier:"default",cache:false,onText:({text})=>{const e=$("#ld"),b=$("#ldp");if(e)e.textContent=`A IA está escrevendo o plano… (${text.length} caracteres)`;if(b)b.style.width=Math.min(95,8+text.length/40)+"%"}});
+      plano=normalizarPlano(raw,nomes);if(!plano)aviso="A resposta da IA veio incompleta; usei o algoritmo local.";
+    }catch(e){aviso=e&&e.code==="not_granted"?"Você não autorizou o uso da IA; usei o algoritmo local.":e&&e.code==="rate_limited"?"Limite de uso da IA atingido; usei o algoritmo local.":"A IA não respondeu; usei o algoritmo local."}
+  }
+  if(plano)plano.geradoPor="ia";
+  return {plano,aviso};
+}
+async function gerar(o){
+  o=o||{};
+  telaCarregando(o.pedido?"Ajustando seu plano":"Montando seu plano",S.sample?"A IA está distribuindo suas matérias pela semana…":"Calculando a distribuição das matérias…");
+  let {plano,aviso}=await pedirPlano(S.perfil,{pedido:o.pedido,atual:o.pedido?S.plano:null,prova:S.plano&&S.plano.prova?provaCtx():null});
+  if(!plano){
+    if(o.pedido){toast(aviso||"O ajuste precisa da IA, que não está disponível aqui.");go("semana");return}
+    plano=planoLocal(S.perfil,S.plano&&S.plano.prova?provaCtx():null);plano.geradoPor="local";
+  }
+  manterFeitos(plano);
+  if(S.plano&&S.plano.prova&&S.edital)plano.prova=S.plano.prova;
+  plano.criadoEm=new Date().toISOString();S.plano=plano;await gravar("plano",plano,true);
+  go("semana");toast(aviso||(o.pedido?"Plano ajustado.":"Plano criado e salvo."));
+}
+function provaCtx(){return S.edital&&S.edital.tri?{ed:S.edital,tri:S.edital.tri}:null}
+function manterFeitos(plano){if(!S.plano)return;DIAS.forEach(x=>(plano.semana[x.k]||[]).forEach(b=>{const v=(S.plano.semana[x.k]||[]).find(o=>o.inicio===b.inicio&&o.materia===b.materia);if(v&&v.feito)b.feito=true}))}
+
+/* ================= Pomodoro ================= */
+const P={modo:"foco",dur:{foco:50,curta:10,longa:20},rodando:false,fimEm:0,restante:50*60e3,ciclos:0,materia:"",bloco:null,tick:null,iniciadoEm:0,acumulado:0};
+const MODOS={foco:"Foco",curta:"Pausa curta",longa:"Pausa longa"};
+function pomoTotal(){return P.dur[P.modo]*60e3}
+function pomoRestante(){return P.rodando?Math.max(0,P.fimEm-Date.now()):P.restante}
+function iniciarPomo(){if(P.rodando)return;P.rodando=true;P.fimEm=Date.now()+P.restante;P.iniciadoEm=Date.now();clearInterval(P.tick);P.tick=setInterval(tickPomo,250);somPreparar();tickPomo()}
+function pausarPomo(){if(!P.rodando)return;P.restante=pomoRestante();if(P.modo==="foco")P.acumulado+=Date.now()-P.iniciadoEm;P.rodando=false;clearInterval(P.tick);tickPomo()}
+function resetPomo(modo){pausarPomo();if(modo)P.modo=modo;P.restante=pomoTotal();P.acumulado=0;tickPomo()}
+function tickPomo(){
+  const r=pomoRestante();
+  if(P.rodando&&r<=0){concluirFase();return}
+  const mm=String(Math.floor(r/60000)).padStart(2,"0"),ss=String(Math.floor(r/1000)%60).padStart(2,"0");
+  const t=$("#pomo-t");if(t)t.textContent=mm+":"+ss;
+  const c=$("#pomo-c");if(c){const L=2*Math.PI*46;c.style.strokeDasharray=L;c.style.strokeDashoffset=L*(1-r/pomoTotal())}
+  const pb=$("#pomo-play");if(pb)pb.innerHTML=P.rodando?ico("pause")+"Pausar":ico("play")+(P.restante<pomoTotal()?"Continuar":"Iniciar");
+  const mini=$("#mini-pomo");if(mini){mini.hidden=!(P.rodando||P.restante<pomoTotal());mini.innerHTML=`${ico(P.rodando?"timer":"pause")}<div style="min-width:0"><b>${mm}:${ss}</b><div style="font-size:.74rem;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${MODOS[P.modo]}${P.materia?" · "+esc(P.materia):""}</div></div>`}
+  document.title=P.rodando?`${mm}:${ss} · ${MODOS[P.modo]} — Mapa de Estudos`:"Mapa de Estudos";
+}
+function concluirFase(){
+  clearInterval(P.tick);P.rodando=false;bip();
+  if(P.modo==="foco"){
+    registrar(P.dur.foco,P.materia);P.ciclos++;
+    if(P.bloco)marcarBloco(P.bloco,true);
+    P.modo=P.ciclos%4===0?"longa":"curta";toast(`Sessão de foco concluída: +${P.dur.foco} min. Hora da ${MODOS[P.modo].toLowerCase()}.`);
+  }else{P.modo="foco";toast("Pausa encerrada. Pronto para o próximo foco?")}
+  P.restante=pomoTotal();P.acumulado=0;
+  if(S.view==="pomodoro")renderPomodoro();else tickPomo();
+  if($("#pomo-auto")&&$("#pomo-auto").checked||P.auto)iniciarPomo();
+}
+function encerrarRegistrar(){
+  if(P.modo!=="foco")return;let ms=P.acumulado+(P.rodando?Date.now()-P.iniciadoEm:0);
+  const min=Math.floor(ms/60000);pausarPomo();
+  if(min>=1){registrar(min,P.materia);toast(`${min} min registrados.`)}else toast("Menos de 1 minuto: nada foi registrado.");
+  resetPomo("foco");if(S.view==="pomodoro")renderPomodoro();
+}
+function registrar(min,materia){
+  const hoje=dataISO(),L=S.pomoLog;L.dias[hoje]=L.dias[hoje]||{min:0,mat:{}};
+  L.dias[hoje].min+=min;const k=materia||"Sem matéria";L.dias[hoje].mat[k]=(L.dias[hoje].mat[k]||0)+min;L.sessoes=(L.sessoes||0)+1;
+  const ks=Object.keys(L.dias).sort();while(ks.length>120){delete L.dias[ks.shift()]}
+  gravar("pomo",L,true);
+  if(S.mode==="nuvem"){const dias={};for(let i=0;i<14;i++){const d=diasAtras(i);if(L.dias[d])dias[d]=L.dias[d].min}
+    gravarPub("ranking",{dias,total:Object.values(L.dias).reduce((a,d)=>a+d.min,0),atualizado:Date.now()})}
+}
+let actx=null;
+function somPreparar(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){}}
+function bip(){try{if(!actx)return;[0,.25,.5].forEach(t=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=880;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.0001,actx.currentTime+t);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+t+.2);o.start(actx.currentTime+t);o.stop(actx.currentTime+t+.22)})}catch(e){}}
+function minutosDia(d){return S.pomoLog&&S.pomoLog.dias[d]?S.pomoLog.dias[d].min:0}
+function sequencia(){let n=0;for(let i=0;i<120;i++){if(minutosDia(diasAtras(i))>0)n++;else if(i>0)break}return n}
+
+/* ================= Comunidade (nuvem) ================= */
+function assinarSocial(){
+  ["perfis","ranking","msgs","grupos","membros"].forEach(col=>{
+    try{S.unsub.push(S.db.collection(col).limit(1000).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>{const v=d.data();if(v)m[d.id]=v});S.soc[col]=m;
+      if(col==="perfis")S.pub=m[S.uid]||null;atualizarSocial(col)},()=>{}))}catch(e){}
+  });
+}
+const nomeDe=id=>(S.soc.perfis[id]&&S.soc.perfis[id].nome)||"Estudante";
+function avatar(id,cls){const p=S.soc.perfis[id]||{};const nm=id===S.uid&&S.mode!=="nuvem"?(S.perfil&&S.perfil.nome)||"Você":nomeDe(id);
+  if(p.foto&&/^data:image\/(jpeg|png|webp);base64,/.test(p.foto))return `<img class="avatar ${cls||""}" src="${p.foto}" alt="">`;
+  const ini=nm.split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase();return `<span class="avatar ${cls||""}" aria-hidden="true">${esc(ini||"?")}</span>`}
+function atualizarSocial(col){
+  renderSideUser();if(!$("#main")||!S.perfil)return;
+  const v=S.view;
+  if(col==="msgs"&&(v==="chat"||(v==="grupos"&&S.grupoAberto))){renderMsgs();return}
+  if(["perfis","ranking"].includes(col)&&["ranking","inicio"].includes(v)){renderView();return}
+  if(["grupos","membros","ranking","perfis"].includes(col)&&v==="grupos"&&!S.grupoAberto){renderView();return}
+  if(col==="membros"&&v==="grupos"&&S.grupoAberto){const el=$("#g-membros");if(el)el.innerHTML=membrosHtml(S.grupoAberto)}
+}
+function todosGrupos(){const out={};Object.entries(S.soc.grupos).forEach(([dono,doc])=>Object.entries((doc&&doc.lista)||{}).forEach(([gid,g])=>{out[gid]={...g,id:gid,dono}}));return out}
+function membrosDe(gid){return Object.entries(S.soc.membros).filter(([,d])=>d&&d.grupos&&d.grupos[gid]).map(([id])=>id)}
+function meusGrupos(){const d=S.soc.membros[S.uid];return d&&d.grupos?Object.keys(d.grupos).filter(g=>d.grupos[g]):[]}
+function minHoje(id){const r=S.soc.ranking[id];return r&&r.dias?(r.dias[dataISO()]||0):0}
+function min7(id){const r=S.soc.ranking[id];if(!r||!r.dias)return 0;let s=0;for(let i=0;i<7;i++)s+=r.dias[diasAtras(i)]||0;return s}
+async function enviarMsg(canal,texto){
+  texto=texto.trim().slice(0,600);if(!texto)return;
+  const doc=clone(S.soc.msgs[S.uid]||{global:[],grupos:{}});doc.global=doc.global||[];doc.grupos=doc.grupos||{};
+  const m={id:uid(),t:texto,em:Date.now()};
+  if(canal==="global"){doc.global.push(m);doc.global=doc.global.slice(-40)}else{(doc.grupos[canal]=doc.grupos[canal]||[]).push(m);doc.grupos[canal]=doc.grupos[canal].slice(-40)}
+  S.soc.msgs[S.uid]=doc;renderMsgs();await gravarPub("msgs",doc);
+}
+function mensagens(canal){const out=[];Object.entries(S.soc.msgs).forEach(([autor,d])=>{const arr=canal==="global"?(d&&d.global):(d&&d.grupos&&d.grupos[canal]);(arr||[]).forEach(m=>{if(m&&typeof m.t==="string")out.push({...m,autor})})});return out.sort((a,b)=>a.em-b.em).slice(-150)}
+
+/* ================= Shell com barra lateral ================= */
+const NAV=[
+  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"]]],
+  ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
+  ["Comunidade",[["grupos","Grupos de estudo","users"],["chat","Chat global","chat"],["ranking","Ranking","trophy"]]],
+  ["Conta",[["perfil","Meu perfil","user"],["config","Configurações","gear"]]]];
+function renderShell(){
+  $("#root").innerHTML=`
+  <div class="shell" id="shell">
+    <div class="overlay" id="ovl"></div>
+    <aside class="side" aria-label="Menu">
+      <div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div>
+      <div id="mini-pomo" class="mini-pomo" hidden role="button" tabindex="0"></div>
+      <nav class="nav" id="nav">${NAV.map(([sec,items])=>`<div class="nav-sec">${sec}</div>`+items.map(([k,n,i])=>`<a data-go="${k}" ${k==="topicos"&&!S.edital?"hidden":""} href="#${k}">${ico(i)}<span>${n}</span>${k==="topicos"&&S.edital?`<span class="badge">${progEdital()}%</span>`:""}</a>`).join("")).join("")}</nav>
+      <div class="side-foot">
+        <button class="btn ghost sm" type="button" data-theme-lbl style="justify-content:flex-start">${temaBtnHtml()}</button>
+        <div class="me" id="side-me" role="button" tabindex="0"></div>
+        <button class="btn ghost sm" type="button" id="btn-sair" style="justify-content:flex-start">${ico("out")}Sair</button>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar-m"><button class="btn icon ghost" id="menu-btn" type="button" aria-label="Abrir menu">${ico("menu")}</button><div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div></div>
+      <main id="main"></main>
+    </div>
+  </div>`;
+  $$("[data-go]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.go)}));
+  $("[data-theme-lbl]").onclick=trocarTema;
+  $("#btn-sair").onclick=sair;
+  $("#side-me").onclick=()=>go("perfil");
+  $("#mini-pomo").onclick=()=>go("pomodoro");
+  $("#menu-btn").onclick=()=>$("#shell").classList.add("open");
+  $("#ovl").onclick=()=>$("#shell").classList.remove("open");
+  renderSideUser();renderView();tickPomo();
+}
+function renderSideUser(){
+  const el=$("#side-me");if(!el)return;
+  const nm=S.mode==="nuvem"?(S.pub&&S.pub.nome)||(S.perfil&&S.perfil.nome)||"Estudante":(S.perfil&&S.perfil.nome)||"Visitante";
+  el.innerHTML=`${S.mode==="nuvem"?avatar(S.uid):`<span class="avatar" aria-hidden="true">${esc(nm[0]||"V").toUpperCase()}</span>`}<div style="min-width:0"><div class="nm">${esc(nm)}</div><div class="sub">${S.mode==="nuvem"?"Salvo na nuvem":"Visitante · este navegador"}</div></div>`;
+}
+function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(m=>m.topicos);return all.length?Math.round(all.filter(t=>t.feito).length/all.length*100):0}
+function go(v){S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
+function renderView(){
+  $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:renderGrupos,chat:renderChat,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  f();
+}
+const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;
+function bloqueado(t){return `<div class="page">${pageHead(t)}<div class="card lock stack" style="text-align:center;align-items:center">${ico("users")}<h2>Entre com sua conta para usar a comunidade</h2><p class="muted">Grupos, chat e ranking precisam que seus dados fiquem na nuvem, para que outras pessoas vejam suas mensagens e suas horas.</p><button class="btn primary" type="button" id="relogar">Sair e entrar com a conta</button></div></div>`}
+function ligarBloqueado(){const b=$("#relogar");if(b)b.onclick=sair}
+
+/* ================= Início ================= */
+function renderInicio(){
+  const p=S.perfil,pl=S.plano,hi=hojeIdx(),hojeK=DIAS[hi].k;
+  const blocos=(pl&&pl.semana[hojeK])||[],todos=pl?DIAS.flatMap(x=>pl.semana[x.k]||[]):[];
+  const feitos=todos.filter(b=>b.feito).length,pct=todos.length?Math.round(feitos/todos.length*100):0;
+  const dp=p.temProva&&p.dataProva?Math.ceil((new Date(p.dataProva+"T00:00:00")-new Date(new Date().toDateString()))/864e5):null;
+  const ed=S.edital;const prox=ed?ed.materias.map(m=>({m:m.nome,t:m.topicos.find(t=>!t.feito)})).filter(x=>x.t).slice(0,4):[];
+  const h=new Date().getHours();const saud=h<12?"Bom dia":h<18?"Boa tarde":"Boa noite";
+  const nome=(S.pub&&S.pub.nome)||p.nome;
+  const rk=S.mode==="nuvem"?Object.keys(S.soc.ranking).map(id=>({id,m:minHoje(id)})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m).slice(0,5):[];
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead(`${saud}${nome?", "+esc(nome):""}`,`${DIAS[hi].n}, ${new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long"})} · ${esc(descObjetivo(p))}`,`<button class="btn primary" type="button" id="ini-pomo">${ico("play")}Começar a estudar</button>`)}
+    <div class="stats">
+      <div class="stat"><div class="eyebrow">Estudado hoje</div><div class="v">${fmtH(minutosDia(dataISO()))}</div><div class="s">registrado pelo pomodoro</div></div>
+      <div class="stat"><div class="eyebrow">Sequência</div><div class="v">${sequencia()} ${sequencia()===1?"dia":"dias"}</div><div class="s">dias seguidos estudando</div></div>
+      <div class="stat"><div class="eyebrow">Semana</div><div class="v">${feitos}/${todos.length}</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>
+      <div class="stat"><div class="eyebrow">${dp!=null?esc(p.nomeProva||"Prova"):"Matérias"}</div><div class="v">${dp!=null?(dp>=0?dp+" dias":"já passou"):p.materias.length}</div><div class="s">${dp!=null?"até a prova":"no seu plano"}</div></div>
+    </div>
+    <div class="cols">
+      <div class="card"><div class="card-h"><h2>Hoje</h2><a class="small muted" href="#semana" data-link="semana">Ver semana</a></div>
+        ${blocos.length?`<div class="blist">${blocos.map(b=>`
+          <div class="bitem ${b.feito?"done":""}">
+            <input class="chk" type="checkbox" ${b.feito?"checked":""} data-chk="${hojeK}|${b.id}" aria-label="Concluir ${esc(b.materia)}">
+            <span class="mono small muted tmc">${b.inicio}–${b.fim}</span>
+            <div style="min-width:0"><div class="bt" style="font-weight:600">${esc(b.materia)} <span class="tipo">· ${esc(b.tipo)}</span></div><div class="small muted bt">${esc(b.tarefa)}</div></div>
+            <button class="btn sm" type="button" data-play="${hojeK}|${b.id}" aria-label="Iniciar pomodoro de ${esc(b.materia)}">${ico("play")}</button>
+          </div>`).join("")}</div>`:`<div class="empty-state">Nada planejado para hoje. Aproveite para descansar ou revisar algo leve.</div>`}
+      </div>
+      <div class="stack">
+        ${prox.length?`<div class="card"><div class="card-h"><h3>Próximos tópicos · ${esc(ed.nome)}</h3></div><div class="list">${prox.map(x=>`<div class="li" style="grid-template-columns:minmax(0,1fr)"><div style="min-width:0"><div class="eyebrow">${esc(x.m)}</div><div class="small">${esc(x.t.t)}</div></div></div>`).join("")}</div></div>`
+          :`<div class="card stack sm"><h3>Vai fazer uma prova?</h3><p class="small muted">Envie o edital ou escreva o nome da prova para ver os tópicos cobrados, matéria por matéria.</p><button class="btn sm" type="button" data-link="edital">${ico("scan")}Escanear edital</button></div>`}
+        <div class="card"><div class="card-h"><h3>Ranking de hoje</h3><a class="small muted" href="#ranking" data-link="ranking">Ver tudo</a></div>
+          ${S.mode!=="nuvem"?`<p class="small muted">Entre com sua conta para participar do ranking.</p>`:rk.length?`<div class="list">${rk.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id,"sm")}<span class="nm">${esc(nomeDe(x.id))}</span></div><span class="mono small">${fmtH(x.m)}</span></div>`).join("")}</div>`:`<p class="small muted">Ninguém registrou estudo hoje ainda. Termine um pomodoro e apareça aqui.</p>`}
+        </div>
+      </div>
+    </div></div>`;
+  $("#ini-pomo").onclick=()=>{const prox=blocos.find(b=>!b.feito);if(prox)prepararPomo(hojeK,prox);go("pomodoro")};
+  ligarBlocos();$$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
+}
+function acharBloco(ref){const [k,id]=ref.split("|");return (S.plano&&S.plano.semana[k]||[]).find(b=>b.id===id)}
+function marcarBloco(ref,v){const b=acharBloco(ref);if(!b)return;b.feito=v;gravar("plano",S.plano);if(["inicio","semana"].includes(S.view))renderView()}
+function prepararPomo(k,b){if(P.rodando)return;P.materia=b.materia;P.bloco=k+"|"+b.id;P.modo="foco";P.dur.foco=Math.max(5,Math.min(120,b.min||P.dur.foco));P.restante=pomoTotal();P.acumulado=0}
+function ligarBlocos(){
+  $$("[data-chk]").forEach(c=>c.addEventListener("change",()=>marcarBloco(c.dataset.chk,c.checked)));
+  $$("[data-play]").forEach(b=>b.addEventListener("click",()=>{const bl=acharBloco(b.dataset.play);if(P.rodando){toast("Já existe um pomodoro rodando.");go("pomodoro");return}if(bl)prepararPomo(b.dataset.play.split("|")[0],bl);go("pomodoro");iniciarPomo()}));
+}
+
+/* ================= Minha semana ================= */
+function renderSemana(){
+  const p=S.perfil,pl=S.plano;if(!pl){$("#main").innerHTML=`<div class="page">${pageHead("Minha semana")}<div class="empty-state">Seu plano ainda não foi gerado.<button class="btn primary" id="gerar0">Gerar plano</button></div></div>`;$("#gerar0").onclick=()=>gerar();return}
+  const todos=DIAS.flatMap(x=>pl.semana[x.k]||[]);const tot=todos.reduce((a,b)=>a+b.min,0);
+  const por={};todos.forEach(b=>por[b.materia]=(por[b.materia]||0)+b.min);const dist=Object.entries(por).sort((a,b)=>b[1]-a[1]),mx=dist.length?dist[0][1]:1;
+  const hi=hojeIdx();
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Minha semana",`${fmtH(tot)} planejadas · ${todos.filter(b=>b.feito).length} de ${todos.length} blocos feitos`,
+      `<span class="pill ${pl.geradoPor==="ia"?"solid":""}"><span class="dot"></span>${pl.geradoPor==="ia"?"Gerado pela IA":"Algoritmo local"}</span>${pl.prova?`<span class="pill">Inclui ${esc(pl.prova)}</span>`:""}`)}
+    <div class="week-wrap"><div class="week">${DIAS.map((x,i)=>{const bl=pl.semana[x.k]||[];const m=bl.reduce((a,b)=>a+b.min,0);return `
+      <section class="day ${i===hi?"hoje":""}" aria-label="${x.n}">
+        <header><b>${x.n}</b><span class="small muted mono">${m?fmtH(m):"livre"}</span></header>
+        <div class="lst">${bl.length?bl.map(b=>`
+          <div class="blk t-${b.tipo} ${b.feito?"done":""}">
+            <input class="chk" type="checkbox" data-chk="${x.k}|${b.id}" ${b.feito?"checked":""} aria-label="Concluir ${esc(b.materia)} às ${b.inicio}">
+            <span class="tm">${b.inicio}–${b.fim} · ${esc(b.tipo)}</span>
+            <span class="mt">${esc(b.materia)}</span>
+            ${b.tarefa?`<span class="tk">${esc(b.tarefa)}</span>`:""}
+            ${b.feito?"":`<button class="btn sm ghost play" type="button" data-play="${x.k}|${b.id}">${ico("play")}Pomodoro</button>`}
+          </div>`).join(""):`<p class="empty">Sem estudo planejado.</p>`}</div>
+      </section>`}).join("")}</div></div>
+    <div class="cols" style="margin-top:16px">
+      <div class="card stack"><div><span class="eyebrow">Por que o plano ficou assim</span><p style="margin-top:6px">${esc(pl.resumo)}</p></div>
+        ${pl.dicas&&pl.dicas.length?`<div><span class="eyebrow">Dicas</span><ul style="margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px">${pl.dicas.map(d=>`<li>${esc(d)}</li>`).join("")}</ul></div>`:""}
+        <form class="stack sm" id="ajuste" style="border-top:1px solid var(--line);padding-top:16px">
+          <label for="aj-txt" style="font-weight:600">${ico("spark")} Ajustar com a IA</label>
+          <textarea id="aj-txt" placeholder="Ex.: tenho prova de Química na sexta, aumente Química até lá. Ou: na quarta só consigo estudar 1 hora."></textarea>
+          <div class="row"><button class="btn primary" type="submit" ${S.sample?"":"disabled"}>Ajustar plano</button>
+          <button class="btn" type="button" id="refazer">Gerar de novo</button>
+          ${S.sample?"":`<span class="hint">A IA não está disponível nesta visualização.</span>`}</div>
+        </form>
+      </div>
+      <div class="card"><div class="card-h"><h3>Tempo por matéria</h3></div>
+        <div class="bars-h">${dist.map(([m,min])=>`<div class="r"><span>${esc(m)}</span><span class="mono small">${fmtH(min)}</span><div class="prog"><i style="width:${Math.round(min/mx*100)}%"></i></div></div>`).join("")}</div></div>
+    </div></div>`;
+  ligarBlocos();
+  $("#ajuste").addEventListener("submit",e=>{e.preventDefault();const t=$("#aj-txt").value.trim();if(!t){$("#aj-txt").focus();return}gerar({pedido:t})});
+  $("#refazer").onclick=()=>gerar();
+}
+
+/* ================= Tela do pomodoro ================= */
+function renderPomodoro(){
+  const mats=[...new Set((S.perfil.materias||[]).map(m=>m.nome).concat(S.edital?S.edital.materias.map(m=>m.nome):[]))];
+  const hoje=S.pomoLog.dias[dataISO()]||{min:0,mat:{}};
+  const sem=[];for(let i=6;i>=0;i--){const d=diasAtras(i);sem.push({d,m:minutosDia(d)})}const mx=Math.max(60,...sem.map(x=>x.m));
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Pomodoro","Ciclos de foco e pausa. Cada foco concluído entra no seu histórico e no ranking.")}
+    <div class="pomo">
+      <div class="card pomo-main">
+        <div class="seg" role="group" aria-label="Modo">${Object.entries(MODOS).map(([k,n])=>`<button type="button" data-modo="${k}" class="${P.modo===k?"on":""}">${n}</button>`).join("")}</div>
+        <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="bgc" cx="50" cy="50" r="46"/><circle class="fgc" id="pomo-c" cx="50" cy="50" r="46"/></svg>
+          <div class="ctr"><span class="t" id="pomo-t">00:00</span><span class="muted small">${MODOS[P.modo]}${P.materia?" · "+esc(P.materia):""}</span>
+          <div class="dots" title="Ciclos até a pausa longa">${[0,1,2,3].map(i=>`<i class="${i<P.ciclos%4?"on":""}"></i>`).join("")}</div></div></div>
+        <div class="row" style="justify-content:center">
+          <button class="btn icon" type="button" id="pomo-reset" aria-label="Reiniciar">${ico("reset")}</button>
+          <button class="btn primary" type="button" id="pomo-play" style="min-width:150px;padding:11px 18px"></button>
+          <button class="btn icon" type="button" id="pomo-skip" aria-label="Pular fase">${ico("skip")}</button>
+        </div>
+        ${P.modo==="foco"?`<button class="btn ghost sm" type="button" id="pomo-fim">Encerrar e registrar o tempo feito</button>`:""}
+      </div>
+      <div class="stack">
+        <div class="card stack sm">
+          <div class="field"><label for="pomo-mat">Estudando agora</label><select id="pomo-mat"><option value="">Sem matéria</option>${mats.map(m=>`<option ${m===P.materia?"selected":""}>${esc(m)}</option>`).join("")}</select></div>
+          <div class="grid3" style="gap:8px">${[["foco","Foco"],["curta","Pausa"],["longa","Longa"]].map(([k,n])=>`<div class="field"><label for="d-${k}" class="small">${n} (min)</label><input type="number" id="d-${k}" min="1" max="180" value="${P.dur[k]}"></div>`).join("")}</div>
+          <label class="row small" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" id="pomo-auto" ${P.auto?"checked":""} style="accent-color:var(--fg)">Iniciar a próxima fase automaticamente</label>
+        </div>
+        <div class="card"><div class="card-h"><h3>Hoje: ${fmtH(hoje.min)}</h3><span class="small muted">${S.pomoLog.sessoes||0} sessões no total</span></div>
+          ${Object.keys(hoje.mat).length?`<div class="bars-h">${Object.entries(hoje.mat).sort((a,b)=>b[1]-a[1]).map(([m,v])=>`<div class="r"><span>${esc(m)}</span><span class="mono small">${fmtH(v)}</span><div class="prog"><i style="width:${Math.round(v/hoje.min*100)}%"></i></div></div>`).join("")}</div>`:`<p class="small muted">Conclua uma sessão de foco para ver seu tempo aqui.</p>`}
+        </div>
+        <div class="card"><div class="card-h"><h3>Últimos 7 dias</h3></div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:110px">${sem.map(x=>`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end" title="${fmtH(x.m)}"><span class="mono" style="font-size:.66rem;color:var(--muted)">${x.m?Math.round(x.m/6)/10+"h":""}</span><div style="width:100%;max-width:26px;border-radius:4px 4px 0 0;background:${x.d===dataISO()?"var(--fg)":"var(--line-2)"};height:${Math.max(2,x.m/mx*80)}px"></div><span style="font-size:.68rem;color:var(--muted)">${DIAS[(new Date(x.d+"T12:00").getDay()+6)%7].c}</span></div>`).join("")}</div>
+        </div>
+      </div>
+    </div></div>`;
+  $$("[data-modo]").forEach(b=>b.onclick=()=>{resetPomo(b.dataset.modo);renderPomodoro()});
+  $("#pomo-play").onclick=()=>{P.rodando?pausarPomo():iniciarPomo()};
+  $("#pomo-reset").onclick=()=>resetPomo();
+  $("#pomo-skip").onclick=()=>{pausarPomo();P.modo=P.modo==="foco"?(((P.ciclos+1)%4===0)?"longa":"curta"):"foco";resetPomo();renderPomodoro()};
+  const fim=$("#pomo-fim");if(fim)fim.onclick=encerrarRegistrar;
+  $("#pomo-mat").onchange=e=>{P.materia=e.target.value;P.bloco=null};
+  $("#pomo-auto").onchange=e=>{P.auto=e.target.checked};
+  ["foco","curta","longa"].forEach(k=>$("#d-"+k).addEventListener("change",e=>{const v=Math.max(1,Math.min(180,+e.target.value||P.dur[k]));P.dur[k]=v;e.target.value=v;
+    if(!P.rodando&&P.modo===k){P.restante=pomoTotal();P.acumulado=0}S.perfil.pomo={...P.dur};gravar("perfil",S.perfil);tickPomo()}));
+  tickPomo();
+}
+
+/* ================= Escanear edital ================= */
+function renderEdital(){
+  const t=S.editalTab;
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Escanear edital","A IA lê o edital inteiro e separa os tópicos cobrados por matéria. O resultado aparece em “Tópicos da prova”, separado da sua semana.")}
+    ${S.edital?`<div class="card row" style="justify-content:space-between;margin-bottom:16px"><div><span class="eyebrow">Prova atual</span><div style="font-weight:600">${esc(S.edital.nome)}</div><div class="small muted">${S.edital.materias.length} matérias · ${S.edital.materias.reduce((a,m)=>a+m.topicos.length,0)} tópicos</div></div><button class="btn" type="button" data-link="topicos">${ico("list")}Abrir tópicos</button></div>`:""}
+    <div class="tabs" role="tablist">${[["arquivo","Enviar arquivo"],["texto","Colar texto"],["nome","Não tenho o edital"]].map(([k,n])=>`<button type="button" role="tab" aria-selected="${t===k}" class="${t===k?"on":""}" data-tab="${k}">${n}</button>`).join("")}</div>
+    <div class="card stack" id="ed-body">
+      ${t==="arquivo"?`
+        <label class="drop" id="drop" for="ed-file">${ico("file")}<b>Escolha ou arraste o edital</b><span class="small muted">PDF com texto ou arquivo .txt${S.sample?" · fotos (JPG/PNG) se o PDF for escaneado":""}</span></label>
+        <input type="file" id="ed-file" accept=".pdf,.txt,application/pdf,text/plain,image/jpeg,image/png,image/webp" hidden multiple>
+        <div id="ed-info"></div>`
+      :t==="texto"?`
+        <div class="field"><label for="ed-txt">Cole o texto do edital (ou só o conteúdo programático)</label><textarea id="ed-txt" style="min-height:220px" placeholder="Cole aqui…">${esc(S.editalTexto||"")}</textarea></div>
+        <div class="row"><button class="btn primary" type="button" id="ed-go-txt">${ico("spark")}Analisar com IA</button><span class="hint" id="ed-count"></span></div>`
+      :`
+        <div class="grid2"><div class="field"><label for="ed-nome">Para qual prova você está se preparando?</label><input type="text" id="ed-nome" placeholder="Ex.: EsPCEx, ENEM, Fuvest, Polícia Federal" maxlength="80"></div>
+        <div class="field"><label for="ed-extra">Detalhes (opcional)</label><input type="text" id="ed-extra" placeholder="Ex.: cargo de agente, ano 2027" maxlength="120"></div></div>
+        <div class="sugs">${["EsPCEx","ENEM","Fuvest","ESA","Polícia Federal – Agente","Banco do Brasil – Escriturário"].map(s=>`<button class="sug" type="button" data-pn="${esc(s)}">${esc(s)}</button>`).join("")}</div>
+        <div class="row"><button class="btn primary" type="button" id="ed-go-nome">${ico("spark")}Buscar tópicos da prova</button></div>
+        <p class="hint">A EsPCEx usa o conteúdo do edital 2026, conferido em fonte pública. Para outras provas, a IA usa o edital mais recente que conhece e marca o grau de confiança: confira sempre com o edital oficial.</p>`}
+    </div>
+    ${S.sample?"":`<p class="hint" style="margin-top:12px">A IA não está disponível nesta visualização: só a busca por “EsPCEx” funciona sem ela.</p>`}
+  </div>`;
+  $$("[data-tab]").forEach(b=>b.onclick=()=>{S.editalTab=b.dataset.tab;renderEdital()});
+  $$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
+  if(t==="arquivo"){
+    const inp=$("#ed-file"),dr=$("#drop");
+    inp.onchange=()=>lerArquivos([...inp.files]);
+    dr.addEventListener("dragover",e=>{e.preventDefault();dr.classList.add("over")});
+    dr.addEventListener("dragleave",()=>dr.classList.remove("over"));
+    dr.addEventListener("drop",e=>{e.preventDefault();dr.classList.remove("over");lerArquivos([...e.dataTransfer.files])});
+  }else if(t==="texto"){
+    const ta=$("#ed-txt"),cnt=()=>$("#ed-count").textContent=ta.value.length?ta.value.length.toLocaleString("pt-BR")+" caracteres":"";cnt();ta.oninput=cnt;
+    $("#ed-go-txt").onclick=()=>{const v=ta.value.trim();if(v.length<200){toast("Cole um trecho maior do edital (pelo menos o conteúdo programático).");return}S.editalTexto=v;analisarTexto(v,"texto colado")};
+  }else{
+    $$("[data-pn]").forEach(b=>b.onclick=()=>{$("#ed-nome").value=b.dataset.pn});
+    $("#ed-go-nome").onclick=()=>{const n=$("#ed-nome").value.trim();if(!n){$("#ed-nome").focus();return}buscarPorNome(n,$("#ed-extra").value.trim())};
+  }
+}
+async function lerArquivos(files){
+  if(!files.length)return;const info=$("#ed-info");
+  const imgs=files.filter(f=>/^image\//.test(f.type)),f=files.find(f=>!/^image\//.test(f.type));
+  if(imgs.length&&!f){analisarImagens(imgs);return}
+  if(!f)return;
+  info.innerHTML=`<div class="row muted"><span class="spinner"></span>Lendo ${esc(f.name)}…</div><div class="prog" style="margin-top:8px"><i id="rd-p" style="width:3%"></i></div>`;
+  try{
+    let texto="",pags=0;
+    if(/pdf/i.test(f.type)||/\.pdf$/i.test(f.name)){
+      if(!window.pdfjsLib)throw new Error("O leitor de PDF não carregou. Recarregue a página ou cole o texto.");
+      const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false}).promise;pags=doc.numPages;
+      for(let i=1;i<=pags;i++){const pg=await doc.getPage(i);const tc=await pg.getTextContent();let last=null,line="";
+        tc.items.forEach(it=>{const y=it.transform?Math.round(it.transform[5]):0;if(last!==null&&Math.abs(y-last)>2){texto+=line+"\n";line=""}line+=it.str+(it.hasEOL?"":" ");last=y});texto+=line+"\n\n";
+        $("#rd-p").style.width=Math.round(i/pags*100)+"%"}
+    }else{texto=await f.text()}
+    texto=texto.replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
+    if(texto.length<200){info.innerHTML=`<p class="err">Não encontrei texto neste arquivo. Ele parece ser um PDF escaneado (imagem). ${S.sample?"Envie fotos das páginas do conteúdo programático ou":""} cole o texto na aba “Colar texto”.</p>`;return}
+    S.editalTexto=texto;
+    info.innerHTML=`<div class="row" style="justify-content:space-between"><div><b>${esc(f.name)}</b><div class="small muted">${pags?pags+" páginas · ":""}${texto.length.toLocaleString("pt-BR")} caracteres lidos</div></div><button class="btn primary" type="button" id="ed-go">${ico("spark")}Analisar edital inteiro com IA</button></div>`;
+    $("#ed-go").onclick=()=>analisarTexto(texto,f.name);
+  }catch(e){info.innerHTML=`<p class="err">${esc(e.message||"Não foi possível ler o arquivo.")} Tente colar o texto na aba “Colar texto”.</p>`}
+}
+function progressoEdital(t,s,p){$("#ed-body").innerHTML=`<div class="loadbox"><div class="row"><span class="spinner"></span><b>${esc(t)}</b></div><p class="small muted" id="ed-s">${esc(s)}</p><div class="prog"><i id="ed-p" style="width:${p}%"></i></div></div>`}
+async function analisarTexto(texto,origem){
+  if(!S.sample){toast("A análise do edital precisa da IA, que não está disponível nesta visualização.");return}
+  const TAM=60000,SOB=800,partes=[];for(let i=0;i<texto.length;i+=TAM-SOB)partes.push(texto.slice(i,i+TAM));
+  progressoEdital("Lendo o edital inteiro",`Dividi o edital em ${partes.length} ${partes.length>1?"partes":"parte"}. Analisando a parte 1…`,5);
+  const res=[];let falhas=0;
+  for(let i=0;i<partes.length;i++){
+    $("#ed-s").textContent=`Analisando a parte ${i+1} de ${partes.length}…`;
+    try{res.push(await S.sample.json(promptEditalTrecho(partes[i],i,partes.length),{modelTier:"default",cache:false}))}
+    catch(e){if(e&&e.code==="not_granted"){toast("Você não autorizou o uso da IA.");renderEdital();return}if(e&&e.code==="rate_limited"){toast("Limite de uso da IA atingido. Tente de novo mais tarde.");renderEdital();return}falhas++}
+    $("#ed-p").style.width=Math.round((i+1)/partes.length*100)+"%";
+  }
+  const ed=juntarEdital(res,{fonte:"edital",origem});
+  if(!ed.materias.length){toast("Não encontrei o conteúdo programático. Confira se o arquivo é o edital completo.");renderEdital();return}
+  if(falhas)toast(`${falhas} parte(s) do edital não puderam ser analisadas; confira os tópicos.`);
+  salvarEdital(ed);
+}
+async function analisarImagens(imgs){
+  const lim=await S.sample.limits().catch(()=>null);if(!lim||!lim.images){toast("Esta visualização não aceita imagens. Cole o texto do edital.");return}
+  imgs=imgs.slice(0,lim.images.maxCount);progressoEdital("Lendo as fotos do edital",`${imgs.length} imagem(ns) enviada(s)…`,30);
+  try{const r=await S.sample.json(promptEditalTrecho("(o conteúdo está nas imagens anexadas)",0,1),{images:imgs,modelTier:"default",cache:false});
+    const ed=juntarEdital([r],{fonte:"edital",origem:"fotos"});if(!ed.materias.length){toast("Não encontrei tópicos nas imagens.");renderEdital();return}salvarEdital(ed)}
+  catch(e){toast("A IA não conseguiu ler as imagens.");renderEdital()}
+}
+async function buscarPorNome(nome,extra){
+  if(/esp\s*c\s*ex/i.test(nome)){
+    const pr=PRESET_ESPCEX;salvarEdital({nome:"EsPCEx",banca:pr.banca,dataProva:"",cargo:"Curso de Formação de Oficiais",fonte:"pesquisa",referencia:pr.referencia,fonteUrl:pr.fonteUrl,confianca:"alta",
+      materias:pr.materias.map(([n,q,ts])=>({id:uid(),nome:n,questoes:q,topicos:ts.map(t=>({id:uid(),t,feito:false}))}))});return}
+  if(!S.sample){toast("Sem a IA, só a EsPCEx está disponível. Envie o edital quando tiver acesso à IA.");return}
+  progressoEdital(`Buscando os tópicos de ${nome}`,"A IA está montando o conteúdo programático…",15);
+  try{
+    const r=await S.sample.json(promptPorNome(nome,extra),{modelTier:"complex",cache:false,onText:({text})=>{const p=$("#ed-p");if(p)p.style.width=Math.min(95,15+text.length/60)+"%"}});
+    const ed=juntarEdital([r],{fonte:"ia",origem:nome});
+    if(!ed.materias.length){$("#ed-body").innerHTML=`<div class="empty-state"><b>Não encontrei o conteúdo de “${esc(nome)}”.</b><span>${esc(r&&r.observacao||"A IA não conhece essa prova com segurança.")}</span><span>Envie o edital em PDF ou cole o texto dele.</span><button class="btn" type="button" id="ed-volta">Voltar</button></div>`;$("#ed-volta").onclick=renderEdital;return}
+    ed.nome=ed.nome||nome;ed.referencia=String(r.referencia||"");ed.confianca=String(r.confianca||"media");ed.observacao=String(r.observacao||"");
+    salvarEdital(ed);
+  }catch(e){toast(e&&e.code==="not_granted"?"Você não autorizou o uso da IA.":"A IA não respondeu. Tente de novo.");renderEdital()}
+}
+function juntarEdital(partes,meta){
+  const ed={nome:"",banca:"",dataProva:"",cargo:"",materias:[],...meta,criadoEm:new Date().toISOString()};const idx={};
+  partes.forEach(r=>{if(!r||typeof r!=="object")return;const pv=r.prova||{};
+    ["nome","banca","cargo"].forEach(k=>{if(!ed[k]&&pv[k])ed[k]=String(pv[k]).slice(0,120)});
+    if(!ed.dataProva&&/^\d{4}-\d{2}-\d{2}$/.test(pv.dataProva||""))ed.dataProva=pv.dataProva;
+    (Array.isArray(r.materias)?r.materias:[]).forEach(m=>{if(!m||!m.nome)return;const k=norm(m.nome);
+      let alvo=idx[k];if(!alvo){alvo={id:uid(),nome:String(m.nome).slice(0,60),questoes:0,topicos:[]};idx[k]=alvo;ed.materias.push(alvo)}
+      if(+m.questoes>alvo.questoes)alvo.questoes=Math.round(+m.questoes);
+      (Array.isArray(m.topicos)?m.topicos:[]).forEach(t=>{t=String(t&&t.t||t||"").trim().slice(0,200);if(t&&!alvo.topicos.some(x=>norm(x.t)===norm(t)))alvo.topicos.push({id:uid(),t,feito:false})});
+    })});
+  ed.materias=ed.materias.filter(m=>m.topicos.length);
+  return ed;
+}
+function salvarEdital(ed){S.edital=ed;gravar("edital",ed,true);toast(`Tópicos de ${ed.nome||"prova"} organizados.`);go("topicos")}
+
+/* ================= Tópicos da prova ================= */
+function renderTopicos(){
+  const ed=S.edital;if(!ed){go("edital");return}
+  const tot=ed.materias.reduce((a,m)=>a+m.topicos.length,0),feitos=ed.materias.reduce((a,m)=>a+m.topicos.filter(t=>t.feito).length,0);
+  const dp=ed.dataProva?Math.ceil((new Date(ed.dataProva+"T00:00:00")-new Date(new Date().toDateString()))/864e5):null;
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Tópicos da prova · "+esc(ed.nome||"Prova"),[ed.banca,ed.cargo].filter(Boolean).map(esc).join(" · ")||"Conteúdo programático organizado por matéria",
+      `<button class="btn primary" type="button" id="tp-tri">${ico("spark")}${ed.tri?"Refazer triagem da prova":"Fazer triagem da prova"}</button>`)}
+    ${ed.fonte==="ia"?`<div class="card flat small" style="margin-bottom:16px;border-style:dashed"><b>Gerado a partir do conhecimento da IA</b> (confiança ${esc(ed.confianca||"média")}). ${ed.referencia?"Base: "+esc(ed.referencia)+". ":""}${esc(ed.observacao||"")} Confira com o edital oficial mais recente.</div>`:""}
+    ${ed.fonte==="pesquisa"?`<div class="card flat small" style="margin-bottom:16px"><b>Fonte:</b> ${esc(ed.referencia)} <a href="${esc(ed.fonteUrl)}" target="_blank" rel="noopener">Ver resumo do conteúdo programático</a></div>`:""}
+    <div class="stats">
+      <div class="stat"><div class="eyebrow">Progresso</div><div class="v">${tot?Math.round(feitos/tot*100):0}%</div><div class="prog" style="margin-top:8px"><i style="width:${tot?feitos/tot*100:0}%"></i></div></div>
+      <div class="stat"><div class="eyebrow">Tópicos estudados</div><div class="v">${feitos}/${tot}</div></div>
+      <div class="stat"><div class="eyebrow">Matérias</div><div class="v">${ed.materias.length}</div></div>
+      <div class="stat"><div class="eyebrow">Prova</div><div class="v">${dp!=null?(dp>=0?dp+" dias":"passou"):"—"}</div><div class="s">${ed.dataProva?new Date(ed.dataProva+"T12:00").toLocaleDateString("pt-BR"):"defina na triagem"}</div></div>
+    </div>
+    ${S.plano&&S.plano.prova?`<p class="small muted" style="margin-bottom:12px">Sua semana já inclui esta prova. Refaça a triagem para recalcular.</p>`:""}
+    <div class="stack sm">${ed.materias.map((m,mi)=>{const f=m.topicos.filter(t=>t.feito).length;return `
+      <details class="mat-acc" ${mi===0?"open":""}>
+        <summary><div style="min-width:0"><div style="font-weight:600">${esc(m.nome)}</div><div class="small muted">${m.questoes?m.questoes+" questões · ":""}${f} de ${m.topicos.length} tópicos</div></div>
+          <div class="prog"><i style="width:${m.topicos.length?f/m.topicos.length*100:0}%"></i></div><span class="mono small">${m.topicos.length?Math.round(f/m.topicos.length*100):0}%</span></summary>
+        <div class="tops">${m.topicos.map(t=>`<label class="top ${t.feito?"done":""}"><input class="chk" type="checkbox" data-top="${m.id}|${t.id}" ${t.feito?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}
+          <form class="row" data-addtop="${m.id}" style="padding-top:8px;flex-wrap:nowrap"><input type="text" placeholder="Adicionar tópico" maxlength="200" aria-label="Novo tópico em ${esc(m.nome)}"><button class="btn sm" type="submit">${ico("plus")}</button></form>
+        </div>
+      </details>`}).join("")}</div>
+    <div class="row" style="margin-top:20px"><button class="btn ghost danger sm" type="button" id="tp-del">Remover esta prova</button><span class="hint" id="tp-del-c"></span></div>
+  </div>`;
+  $$("[data-top]").forEach(c=>c.addEventListener("change",()=>{const [mi,ti]=c.dataset.top.split("|");const m=ed.materias.find(x=>x.id===mi),t=m&&m.topicos.find(x=>x.id===ti);if(!t)return;t.feito=c.checked;gravar("edital",ed);renderTopicosKeepOpen()}));
+  $$("[data-addtop]").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();const i=f.querySelector("input"),v=i.value.trim();if(!v)return;ed.materias.find(x=>x.id===f.dataset.addtop).topicos.push({id:uid(),t:v,feito:false});gravar("edital",ed);renderTopicosKeepOpen()}));
+  $("#tp-tri").onclick=()=>{S.triProva=null;go("triagemProva")};
+  let conf=false;$("#tp-del").onclick=()=>{if(!conf){conf=true;$("#tp-del").textContent="Clique de novo para confirmar";$("#tp-del-c").textContent="Os tópicos e o progresso desta prova serão apagados.";return}
+    S.edital=null;if(S.mode==="nuvem")meuDoc("edital").delete().catch(()=>{});else try{localStorage.removeItem("mapa_edital")}catch(e){}
+    if(S.plano&&S.plano.prova){delete S.plano.prova;gravar("plano",S.plano)}toast("Prova removida.");go("edital")};
+}
+function renderTopicosKeepOpen(){const abertos=$$("details.mat-acc").map(d=>d.open);const y=scrollY;renderTopicos();$$("details.mat-acc").forEach((d,i)=>d.open=!!abertos[i]);scrollTo(0,y);$$("[data-go=topicos] .badge").forEach(b=>b.textContent=progEdital()+"%")}
+
+/* ================= Triagem da prova ================= */
+function renderTriagemProva(){
+  const ed=S.edital;if(!ed){go("edital");return}
+  const t=S.triProva=S.triProva||clone(ed.tri||{dataProva:ed.dataProva||(S.perfil.temProva?S.perfil.dataProva:""),fase:"zero",pct:S.perfil.materias.length?75:100,mats:{}});
+  ed.materias.forEach(m=>{if(!t.mats[m.id]){const base=S.perfil.materias.find(x=>norm(x.nome)===norm(m.nome));t.mats[m.id]={dom:base?6-base.dif:3,fora:false}}});
+  if(S.proposta){renderProposta();return}
+  $("#main").innerHTML=`<div class="page" style="max-width:860px">
+    ${pageHead("Triagem para "+esc(ed.nome||"a prova"),"Responda para a IA ajustar sua semana a esta prova. Nada muda na sua semana até você aprovar.")}
+    <form class="card stack" id="tri-f">
+      <div class="grid2">
+        <div class="field"><label for="tr-data">Data da prova</label><input type="date" id="tr-data" value="${esc(t.dataProva)}"></div>
+        <div class="field"><label for="tr-pct">Quanto da sua semana vai para esta prova?</label><select id="tr-pct">${[[100,"Toda a semana"],[75,"Cerca de 75%"],[50,"Metade"],[25,"Cerca de 25%"]].map(([v,n])=>`<option value="${v}" ${t.pct===v?"selected":""}>${n}</option>`).join("")}</select><span class="hint">O resto continua com as matérias do seu dia a dia.</span></div>
+      </div>
+      <div class="field"><span class="lbl">Em que fase você está?</span>
+        <div class="opts">${[["zero","Começando do zero","Ver teoria de quase tudo"],["revisar","Revisando","Já estudei, quero reforçar e praticar"],["reta","Reta final","Foco em questões e simulados"]].map(([k,n,d])=>`<button type="button" class="opt ${t.fase===k?"on":""}" data-fase="${k}"><b>${n}</b><span>${d}</span></button>`).join("")}</div></div>
+      <div><div class="row eyebrow" style="justify-content:space-between;margin-bottom:6px"><span>Matéria da prova</span><span>Quanto você domina (1–5) · Incluir</span></div>
+        ${ed.materias.map(m=>{const tm=t.mats[m.id];return `<div class="mat" data-m="${m.id}" style="grid-template-columns:minmax(0,1fr) auto auto"><span class="nm">${esc(m.nome)}${m.questoes?` <span class="small muted">· ${m.questoes} questões</span>`:""}</span>
+          <span class="seg" role="group" aria-label="Domínio em ${esc(m.nome)}">${[1,2,3,4,5].map(n=>`<button type="button" data-dom="${n}" class="${tm.dom===n?"on":""}" aria-pressed="${tm.dom===n}">${n}</button>`).join("")}</span>
+          <label class="row small" style="gap:6px"><input type="checkbox" data-inc ${tm.fora?"":"checked"} style="accent-color:var(--fg)">incluir</label></div>`}).join("")}
+        <p class="hint" style="margin-top:8px">1 = não sei nada, 5 = domino bem.</p></div>
+      <div class="navq"><button class="btn ghost" type="button" id="tr-back">Voltar aos tópicos</button><button class="btn primary" type="submit">${ico("spark")}Gerar proposta de semana</button></div>
+    </form></div>`;
+  const f=$("#tri-f"),ler=()=>{t.dataProva=$("#tr-data").value;t.pct=+$("#tr-pct").value};
+  $$("[data-fase]",f).forEach(b=>b.onclick=()=>{ler();t.fase=b.dataset.fase;renderTriagemProva()});
+  $$("[data-m]",f).forEach(r=>{const tm=t.mats[r.dataset.m];$$("[data-dom]",r).forEach(b=>b.onclick=()=>{ler();tm.dom=+b.dataset.dom;renderTriagemProva()});$("[data-inc]",r).onchange=e=>{tm.fora=!e.target.checked}});
+  $("#tr-back").onclick=()=>{S.triProva=null;go("topicos")};
+  f.addEventListener("submit",async e=>{e.preventDefault();ler();
+    if(ed.materias.every(m=>t.mats[m.id].fora)){toast("Inclua pelo menos uma matéria.");return}
+    ed.tri=clone(t);if(t.dataProva)ed.dataProva=t.dataProva;gravar("edital",ed);
+    telaCarregando("Montando a proposta para "+(ed.nome||"a prova"),S.sample?"A IA está encaixando os tópicos da prova na sua semana…":"Calculando a distribuição…");
+    let {plano,aviso}=await pedirPlano(S.perfil,{prova:{ed,tri:t}});
+    if(!plano){plano=planoLocal(S.perfil,{ed,tri:t});plano.geradoPor="local"}
+    plano.prova=ed.nome||"prova";S.proposta={plano,aviso};renderProposta();
+  });
+}
+function renderProposta(){
+  const {plano,aviso}=S.proposta;const tot=DIAS.flatMap(x=>plano.semana[x.k]).reduce((a,b)=>a+b.min,0);
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Proposta de semana para "+esc(plano.prova),`${fmtH(tot)} por semana · ${plano.geradoPor==="ia"?"gerada pela IA":"gerada pelo algoritmo local"}${aviso?" · "+esc(aviso):""}`,
+      `<button class="btn" type="button" id="pr-desc">Manter minha semana atual</button><button class="btn primary" type="button" id="pr-ok">Aplicar à minha semana</button>`)}
+    <div class="card" style="margin-bottom:16px"><span class="eyebrow">Resumo</span><p style="margin-top:6px">${esc(plano.resumo)}</p></div>
+    <div class="week-wrap"><div class="week">${DIAS.map(x=>{const bl=plano.semana[x.k]||[];return `<section class="day"><header><b>${x.n}</b><span class="small muted mono">${bl.length?fmtH(bl.reduce((a,b)=>a+b.min,0)):"livre"}</span></header>
+      <div class="lst">${bl.length?bl.map(b=>`<div class="blk t-${b.tipo}"><span class="tm">${b.inicio}–${b.fim} · ${esc(b.tipo)}</span><span class="mt">${esc(b.materia)}</span><span class="tk">${esc(b.tarefa)}</span></div>`).join(""):`<p class="empty">Sem estudo.</p>`}</div></section>`}).join("")}</div></div>
+  </div>`;
+  $("#pr-desc").onclick=()=>{S.proposta=null;toast("Sua semana continua como estava.");go("topicos")};
+  $("#pr-ok").onclick=async()=>{const pl=S.proposta.plano;manterFeitos(pl);pl.criadoEm=new Date().toISOString();S.plano=pl;S.proposta=null;await gravar("plano",pl,true);toast("Semana atualizada com a prova.");go("semana")};
+}
+
+/* ================= Grupos ================= */
+function renderGrupos(){
+  if(S.mode!=="nuvem"){$("#main").innerHTML=bloqueado("Grupos de estudo");ligarBloqueado();return}
+  if(S.grupoAberto){renderGrupo();return}
+  const gs=Object.values(todosGrupos()),meus=meusGrupos();
+  gs.sort((a,b)=>(meus.includes(b.id)-meus.includes(a.id))||membrosDe(b.id).length-membrosDe(a.id).length);
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Grupos de estudo","Entre em um grupo para conversar no chat dele e comparar horas com os membros.",`<button class="btn primary" type="button" id="g-novo">${ico("plus")}Criar grupo</button>`)}
+    <form class="card stack" id="g-form" hidden style="margin-bottom:16px">
+      <div class="grid2"><div class="field"><label for="g-nome">Nome do grupo</label><input type="text" id="g-nome" maxlength="50" placeholder="Ex.: Rumo à EsPCEx" required></div>
+      <div class="field"><label for="g-desc">Descrição</label><input type="text" id="g-desc" maxlength="140" placeholder="Para quem é o grupo e como vocês estudam"></div></div>
+      <div class="row"><button class="btn primary" type="submit">Criar e entrar</button><button class="btn ghost" type="button" id="g-cancel">Cancelar</button></div>
+    </form>
+    ${gs.length?`<div class="groups">${gs.map(g=>{const ms=membrosDe(g.id),sou=meus.includes(g.id);return `
+      <div class="card gcard"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h3 style="min-width:0;overflow-wrap:anywhere">${esc(g.nome)}</h3>${sou?`<span class="pill solid">Membro</span>`:""}</div>
+        <p class="small muted" style="flex:1">${esc(g.desc||"Sem descrição.")}</p>
+        <div class="row" style="justify-content:space-between"><div class="stack-av">${ms.slice(0,5).map(id=>avatar(id,"sm")).join("")}</div><span class="small muted">${ms.length} ${ms.length===1?"membro":"membros"} · ${fmtH(ms.reduce((a,id)=>a+minHoje(id),0))} hoje</span></div>
+        <div class="row"><button class="btn sm ${sou?"primary":""}" type="button" data-abrir="${g.id}">${sou?"Abrir":"Ver"}</button>${sou?"":`<button class="btn sm" type="button" data-entrar="${g.id}">Entrar</button>`}</div>
+      </div>`}).join("")}</div>`:`<div class="empty-state">${ico("users")}<b>Nenhum grupo ainda</b><span>Crie o primeiro grupo e chame seus colegas.</span></div>`}
+  </div>`;
+  const f=$("#g-form");$("#g-novo").onclick=()=>{f.hidden=false;$("#g-nome").focus()};$("#g-cancel").onclick=()=>f.hidden=true;
+  f.addEventListener("submit",async e=>{e.preventDefault();const nome=$("#g-nome").value.trim();if(!nome)return;const gid=uid();
+    const doc=clone(S.soc.grupos[S.uid]||{lista:{}});doc.lista=doc.lista||{};doc.lista[gid]={nome,desc:$("#g-desc").value.trim(),criadoEm:Date.now()};
+    if(await gravarPub("grupos",doc)){S.soc.grupos[S.uid]=doc;await entrarGrupo(gid,true);S.grupoAberto=gid;renderView()}});
+  $$("[data-abrir]").forEach(b=>b.onclick=()=>{S.grupoAberto=b.dataset.abrir;renderView()});
+  $$("[data-entrar]").forEach(b=>b.onclick=async()=>{await entrarGrupo(b.dataset.entrar);S.grupoAberto=b.dataset.entrar;renderView()});
+}
+async function entrarGrupo(gid,quieto){const d=clone(S.soc.membros[S.uid]||{grupos:{}});d.grupos=d.grupos||{};d.grupos[gid]=true;if(await gravarPub("membros",d)){S.soc.membros[S.uid]=d;if(!quieto)toast("Você entrou no grupo.")}}
+async function sairGrupo(gid){const d=clone(S.soc.membros[S.uid]||{grupos:{}});delete d.grupos[gid];if(await gravarPub("membros",d)){S.soc.membros[S.uid]=d;toast("Você saiu do grupo.")}}
+function membrosHtml(gid){const ms=membrosDe(gid).sort((a,b)=>minHoje(b)-minHoje(a));
+  return ms.length?`<div class="list">${ms.map((id,i)=>`<div class="li ${id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(id,"sm")}<span class="nm">${esc(nomeDe(id))}</span></div><span class="mono small">${fmtH(minHoje(id))}</span></div>`).join("")}</div>`:`<p class="small muted">Sem membros.</p>`}
+function renderGrupo(){
+  const g=todosGrupos()[S.grupoAberto];if(!g){S.grupoAberto=null;renderGrupos();return}
+  const sou=meusGrupos().includes(g.id);
+  $("#main").innerHTML=`<div class="page">
+    <button class="btn ghost sm" type="button" id="g-voltar" style="margin-bottom:10px">← Todos os grupos</button>
+    ${pageHead(esc(g.nome),esc(g.desc||"")+(g.dono?` · criado por ${esc(nomeDe(g.dono))}`:""),sou?`<button class="btn" type="button" id="g-sair">Sair do grupo</button>`:`<button class="btn primary" type="button" id="g-entrar">Entrar no grupo</button>`)}
+    <div class="cols">
+      <div class="card chat">${sou?`<div class="msgs" id="msgs" aria-live="polite"></div>
+        <form class="composer" id="composer"><input type="text" id="msg-in" placeholder="Mensagem para o grupo" maxlength="600" autocomplete="off" aria-label="Mensagem"><button class="btn primary" type="submit" aria-label="Enviar">${ico("send")}</button></form>`
+        :`<div class="empty-state" style="margin:20px">Entre no grupo para ver e mandar mensagens.</div>`}</div>
+      <div class="card"><div class="card-h"><h3>Ranking do grupo · hoje</h3></div><div id="g-membros">${membrosHtml(g.id)}</div></div>
+    </div></div>`;
+  $("#g-voltar").onclick=()=>{S.grupoAberto=null;renderView()};
+  const s=$("#g-sair");if(s)s.onclick=async()=>{await sairGrupo(g.id);renderView()};
+  const en=$("#g-entrar");if(en)en.onclick=async()=>{await entrarGrupo(g.id);renderView()};
+  if(sou)ligarChat(g.id);
+}
+
+/* ================= Chat ================= */
+function renderChat(){
+  if(S.mode!=="nuvem"){$("#main").innerHTML=bloqueado("Chat global");ligarBloqueado();return}
+  $("#main").innerHTML=`<div class="page">${pageHead("Chat global","Converse com todos os estudantes que usam o site. Seja gentil.")}
+    <div class="card chat"><div class="msgs" id="msgs" aria-live="polite"></div>
+    <form class="composer" id="composer"><input type="text" id="msg-in" placeholder="Escreva uma mensagem" maxlength="600" autocomplete="off" aria-label="Mensagem"><button class="btn primary" type="submit" aria-label="Enviar">${ico("send")}</button></form></div></div>`;
+  ligarChat("global");
+}
+let canalAtual="global";
+function ligarChat(canal){canalAtual=canal;renderMsgs();$("#composer").addEventListener("submit",e=>{e.preventDefault();const i=$("#msg-in");const v=i.value;i.value="";enviarMsg(canal,v);i.focus()})}
+function renderMsgs(){
+  const box=$("#msgs");if(!box)return;const perto=box.scrollHeight-box.scrollTop-box.clientHeight<80;
+  const ms=mensagens(canalAtual);
+  box.innerHTML=ms.length?ms.map(m=>`<div class="msg ${m.autor===S.uid?"mine":""}">${avatar(m.autor)}<div style="min-width:0"><div class="h"><b>${esc(nomeDe(m.autor))}</b><time>${hora(m.em)}</time></div><div class="b">${esc(m.t)}</div></div></div>`).join("")
+    :`<div class="empty-state" style="margin:auto">${ico("chat")}<span>Nenhuma mensagem ainda. Diga oi!</span></div>`;
+  if(perto||box.dataset.init!=="1"){box.scrollTop=box.scrollHeight;box.dataset.init="1"}
+}
+
+/* ================= Ranking ================= */
+function renderRanking(){
+  if(S.mode!=="nuvem"){$("#main").innerHTML=bloqueado("Ranking");ligarBloqueado();return}
+  const meus=meusGrupos(),gs=todosGrupos();
+  let ids=Object.keys(S.soc.ranking);if(S.rankGrupo!=="todos")ids=ids.filter(id=>membrosDe(S.rankGrupo).includes(id));
+  const val=S.rankTab==="hoje"?minHoje:min7;
+  const lista=ids.map(id=>({id,m:val(id)})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m);
+  const minha=lista.findIndex(x=>x.id===S.uid);
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Ranking",S.rankTab==="hoje"?"Horas estudadas hoje, registradas pelo pomodoro. Zera à meia-noite.":"Horas estudadas nos últimos 7 dias.",
+      `<div class="seg" role="group">${[["hoje","Hoje"],["semana","7 dias"]].map(([k,n])=>`<button type="button" data-rt="${k}" class="${S.rankTab===k?"on":""}">${n}</button>`).join("")}</div>
+       <select id="rk-g" style="width:auto"><option value="todos">Todos os estudantes</option>${meus.filter(g=>gs[g]).map(g=>`<option value="${g}" ${S.rankGrupo===g?"selected":""}>${esc(gs[g].nome)}</option>`).join("")}</select>`)}
+    ${lista.length?`
+    <div class="podium">${lista.slice(0,3).map((x,i)=>`<div class="card">${avatar(x.id,"lg")}<span class="eyebrow">${i+1}º lugar</span><b style="overflow-wrap:anywhere">${esc(nomeDe(x.id))}</b><span class="mono" style="font-size:1.3rem;font-weight:600">${fmtH(x.m)}</span></div>`).join("")}</div>
+    <div class="card"><div class="card-h"><h3>Classificação</h3><span class="small muted">${minha>=0?`Você está em ${minha+1}º`:"Você ainda não pontuou neste período"}</span></div>
+      <div class="list">${lista.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id)}<div style="min-width:0"><div class="nm">${esc(nomeDe(x.id))}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((S.soc.perfis[x.id]||{}).objetivo||"")}</div></div></div><span class="mono">${fmtH(x.m)}</span></div>`).join("")}</div></div>`
+    :`<div class="empty-state">${ico("trophy")}<b>Ninguém pontuou ainda</b><span>Conclua uma sessão de foco no pomodoro para entrar no ranking.</span><button class="btn primary" type="button" data-link="pomodoro">Abrir pomodoro</button></div>`}
+  </div>`;
+  $$("[data-rt]").forEach(b=>b.onclick=()=>{S.rankTab=b.dataset.rt;renderRanking()});
+  $("#rk-g").onchange=e=>{S.rankGrupo=e.target.value;renderRanking()};
+  $$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
+}
+
+/* ================= Perfil ================= */
+function renderPerfil(){
+  const nuvem=S.mode==="nuvem",pub=S.pub||{};
+  const total=Object.values(S.pomoLog.dias).reduce((a,d)=>a+d.min,0);
+  $("#main").innerHTML=`<div class="page" style="max-width:860px">
+    ${pageHead("Meu perfil",nuvem?"Nome, foto e bio aparecem para os outros estudantes no chat, nos grupos e no ranking.":"Como visitante, seu perfil fica só neste navegador.")}
+    <form class="card stack" id="pf">
+      <div class="row" style="gap:18px;align-items:center">
+        <div id="pf-av">${nuvem?avatar(S.uid,"lg"):`<span class="avatar lg">${esc(((S.perfil.nome||"V")[0]).toUpperCase())}</span>`}</div>
+        ${nuvem?`<div class="stack sm"><div class="row"><label class="btn sm" for="pf-foto">Trocar foto</label><button class="btn sm ghost" type="button" id="pf-rm" ${pub.foto?"":"hidden"}>Remover</button></div><input type="file" id="pf-foto" accept="image/*" hidden><span class="hint">A foto é reduzida para 160×160 antes de salvar.</span></div>`:""}
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="pf-nome">Nome de exibição</label><input type="text" id="pf-nome" maxlength="40" value="${esc(nuvem?(pub.nome||S.perfil.nome):S.perfil.nome)}" required></div>
+        <div class="field"><label for="pf-obj">Objetivo</label><input type="text" id="pf-obj" maxlength="80" value="${esc(pub.objetivo||descObjetivo(S.perfil))}"></div>
+      </div>
+      ${nuvem?`<div class="field"><label for="pf-bio">Bio</label><textarea id="pf-bio" maxlength="160" placeholder="Ex.: 3º ano, quero passar na EsPCEx. Estudo melhor de manhã.">${esc(pub.bio||"")}</textarea></div>`:""}
+      <div class="row"><button class="btn primary" type="submit">Salvar perfil</button><span class="hint" id="pf-st"></span></div>
+    </form>
+    <div class="stats" style="margin-top:16px">
+      <div class="stat"><div class="eyebrow">Tempo total</div><div class="v">${fmtH(total)}</div></div>
+      <div class="stat"><div class="eyebrow">Sessões</div><div class="v">${S.pomoLog.sessoes||0}</div></div>
+      <div class="stat"><div class="eyebrow">Sequência</div><div class="v">${sequencia()}</div><div class="s">dias</div></div>
+      <div class="stat"><div class="eyebrow">Grupos</div><div class="v">${nuvem?meusGrupos().length:"—"}</div></div>
+    </div>
+  </div>`;
+  let foto=pub.foto||"";
+  if(nuvem){
+    $("#pf-foto").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{foto=await reduzirFoto(f);$("#pf-av").innerHTML=`<img class="avatar lg" src="${foto}" alt="">`;$("#pf-rm").hidden=false;$("#pf-st").textContent="Foto pronta. Clique em Salvar perfil."}catch(err){toast("Não consegui abrir essa imagem.")}};
+    $("#pf-rm").onclick=()=>{foto="";$("#pf-av").innerHTML=`<span class="avatar lg">${esc((($("#pf-nome").value||"?")[0]).toUpperCase())}</span>`;$("#pf-rm").hidden=true};
+  }
+  $("#pf").addEventListener("submit",async e=>{e.preventDefault();const nome=$("#pf-nome").value.trim();if(!nome){$("#pf-nome").focus();return}
+    S.perfil.nome=nome;gravar("perfil",S.perfil);
+    if(nuvem){const d={...(S.pub||{}),nome,objetivo:$("#pf-obj").value.trim(),bio:$("#pf-bio").value.trim(),foto,atualizado:Date.now()};if(!d.desde)d.desde=Date.now();
+      if(await gravarPub("perfis",d)){S.soc.perfis[S.uid]=d;S.pub=d;toast("Perfil salvo na nuvem.")}}
+    else toast("Perfil salvo neste navegador.");
+    renderSideUser();
+  });
+}
+function reduzirFoto(file){return new Promise((ok,no)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const s=160,c=document.createElement("canvas");c.width=c.height=s;const x=c.getContext("2d");const m=Math.min(img.width,img.height);x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);URL.revokeObjectURL(url);ok(c.toDataURL("image/jpeg",.82))};img.onerror=no;img.src=url})}
+
+/* ================= Configurações ================= */
+function renderConfig(){
+  $("#main").innerHTML=`<div class="page" style="max-width:860px">
+    ${pageHead("Configurações")}
+    <div class="stack">
+      <div class="card row" style="justify-content:space-between"><div><h3>Aparência</h3><p class="small muted">Tema atual: ${temaAtual()==="dark"?"preto":"branco"}</p></div>
+        <div class="seg" role="group"><button type="button" data-tm="light" class="${temaAtual()==="light"?"on":""}">Branco</button><button type="button" data-tm="dark" class="${temaAtual()==="dark"?"on":""}">Preto</button></div></div>
+      <div class="card row" style="justify-content:space-between"><div><h3>Suas respostas</h3><p class="small muted">${esc(descObjetivo(S.perfil))} · ${S.perfil.materias.length} matérias · ${fmtH(DIAS.reduce((a,x)=>a+(+S.perfil.horas[x.k]||0),0)*60)} por semana</p></div>
+        <button class="btn" type="button" id="cf-tri">Refazer triagem</button></div>
+      <div class="card row" style="justify-content:space-between"><div><h3>Armazenamento</h3><p class="small muted">${S.mode==="nuvem"?"Seus dados estão salvos na nuvem, ligados à sua conta.":"Seus dados estão só neste navegador. Entre com a conta para salvar na nuvem."}</p></div>
+        <span class="pill ${S.mode==="nuvem"?"solid":""}"><span class="dot"></span>${S.mode==="nuvem"?"Nuvem":"Local"}</span></div>
+      <div class="card"><details><summary>Ver o prompt que a IA recebe para montar a semana</summary><pre class="prompt">${esc(montarPrompt(S.perfil,{prova:S.plano&&S.plano.prova?provaCtx():null}))}</pre></details></div>
+      <div class="card"><details><summary>Ver o prompt usado para ler editais</summary><pre class="prompt">${esc(promptEditalTrecho("[trecho do edital]",0,1))}</pre></details></div>
+    </div></div>`;
+  $$("[data-tm]").forEach(b=>b.onclick=()=>{if(temaAtual()!==b.dataset.tm)trocarTema();renderConfig()});
+  $("#cf-tri").onclick=()=>{S.step=0;S.draft=migrar(clone(S.perfil));renderWizard();scrollTo(0,0)};
+}
+
+renderLogin();
+})();
+</script>
+</body></html>
