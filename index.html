@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro, cronômetro, catálogo de provas e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro, cronômetro, grupos de estudo, catálogo de provas e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -238,6 +238,8 @@ input[type=range]{width:100%;accent-color:var(--fg)}
 pre.prompt{white-space:pre-wrap;font-family:var(--f-mono);font-size:.76rem;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;max-height:420px;overflow:auto;margin:12px 0 0}
 details>summary{cursor:pointer;font-weight:500}
 .lock{max-width:520px;margin:40px auto}
+.dm-cols{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.dm-cols{grid-template-columns:1fr}}
 .overlay{display:none}
 
 @media (max-width:1100px){
@@ -749,11 +751,11 @@ async function entrar(modo){
   S.pomoLog=garantirTotais(S.pomoLog&&S.pomoLog.dias?S.pomoLog:{dias:{},sessoes:0});carregarCrono();if(S.edital&&!Array.isArray(S.edital.materias))S.edital=null;
   if(S.perfil&&S.perfil.tema)aplicarTema(S.perfil.tema);
   if(S.perfil&&S.perfil.pomo)Object.assign(P.dur,S.perfil.pomo);else if(S.perfil)Object.assign(P.dur,{foco:+S.perfil.bloco||50,curta:+S.perfil.pausa||10});P.restante=pomoTotal();
-  if(S.mode==="nuvem")assinarSocial();
+  if(S.mode==="nuvem"){assinarSocial();if(FBM())iniciarComunidadeFB()}
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
   else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
 }
-function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
+function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
   Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{}}});renderLogin()}
 
 function perfilPadrao(nome){
@@ -1209,7 +1211,7 @@ function renderCronometro(){
 
 /* ================= Comunidade (nuvem) ================= */
 function assinarSocial(){
-  ["perfis","ranking","msgs","grupos","membros"].forEach(col=>{
+  (FBM()?["perfis","ranking"]:["perfis","ranking","msgs","grupos","membros"]).forEach(col=>{
     try{S.unsub.push(S.db.collection(col).limit(1000).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>{const v=d.data();if(v)m[d.id]=v});S.soc[col]=m;
       if(col==="perfis")S.pub=m[S.uid]||null;atualizarSocial(col)},()=>{}))}catch(e){}
   });
@@ -1220,6 +1222,7 @@ function avatar(id,cls){const p=S.soc.perfis[id]||{};const nm=id===S.uid&&S.mode
   const ini=nm.split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase();return `<span class="avatar ${cls||""}" aria-hidden="true">${esc(ini||"?")}</span>`}
 function atualizarSocial(col){
   renderSideUser();if(!$("#main")||!S.perfil)return;
+  if(FBM()){if(col==="perfis"&&S.view==="amigos")renderAmigosFB();if(col==="perfis"&&S.view==="mensagens")listaConversas();if(["perfis","ranking"].includes(col)&&["ranking","inicio"].includes(S.view))renderView();return}
   const v=S.view;
   if(col==="msgs"&&(v==="chat"||(v==="grupos"&&S.grupoAberto))){renderMsgs();return}
   if(["perfis","ranking"].includes(col)&&["ranking","inicio"].includes(v)){renderView();return}
@@ -1240,11 +1243,235 @@ async function enviarMsg(canal,texto){
 }
 function mensagens(canal){const out=[];Object.entries(S.soc.msgs).forEach(([autor,d])=>{const arr=canal==="global"?(d&&d.global):(d&&d.grupos&&d.grupos[canal]);(arr||[]).forEach(m=>{if(m&&typeof m.t==="string")out.push({...m,autor})})});return out.sort((a,b)=>a.em-b.em).slice(-150)}
 
+/* ================= Comunidade no Firebase =================
+   grupos/{gid} (+ membros, mensagens, arquivos/partes), chat/{mid}, conversas/{cid} (+ mensagens),
+   perfis/{uid}.amigos e data/users/{uid}/social (meus grupos e conversas já vistas). */
+const FBM=()=>!!FB&&S.mode==="nuvem";
+const SUBS={};
+function parar(k){if(SUBS[k]){try{SUBS[k]()}catch(e){}delete SUBS[k]}}
+function pararTela(){Object.keys(SUBS).filter(k=>k.startsWith("tela:")).forEach(parar)}
+function assinar(k,q,fn){parar(k);try{SUBS[k]=q.onSnapshot(fn,err=>{console.warn(k,err&&err.code);const el=$("#"+k.replace(/[^a-z]/gi,""));if(el&&err&&err.code==="permission-denied")el.innerHTML=`<p class="small muted" style="padding:16px">Você não tem acesso a este conteúdo.</p>`})}catch(e){console.warn(e)}}
+const FBC={grupos:{},meus:{},convs:{},vistos:{},grupoTab:"chat",dm:null,busca:""};
+function iniciarComunidadeFB(){
+  const db=S.db,me=S.uid;
+  assinar("grupos",db.collection("grupos").limit(500),snap=>{const m={};snap.docs.forEach(d=>{const v=d.data();if(v&&v.nome&&v.dono)m[d.id]={...v,id:d.id}});FBC.grupos=m;refreshCom("grupos")});
+  assinar("social",meuDoc("social"),snap=>{const v=snap.exists?snap.data():{};FBC.meus=v.grupos||{};FBC.vistos=v.vistos||{};refreshCom("social")});
+  assinar("convs",db.collection("conversas").where("participantes","array-contains",me),snap=>{const m={};snap.docs.forEach(d=>m[d.id]={...d.data(),id:d.id});FBC.convs=m;refreshCom("convs")});
+  migrarLegado();
+}
+function pararComunidadeFB(){Object.keys(SUBS).forEach(parar);Object.assign(FBC,{grupos:{},meus:{},convs:{},vistos:{},dm:null})}
+async function migrarLegado(){ // grupos criados na versão anterior (um documento por pessoa) viram grupos de verdade
+  const db=S.db,me=S.uid;
+  try{const g=await db.collection("grupos").doc(me).get();const d=g.exists?g.data():null;
+    if(d&&d.lista&&!d.dono){for(const [gid,x] of Object.entries(d.lista)){await db.collection("grupos").doc(gid).set({nome:x.nome||"Grupo",desc:x.desc||"",dono:me,criadoEm:x.criadoEm||Date.now()});await entrarGrupoFB(gid,true)}
+      await db.collection("grupos").doc(me).delete()}}catch(e){console.warn("migrar grupos",e&&e.code)}
+  try{const m=await db.collection("membros").doc(me).get();const d=m.exists?m.data():null;
+    if(d&&d.grupos){for(const [gid,ok] of Object.entries(d.grupos))if(ok)await entrarGrupoFB(gid,true);await db.collection("membros").doc(me).delete()}}catch(e){console.warn("migrar membros",e&&e.code)}
+}
+function naoLidas(){return Object.values(FBC.convs).filter(c=>c.ultimaDe&&c.ultimaDe!==S.uid&&(c.atualizado||0)>(FBC.vistos[c.id]||0)).length}
+function refreshCom(o){
+  const n=naoLidas();$$('[data-go="mensagens"]').forEach(a=>{let b=a.querySelector(".badge");if(n){if(!b){a.insertAdjacentHTML("beforeend",'<span class="badge"></span>');b=a.querySelector(".badge")}b.textContent=n}else if(b)b.remove()});
+  if(!$("#main"))return;
+  if(S.view==="grupos"&&!S.grupoAberto&&(o==="grupos"||o==="social"))renderGruposFB();
+  if(S.view==="grupos"&&S.grupoAberto&&o==="grupos"&&!FBC.grupos[S.grupoAberto]){S.grupoAberto=null;renderGruposFB()}
+  if(S.view==="grupos"&&S.grupoAberto&&o==="social")renderGrupoFB();
+  if(S.view==="mensagens"&&o==="convs")listaConversas();
+}
+async function entrarGrupoFB(gid,quieto){
+  try{await S.db.collection("grupos").doc(gid).collection("membros").doc(S.uid).set({em:Date.now()});
+    await meuDoc("social").set({grupos:{[gid]:true}},{merge:true});if(!quieto)toast("Você entrou no grupo.")}
+  catch(e){toast("Não foi possível entrar no grupo ("+(e&&e.code||"erro")+").")}
+}
+async function sairGrupoFB(gid){
+  try{await S.db.collection("grupos").doc(gid).collection("membros").doc(S.uid).delete();
+    await meuDoc("social").set({grupos:{[gid]:firebase.firestore.FieldValue.delete()}},{merge:true});toast("Você saiu do grupo.")}
+  catch(e){toast("Não foi possível sair do grupo.")}
+}
+function msgsHtml(lista){return lista.length?lista.map(m=>`<div class="msg ${m.autor===S.uid?"mine":""}">${avatar(m.autor)}<div style="min-width:0"><div class="h"><b>${esc(nomeDe(m.autor))}</b><time>${hora(m.em)}</time></div><div class="b">${esc(m.texto)}</div></div></div>`).join("")
+  :`<div class="empty-state" style="margin:auto">${ico("chat")}<span>Nenhuma mensagem ainda. Diga oi!</span></div>`}
+function pintarMsgs(boxId,lista){const box=$("#"+boxId);if(!box)return;const perto=box.scrollHeight-box.scrollTop-box.clientHeight<80||box.dataset.init!=="1";box.innerHTML=msgsHtml(lista);if(perto){box.scrollTop=box.scrollHeight;box.dataset.init="1"}}
+function chatBox(id,ph){return `<div class="card chat"><div class="msgs" id="${id}" aria-live="polite"><div class="row muted small" style="margin:auto"><span class="spinner"></span>Carregando mensagens…</div></div>
+  <form class="composer" data-composer="${id}"><input type="text" placeholder="${ph}" maxlength="1000" autocomplete="off" aria-label="Mensagem"><button class="btn primary" type="submit" aria-label="Enviar">${ico("send")}</button></form></div>`}
+function ligarComposer(id,enviar){const f=$(`[data-composer="${id}"]`);if(!f)return;f.addEventListener("submit",async e=>{e.preventDefault();const i=f.querySelector("input");const t=i.value.trim().slice(0,1000);if(!t)return;i.value="";i.focus();
+  try{await enviar(t)}catch(err){toast("Mensagem não enviada ("+(err&&err.code||"erro")+").");i.value=t}})}
+
+/* ---- Chat global ---- */
+function renderChatFB(){
+  $("#main").innerHTML=`<div class="page">${pageHead("Chat global","Converse com todos os estudantes do site. Seja gentil.")}${chatBox("chatg","Escreva uma mensagem para todos")}</div>`;
+  assinar("tela:chatg",S.db.collection("chat").orderBy("em","desc").limit(150),snap=>pintarMsgs("chatg",snap.docs.map(d=>d.data()).reverse()));
+  ligarComposer("chatg",t=>S.db.collection("chat").add({autor:S.uid,texto:t,em:Date.now()}));
+}
+
+/* ---- Grupos ---- */
+function renderGruposFB(){
+  if(S.grupoAberto){renderGrupoFB();return}
+  const gs=Object.values(FBC.grupos).sort((a,b)=>(!!FBC.meus[b.id]-!!FBC.meus[a.id])||(b.criadoEm||0)-(a.criadoEm||0));
+  const aberto=$("#g-form")&&!$("#g-form").hidden;
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Grupos de estudo","Cada grupo tem chat próprio, arquivos compartilhados e ranking dos membros.",`<button class="btn primary" type="button" id="g-novo">${ico("plus")}Criar grupo</button>`)}
+    <form class="card stack" id="g-form" ${aberto?"":"hidden"} style="margin-bottom:16px">
+      <div class="grid2"><div class="field"><label for="g-nome">Nome do grupo</label><input type="text" id="g-nome" maxlength="50" placeholder="Ex.: CMB 1º ano" required></div>
+      <div class="field"><label for="g-desc">Descrição</label><input type="text" id="g-desc" maxlength="140" placeholder="Para quem é o grupo e como vocês estudam"></div></div>
+      <div class="row"><button class="btn primary" type="submit">Criar e entrar</button><button class="btn ghost" type="button" id="g-cancel">Cancelar</button></div>
+    </form>
+    ${gs.length?`<div class="groups">${gs.map(g=>{const sou=!!FBC.meus[g.id];return `
+      <div class="card gcard"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h3 style="min-width:0;overflow-wrap:anywhere">${esc(g.nome)}</h3>${sou?`<span class="pill solid">Membro</span>`:""}</div>
+        <p class="small muted" style="flex:1">${esc(g.desc||"Sem descrição.")}</p>
+        <div class="row small muted" style="flex-wrap:nowrap">${avatar(g.dono,"sm")}<span>Criado por ${esc(nomeDe(g.dono))}</span></div>
+        <div class="row"><button class="btn sm ${sou?"primary":""}" type="button" data-abrir="${g.id}">${sou?"Abrir":"Ver"}</button>${sou?"":`<button class="btn sm" type="button" data-entrar="${g.id}">Entrar</button>`}</div>
+      </div>`}).join("")}</div>`:`<div class="empty-state">${ico("users")}<b>Nenhum grupo ainda</b><span>Crie o primeiro grupo e chame seus colegas.</span></div>`}
+  </div>`;
+  const f=$("#g-form");$("#g-novo").onclick=()=>{f.hidden=false;$("#g-nome").focus()};$("#g-cancel").onclick=()=>f.hidden=true;
+  f.addEventListener("submit",async e=>{e.preventDefault();const nome=$("#g-nome").value.trim();if(!nome)return;
+    try{const ref=S.db.collection("grupos").doc();await ref.set({nome,desc:$("#g-desc").value.trim(),dono:S.uid,criadoEm:Date.now()});await entrarGrupoFB(ref.id,true);toast("Grupo criado.");S.grupoAberto=ref.id;FBC.grupoTab="chat";renderView()}
+    catch(err){toast("Não foi possível criar o grupo ("+(err&&err.code||"erro")+").")}});
+  $$("[data-abrir]").forEach(b=>b.onclick=()=>{S.grupoAberto=b.dataset.abrir;FBC.grupoTab="chat";renderView()});
+  $$("[data-entrar]").forEach(b=>b.onclick=async()=>{await entrarGrupoFB(b.dataset.entrar);S.grupoAberto=b.dataset.entrar;FBC.grupoTab="chat";renderView()});
+}
+function renderGrupoFB(){
+  const g=FBC.grupos[S.grupoAberto];if(!g){$("#main").innerHTML=`<div class="page"><div class="row muted"><span class="spinner"></span>Carregando grupo…</div></div>`;return}
+  const sou=!!FBC.meus[g.id],dono=g.dono===S.uid,tab=FBC.grupoTab;
+  pararTela();
+  $("#main").innerHTML=`<div class="page">
+    <button class="btn ghost sm" type="button" id="g-voltar" style="margin-bottom:10px">← Todos os grupos</button>
+    ${pageHead(esc(g.nome),[esc(g.desc||""),`criado por ${esc(nomeDe(g.dono))}`].filter(Boolean).join(" · "),sou?`${dono?"":`<button class="btn" type="button" id="g-sair">Sair do grupo</button>`}${dono?`<button class="btn ghost danger" type="button" id="g-apagar">Apagar grupo</button>`:""}`:`<button class="btn primary" type="button" id="g-entrar">Entrar no grupo</button>`)}
+    ${sou?`<div class="tabs" role="tablist">${[["chat","Chat"],["arquivos","Arquivos"],["membros","Membros"]].map(([k,n])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-gtab="${k}">${n}</button>`).join("")}</div>
+      <div id="g-corpo"></div>`
+    :`<div class="empty-state">${ico("users")}<b>Entre no grupo para ver o chat, os arquivos e os membros.</b></div>`}
+  </div>`;
+  $("#g-voltar").onclick=()=>{S.grupoAberto=null;pararTela();renderView()};
+  const s=$("#g-sair");if(s)s.onclick=async()=>{await sairGrupoFB(g.id);S.grupoAberto=null;renderView()};
+  const en=$("#g-entrar");if(en)en.onclick=async()=>{await entrarGrupoFB(g.id);setTimeout(renderGrupoFB,300)};
+  const ap=$("#g-apagar");let conf=false;if(ap)ap.onclick=async()=>{if(!conf){conf=true;ap.textContent="Toque de novo para apagar";return}
+    try{await S.db.collection("grupos").doc(g.id).delete();await meuDoc("social").set({grupos:{[g.id]:firebase.firestore.FieldValue.delete()}},{merge:true});toast("Grupo apagado.");S.grupoAberto=null;renderView()}catch(e){toast("Não foi possível apagar o grupo.")}};
+  $$("[data-gtab]").forEach(b=>b.onclick=()=>{FBC.grupoTab=b.dataset.gtab;renderGrupoFB()});
+  if(!sou)return;
+  const base=S.db.collection("grupos").doc(g.id),corpo=$("#g-corpo");
+  if(tab==="chat"){
+    corpo.innerHTML=chatBox("gchat","Mensagem para o grupo");
+    assinar("tela:gchat",base.collection("mensagens").orderBy("em","desc").limit(150),snap=>pintarMsgs("gchat",snap.docs.map(d=>d.data()).reverse()));
+    ligarComposer("gchat",t=>base.collection("mensagens").add({autor:S.uid,texto:t,em:Date.now()}));
+  }else if(tab==="arquivos"){
+    corpo.innerHTML=`<div class="stack">
+      <label class="drop" for="g-file">${ico("file")}<b>Enviar arquivo para o grupo</b><span class="small muted">PDF, imagens, documentos, áudio ou vídeo de até 25 MB</span></label>
+      <input type="file" id="g-file" hidden multiple><div id="g-up"></div>
+      <div class="card"><div id="garq" class="list"><div class="row muted small"><span class="spinner"></span>Carregando arquivos…</div></div></div></div>`;
+    $("#g-file").onchange=async e=>{for(const f of [...e.target.files])await enviarArquivoFB(base,f);e.target.value=""};
+    assinar("tela:garq",base.collection("arquivos").orderBy("em","desc").limit(200),snap=>{const box=$("#garq");if(!box)return;const arr=snap.docs.map(d=>({...d.data(),id:d.id}));
+      box.innerHTML=arr.length?arr.map(a=>`<div class="li"><span class="avatar" aria-hidden="true">${ico("file")}</span><div style="min-width:0"><div class="nm">${esc(a.nome)}</div><div class="small muted">${tamanhoTxt(a.tamanho)} · ${esc(nomeDe(a.autor))} · ${hora(a.em)}${a.completo?"":" · enviando…"}</div></div>
+        <div class="row" style="flex-wrap:nowrap;gap:6px">${a.completo?`<button class="btn sm" type="button" data-baixar="${a.id}">Baixar</button>`:""}${a.autor===S.uid||g.dono===S.uid?`<button class="btn sm ghost danger" type="button" data-apagar="${a.id}" aria-label="Apagar ${esc(a.nome)}">✕</button>`:""}</div></div>`).join("")
+        :`<p class="small muted">Nenhum arquivo ainda. Envie resumos, listas e provas para o grupo.</p>`;
+      $$("[data-baixar]",box).forEach(b=>b.onclick=()=>baixarArquivoFB(base,arr.find(x=>x.id===b.dataset.baixar),b));
+      $$("[data-apagar]",box).forEach(b=>{let c=false;b.onclick=async()=>{if(!c){c=true;b.textContent="Apagar?";return}await apagarArquivoFB(base,b.dataset.apagar)}});
+    });
+  }else{
+    corpo.innerHTML=`<div class="card"><div class="card-h"><h3>Membros · ranking de hoje</h3></div><div id="gmemb"><div class="row muted small"><span class="spinner"></span>Carregando…</div></div></div>`;
+    assinar("tela:gmemb",base.collection("membros"),snap=>{const box=$("#gmemb");if(!box)return;const ids=snap.docs.map(d=>d.id).sort((a,b)=>minHoje(b)-minHoje(a));
+      box.innerHTML=`<div class="list">${ids.map((id,i)=>`<div class="li ${id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(id,"sm")}<span class="nm">${esc(nomeDe(id))}${id===g.dono?' <span class="pill">criador</span>':""}</span></div><div class="row" style="flex-wrap:nowrap;gap:8px"><span class="mono small">${fmtH(minHoje(id))}</span>${id!==S.uid?`<button class="btn sm ghost" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(nomeDe(id))}">${ico("chat")}</button>`:""}</div></div>`).join("")}</div>`;
+      $$("[data-dm]",box).forEach(b=>b.onclick=()=>abrirDM(b.dataset.dm))});
+  }
+}
+const tamanhoTxt=n=>n>=1048576?(n/1048576).toLocaleString("pt-BR",{maximumFractionDigits:1})+" MB":Math.max(1,Math.round(n/1024))+" KB";
+const PARTE=640*1024,MAX_ARQ=25*1024*1024;
+function blobB64(b){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(",")[1]||"");r.onerror=no;r.readAsDataURL(b)})}
+async function enviarArquivoFB(base,file){
+  const box=$("#g-up");if(file.size>MAX_ARQ){toast(`“${file.name}” passa de 25 MB.`);return}
+  const n=Math.max(1,Math.ceil(file.size/PARTE));const ref=base.collection("arquivos").doc();
+  const pr=p=>{if(box)box.innerHTML=`<div class="card flat stack sm"><div class="row small"><span class="spinner"></span>Enviando ${esc(file.name)}… ${p}%</div><div class="prog"><i style="width:${p}%"></i></div></div>`};
+  try{pr(0);await ref.set({nome:file.name.slice(0,140),tipo:file.type||"application/octet-stream",tamanho:file.size,autor:S.uid,em:Date.now(),partes:n,completo:false});
+    for(let i=0;i<n;i++){await ref.collection("partes").doc(String(i).padStart(4,"0")).set({i,d:await blobB64(file.slice(i*PARTE,(i+1)*PARTE))});pr(Math.round((i+1)/n*100))}
+    await ref.update({completo:true});if(box)box.innerHTML="";toast(`“${file.name}” enviado.`)}
+  catch(e){if(box)box.innerHTML="";toast("Falha ao enviar o arquivo ("+(e&&e.code||"erro")+").");try{await apagarArquivoFB(base,ref.id,true)}catch(_){}}
+}
+async function baixarArquivoFB(base,a,btn){
+  if(!a)return;const txt=btn.textContent;btn.disabled=true;btn.textContent="Baixando…";
+  try{const snap=await base.collection("arquivos").doc(a.id).collection("partes").orderBy("i").get();
+    const partes=snap.docs.map(d=>{const bin=atob(d.data().d);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u});
+    const url=URL.createObjectURL(new Blob(partes,{type:a.tipo}));const l=document.createElement("a");l.href=url;l.download=a.nome;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+  catch(e){toast("Não foi possível baixar ("+(e&&e.code||"erro")+").")}
+  btn.disabled=false;btn.textContent=txt;
+}
+async function apagarArquivoFB(base,id,quieto){
+  const ref=base.collection("arquivos").doc(id);
+  try{const ps=await ref.collection("partes").get();for(const d of ps.docs)await d.ref.delete();await ref.delete();if(!quieto)toast("Arquivo apagado.")}
+  catch(e){if(!quieto)toast("Não foi possível apagar ("+(e&&e.code||"erro")+").")}
+}
+
+/* ---- Mensagens privadas ---- */
+const cidDe=o=>[S.uid,o].sort().join("_");
+function abrirDM(outro){FBC.dm=outro;go("mensagens")}
+function renderMensagensFB(){
+  $("#main").innerHTML=`<div class="page">${pageHead("Mensagens","Conversas privadas: só você e a outra pessoa veem.",`<button class="btn" type="button" data-link="amigos">${ico("users")}Buscar pessoas</button>`)}
+    <div class="dm-cols"><div class="card" style="padding:12px"><div id="convs" class="list"></div></div><div id="dm-area"></div></div></div>`;
+  $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
+  listaConversas();abrirConversa();
+}
+function listaConversas(){
+  const box=$("#convs");if(!box)return;
+  const cs=Object.values(FBC.convs).sort((a,b)=>(b.atualizado||0)-(a.atualizado||0));
+  const lista=cs.map(c=>({c,o:(c.participantes||[]).find(x=>x!==S.uid)})).filter(x=>x.o);
+  if(FBC.dm&&!lista.some(x=>x.o===FBC.dm))lista.unshift({c:{id:cidDe(FBC.dm),ultima:"Nova conversa"},o:FBC.dm});
+  box.innerHTML=lista.length?lista.map(({c,o})=>{const nl=c.ultimaDe&&c.ultimaDe!==S.uid&&(c.atualizado||0)>(FBC.vistos[c.id]||0);return `<button type="button" class="li" data-conv="${o}" style="width:100%;text-align:left;background:${FBC.dm===o?"var(--sunken)":"transparent"};border:0;border-radius:var(--r-sm);padding:10px 8px;cursor:pointer;grid-template-columns:auto minmax(0,1fr) auto">
+    ${avatar(o)}<div style="min-width:0"><div class="nm" style="${nl?"font-weight:700":""}">${esc(nomeDe(o))}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.ultima||"")}</div></div>${nl?'<span class="pill solid">nova</span>':""}</button>`}).join("")
+    :`<p class="small muted" style="padding:8px">Nenhuma conversa ainda. Toque em “Buscar pessoas” para começar.</p>`;
+  $$("[data-conv]",box).forEach(b=>b.onclick=()=>{FBC.dm=b.dataset.conv;listaConversas();abrirConversa()});
+}
+function abrirConversa(){
+  const area=$("#dm-area");if(!area)return;const o=FBC.dm;parar("tela:dm");
+  if(!o){area.innerHTML=`<div class="empty-state">${ico("chat")}<span>Escolha uma conversa ou busque alguém para conversar.</span></div>`;return}
+  const cid=cidDe(o),existe=!!FBC.convs[cid];
+  area.innerHTML=`<div class="row" style="margin-bottom:10px;flex-wrap:nowrap">${avatar(o)}<b>${esc(nomeDe(o))}</b></div>${chatBox("dm","Mensagem privada")}`;
+  const ref=S.db.collection("conversas").doc(cid);
+  if(existe){assinar("tela:dm",ref.collection("mensagens").orderBy("em","desc").limit(150),snap=>pintarMsgs("dm",snap.docs.map(d=>d.data()).reverse()));meuDoc("social").set({vistos:{[cid]:Date.now()}},{merge:true}).catch(()=>{})}
+  else pintarMsgs("dm",[]);
+  ligarComposer("dm",async t=>{await ref.set({participantes:[S.uid,o].sort(),atualizado:Date.now(),ultima:t.slice(0,90),ultimaDe:S.uid},{merge:true});
+    await ref.collection("mensagens").add({autor:S.uid,texto:t,em:Date.now()});
+    meuDoc("social").set({vistos:{[cid]:Date.now()}},{merge:true}).catch(()=>{});
+    if(!SUBS["tela:dm"])assinar("tela:dm",ref.collection("mensagens").orderBy("em","desc").limit(150),snap=>pintarMsgs("dm",snap.docs.map(d=>d.data()).reverse()))});
+}
+
+/* ---- Amigos ---- */
+function renderAmigosFB(){
+  const meus=new Set((S.pub&&S.pub.amigos)||[]);
+  const todos=Object.entries(S.soc.perfis).filter(([id,p])=>id!==S.uid&&p&&p.nome);
+  const q=norm(FBC.busca);
+  const achados=q?todos.filter(([,p])=>norm(p.nome).includes(q)||norm(p.objetivo).includes(q)):todos.filter(([id])=>meus.has(id));
+  const linha=([id,p])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(id)}<div style="min-width:0"><div class="nm">${esc(p.nome)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.objetivo||p.bio||"")}</div></div>
+    <div class="row" style="flex-wrap:nowrap;gap:6px"><button class="btn sm ${meus.has(id)?"":"primary"}" type="button" data-amigo="${id}">${meus.has(id)?"Amigo ✓":"Adicionar"}</button><button class="btn sm" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(p.nome)}">${ico("chat")}</button></div></div>`;
+  const foco=document.activeElement&&document.activeElement.id==="am-busca";
+  $("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Amigos","Busque estudantes pelo nome ou pelo objetivo, adicione como amigo e mande mensagem.")}
+    <div class="field" style="margin-bottom:16px"><label for="am-busca">Buscar pessoas</label><input type="text" id="am-busca" placeholder="Nome ou objetivo (ex.: EsPCEx, ENEM)" value="${esc(FBC.busca)}" autocomplete="off"></div>
+    <div class="card"><div class="card-h"><h3>${q?`Resultados (${achados.length})`:`Seus amigos (${achados.length})`}</h3>${q?"":`<span class="small muted">${todos.length} pessoas no app</span>`}</div>
+      ${achados.length?`<div class="list">${achados.slice(0,60).map(linha).join("")}</div>`:`<p class="small muted">${q?"Ninguém encontrado com esse nome.":"Você ainda não adicionou amigos. Use a busca acima."}</p>`}
+    </div>
+    ${!q&&todos.length?`<div class="card" style="margin-top:16px"><div class="card-h"><h3>Pessoas no app</h3></div><div class="list">${todos.filter(([id])=>!meus.has(id)).slice(0,20).map(linha).join("")}</div></div>`:""}
+  </div>`;
+  const inp=$("#am-busca");if(foco){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)}
+  inp.addEventListener("input",()=>{FBC.busca=inp.value;renderAmigosFB()});
+  $$("[data-amigo]").forEach(b=>b.onclick=async()=>{const set=new Set((S.pub&&S.pub.amigos)||[]);const id=b.dataset.amigo;set.has(id)?set.delete(id):set.add(id);
+    const d={...(S.pub||{nome:S.perfil.nome||"Estudante"}),amigos:[...set]};if(await gravarPub("perfis",d)){S.pub=d;S.soc.perfis[S.uid]=d;toast(set.has(id)?"Amigo adicionado.":"Amigo removido.");renderAmigosFB()}});
+  $$("[data-dm]").forEach(b=>b.onclick=()=>abrirDM(b.dataset.dm));
+}
+
+/* ---- Biblioteca ---- */
+function renderBiblioteca(){
+  $("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Biblioteca")}
+    <div class="card stack" style="align-items:center;text-align:center;padding:40px 24px">
+      <span class="logo" style="width:56px;height:56px;border-radius:14px">${ico("book")}</span>
+      <span class="pill">Em breve</span>
+      <h2>Esta aba receberá atualizações futuras</h2>
+      <p class="muted" style="max-width:52ch">A Biblioteca vai reunir materiais de estudo organizados por matéria e por prova. Enquanto isso, compartilhe arquivos com seus colegas na aba “Arquivos” dos grupos de estudo.</p>
+      <div class="sugs" style="justify-content:center">${["Resumos","Mapas mentais","Listas de exercícios","Provas anteriores","Videoaulas"].map(x=>`<span class="pill">${x}</span>`).join("")}</div>
+      <button class="btn" type="button" data-link="grupos">${ico("users")}Ir para os grupos</button>
+    </div></div>`;
+  $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
+}
+
 /* ================= Shell com barra lateral ================= */
 const NAV=[
-  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"]]],
+  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["biblioteca","Biblioteca","book"]]],
   ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
-  ["Comunidade",[["grupos","Grupos de estudo","users"],["chat","Chat global","chat"],["ranking","Ranking","trophy"]]],
+  ["Comunidade",[["grupos","Grupos de estudo","users"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
   ["Conta",[["perfil","Meu perfil","user"],["config","Configurações","gear"]]]];
 function renderShell(){
   $("#root").innerHTML=`
@@ -1281,10 +1508,10 @@ function renderSideUser(){
   el.innerHTML=`${S.mode==="nuvem"?avatar(S.uid):`<span class="avatar" aria-hidden="true">${esc(nm[0]||"V").toUpperCase()}</span>`}<div style="min-width:0"><div class="nm">${esc(nm)}</div><div class="sub">${S.mode==="nuvem"?"Salvo na nuvem":"Visitante · este navegador"}</div></div>`;
 }
 function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(m=>m.topicos);return all.length?Math.round(all.filter(t=>t.feito).length/all.length*100):0}
-function go(v){S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
+function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
 function renderView(){
   $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
-  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:renderGrupos,chat:renderChat,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
   f();
 }
 const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;

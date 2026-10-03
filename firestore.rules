@@ -1,14 +1,73 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Dados privados de cada pessoa: perfil de estudo, plano, edital e pomodoro
-    match /data/users/{uid}/{doc=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+    function logado() { return request.auth != null; }
+    function eu(uid) { return logado() && request.auth.uid == uid; }
+
+    // Dados privados de cada pessoa: triagem, plano, edital, tempo de estudo, grupos e conversas vistas
+    match /data/users/{uid}/{doc=**} { allow read, write: if eu(uid); }
+
+    // Perfil público (nome, foto, bio, amigos) e ranking: todos leem, cada um escreve o seu
+    match /perfis/{uid} { allow read: if logado(); allow write: if eu(uid); }
+    match /ranking/{uid} { allow read: if logado(); allow write: if eu(uid); }
+
+    // Dados da versão anterior (só para migrar e apagar)
+    match /msgs/{uid} { allow read: if logado(); allow write: if eu(uid); }
+    match /membros/{uid} { allow read: if logado(); allow write: if eu(uid); }
+
+    // Chat global
+    match /chat/{mid} {
+      allow read: if logado();
+      allow create: if logado() && request.resource.data.autor == request.auth.uid
+                    && request.resource.data.texto is string && request.resource.data.texto.size() <= 1000;
+      allow delete: if logado() && resource.data.autor == request.auth.uid;
     }
-    // Dados da comunidade: qualquer pessoa logada lê; cada uma só escreve o próprio documento
-    match /{col}/{uid} {
-      allow read: if request.auth != null && col in ['perfis', 'ranking', 'msgs', 'grupos', 'membros'];
-      allow write: if request.auth != null && request.auth.uid == uid && col in ['perfis', 'ranking', 'msgs', 'grupos', 'membros'];
+
+    // Grupos de estudo
+    match /grupos/{gid} {
+      function membro() { return exists(/databases/$(database)/documents/grupos/$(gid)/membros/$(request.auth.uid)); }
+      function dono() { return get(/databases/$(database)/documents/grupos/$(gid)).data.dono == request.auth.uid; }
+      allow read: if logado();
+      allow create: if logado() && request.resource.data.dono == request.auth.uid;
+      allow update: if logado() && resource.data.dono == request.auth.uid;
+      allow delete: if logado() && (resource.data.dono == request.auth.uid || gid == request.auth.uid);
+
+      match /membros/{uid} { allow read: if logado(); allow write: if eu(uid); }
+
+      match /mensagens/{mid} {
+        allow read: if logado() && membro();
+        allow create: if logado() && membro() && request.resource.data.autor == request.auth.uid
+                      && request.resource.data.texto is string && request.resource.data.texto.size() <= 1000;
+        allow delete: if logado() && resource.data.autor == request.auth.uid;
+      }
+
+      match /arquivos/{fid} {
+        function autorArquivo() { return get(/databases/$(database)/documents/grupos/$(gid)/arquivos/$(fid)).data.autor == request.auth.uid; }
+        allow read: if logado() && membro();
+        allow create: if logado() && membro() && request.resource.data.autor == request.auth.uid;
+        allow update: if logado() && resource.data.autor == request.auth.uid;
+        allow delete: if logado() && (resource.data.autor == request.auth.uid || dono());
+        match /partes/{pid} {
+          allow read: if logado() && membro();
+          allow create: if logado() && membro() && autorArquivo();
+          allow delete: if logado() && (autorArquivo() || dono());
+        }
+      }
+    }
+
+    // Mensagens privadas entre duas pessoas
+    match /conversas/{cid} {
+      function participa() { return request.auth.uid in get(/databases/$(database)/documents/conversas/$(cid)).data.participantes; }
+      allow read: if logado() && request.auth.uid in resource.data.participantes;
+      allow create: if logado() && request.auth.uid in request.resource.data.participantes
+                    && request.resource.data.participantes.size() == 2;
+      allow update: if logado() && request.auth.uid in resource.data.participantes
+                    && request.resource.data.participantes == resource.data.participantes;
+      match /mensagens/{mid} {
+        allow read: if logado() && participa();
+        allow create: if logado() && participa() && request.resource.data.autor == request.auth.uid
+                      && request.resource.data.texto is string && request.resource.data.texto.size() <= 1000;
+      }
     }
   }
 }
