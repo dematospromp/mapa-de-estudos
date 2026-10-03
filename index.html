@@ -1491,7 +1491,7 @@ function carregarPomo(){let d=null;try{d=JSON.parse(localStorage.getItem(pomoCha
     if(P.silencioso)setTimeout(()=>toast(`Seu ${d.modo==="foco"?"foco":"intervalo"} terminou enquanto o app estava fechado${d.modo==="foco"?" e foi registrado":""}.`),600)}
   else tickPomo()}
 // o navegador só libera o som depois de um toque: agenda o alarme do pomodoro restaurado no primeiro toque
-addEventListener("pointerdown",()=>{if(P.rodando&&!ALARME.fut.length){somPreparar();setTimeout(()=>{if(P.rodando)agendarAlarme(pomoRestante())},60)}},{capture:true});
+addEventListener("pointerdown",()=>{if(P.rodando&&(!ALARME.destravado||!ALARME.mudo||ALARME.mudo.paused)){somPreparar();agendarAlarme()}},{capture:true});
 function resetPomo(modo){pausarPomo();cancelarAlarmeAgendado();if(modo)P.modo=modo;P.restante=pomoTotal();P.acumulado=0;tickPomo();salvarPomoLocal()}
 function tickPomo(){
   const r=pomoRestante();
@@ -1515,7 +1515,7 @@ function concluirFase(){
   const auto=$("#pomo-auto")&&$("#pomo-auto").checked||P.auto;salvarPomoLocal();
   if(P.silencioso){P.silencioso=false;return} // terminou com o app fechado há muito tempo: registra sem tocar
   tocarAlarme(eraFoco?"Fim do foco!":"Fim da pausa!",eraFoco?`Hora da ${MODOS[P.modo].toLowerCase()}. ${auto?"A pausa já começou.":"Toque para começar quando quiser."}`:`Hora de voltar a estudar.${auto?" O próximo foco já começou.":""}`);
-  if(auto)iniciarPomo(true);
+  if(auto)iniciarPomo(true);else cancelarAlarmeAgendado();
 }
 function encerrarRegistrar(){
   if(P.modo!=="foco")return;let ms=P.acumulado+(P.rodando?Date.now()-P.iniciadoEm:0);
@@ -1539,44 +1539,63 @@ function registrar(min,materia,fonte){
   publicarRanking();verificarConquistas();atualizarBadgeDesafios();
 }
 let actx=null;
-function somPreparar(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){}}
-/* ---- Alarme do pomodoro: agendado no relógio de áudio (toca na hora certa mesmo com a aba em segundo plano) e repete até a pessoa parar ---- */
-const ALARME={nos:[],fut:[],futT0:0,tocando:false,vib:null,fimAuto:null};
+/* ---- Alarme do pomodoro ----
+   O som é um arquivo de áudio tocado como mídia (usa o volume de mídia e funciona com o iPhone no silencioso).
+   O navegador só deixa tocar som depois de um toque: o arquivo é "destravado" quando a pessoa aperta Iniciar.
+   Enquanto o pomodoro corre, um áudio inaudível fica tocando para o navegador não congelar o app em segundo plano. */
+const ALARME={tocando:false,vib:null,fimAuto:null,el:null,mudo:null,destravado:false};
 const ALARME_SEG=90; // toca por até 1 min 30 s se ninguém parar
-function agendarSons(seg){ // seg = daqui a quantos segundos começa; devolve os sons criados
-  const out=[];if(!actx)return out;const t0=actx.currentTime+Math.max(0,seg);
-  for(let c=0;c*1.6<ALARME_SEG;c++)[0,.2,.4].forEach((d,i)=>{const t=t0+c*1.6+d,o=actx.createOscillator(),g=actx.createGain();
-    o.type="square";o.frequency.value=i===1?1175:988;o.connect(g);g.connect(actx.destination);
-    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.22,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.17);o.start(t);o.stop(t+.18);out.push(o)});
-  return out}
-const pararSons=l=>l.forEach(o=>{try{o.stop()}catch(e){}});
-function agendarAlarme(ms){cancelarAlarmeAgendado();try{if(actx&&actx.state==="running"){ALARME.fut=agendarSons(ms/1000);ALARME.futT0=Date.now()+ms}}catch(e){}}
-function cancelarAlarmeAgendado(){pararSons(ALARME.fut);ALARME.fut=[]}
+function wavURL(n,taxa,f){const buf=new ArrayBuffer(44+n*2),v=new DataView(buf),txt=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  txt(0,"RIFF");v.setUint32(4,36+n*2,true);txt(8,"WAVE");txt(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,taxa,true);v.setUint32(28,taxa*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);txt(36,"data");v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.max(-1,Math.min(1,f(i/taxa)))*32767,true);
+  return URL.createObjectURL(new Blob([buf],{type:"audio/wav"}))}
+function criarSons(){if(ALARME.el)return;const taxa=22050;
+  // bip-bip-bip (si, ré, si) a cada 1,6 s
+  const bip=(t,ini,fr)=>{const x=t-ini;if(x<0||x>.17)return 0;const env=Math.min(1,x/.01)*Math.min(1,(.17-x)/.03);return env*(.62*Math.sin(2*Math.PI*fr*x)+.22*Math.sin(2*Math.PI*fr*3*x)+.1*Math.sin(2*Math.PI*fr*5*x))};
+  ALARME.el=new Audio(wavURL(Math.round(1.6*taxa),taxa,t=>bip(t,0,988)+bip(t,.2,1175)+bip(t,.4,988)));ALARME.el.loop=true;ALARME.el.preload="auto";
+  ALARME.mudo=new Audio(wavURL(taxa,8000,t=>Math.sin(2*Math.PI*30*t)*.0004));ALARME.mudo.loop=true;ALARME.mudo.preload="auto";
+  try{ALARME.el.setAttribute("playsinline","");ALARME.mudo.setAttribute("playsinline","")}catch(e){}}
+// chamado dentro de um toque (Iniciar, Continuar, Testar som ou qualquer toque com o pomodoro rodando)
+function somPreparar(){try{criarSons();if(!ALARME.destravado&&!ALARME.tocando){const a=ALARME.el;a.muted=true;const pr=a.play();
+    if(pr&&pr.then)pr.then(()=>{if(!ALARME.tocando){a.pause();a.currentTime=0}a.muted=false;ALARME.destravado=true}).catch(()=>{a.muted=false});else{a.pause();a.muted=false;ALARME.destravado=true}}}catch(e){}}
+function agendarAlarme(){ // mantém o app acordado enquanto o pomodoro corre
+  try{criarSons();const m=ALARME.mudo;if(m.paused){const pr=m.play();if(pr&&pr.catch)pr.catch(()=>{})}
+    if("mediaSession" in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:`${MODOS[P.modo]} em andamento`,artist:"Logic Academy · pomodoro"})}}catch(e){}}
+function cancelarAlarmeAgendado(){try{if(ALARME.mudo&&!ALARME.mudo.paused)ALARME.mudo.pause()}catch(e){}}
+function tocarSomAlarme(){
+  try{criarSons();const a=ALARME.el;a.muted=false;a.volume=1;a.currentTime=0;const pr=a.play();if(pr&&pr.catch)pr.catch(()=>bipWebAudio())}catch(e){bipWebAudio()}}
+function bipWebAudio(){ // reserva, caso o navegador recuse o arquivo de áudio
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();const t0=actx.currentTime+.05;
+    for(let c=0;c<12;c++)[0,.2,.4].forEach((d,i)=>{const t=t0+c*1.6+d,o=actx.createOscillator(),g=actx.createGain();o.type="square";o.frequency.value=i===1?1175:988;o.connect(g);g.connect(actx.destination);
+      g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.22,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.17);o.start(t);o.stop(t+.18);(ALARME.wa=ALARME.wa||[]).push(o)})}catch(e){}}
 function tocarAlarme(titulo,texto){
-  somPreparar();pararSons(ALARME.nos);
-  // o som agendado para este fim já está tocando: passa a ser o alarme atual; senão começa agora
-  if(ALARME.fut.length&&Math.abs(Date.now()-ALARME.futT0)<5000){ALARME.nos=ALARME.fut;ALARME.fut=[]}
-  else{cancelarAlarmeAgendado();try{ALARME.nos=agendarSons(0)}catch(e){ALARME.nos=[]}}
-  ALARME.tocando=true;try{navigator.vibrate&&navigator.vibrate([500,250,500,250,500])}catch(e){}
+  tocarSomAlarme();ALARME.tocando=true;
+  try{navigator.vibrate&&navigator.vibrate([500,250,500,250,500])}catch(e){}
   clearInterval(ALARME.vib);ALARME.vib=setInterval(()=>{try{navigator.vibrate&&navigator.vibrate([500,250,500])}catch(e){}},2500);
   clearTimeout(ALARME.fimAuto);ALARME.fimAuto=setTimeout(pararAlarme,ALARME_SEG*1000);
-  if(document.hidden)notificar(titulo,texto);
+  notificar(titulo,texto);
   document.querySelectorAll(".alarme").forEach(x=>x.remove());
   const el=document.createElement("div");el.className="alarme";el.setAttribute("role","alertdialog");el.setAttribute("aria-label",titulo);
   el.innerHTML=`<div class="alarme-box"><span class="alarme-ic">${ico("timer")}</span><h2>${esc(titulo)}</h2><p>${esc(texto)}</p>
-    <button class="btn primary alarme-parar" type="button" id="alarme-parar">${ico("pause")}Parar alarme</button></div>`;
+    <button class="btn primary alarme-parar" type="button" id="alarme-parar">${ico("pause")}Parar alarme</button>
+    <p class="small muted" style="margin:0">Sem som? Aumente o volume de <b>mídia</b> do aparelho.</p></div>`;
   document.body.appendChild(el);const b=el.querySelector("#alarme-parar");b.onclick=pararAlarme;setTimeout(()=>b.focus(),50);
   document.title="⏰ "+titulo+" — Logic Academy";
 }
 function pararAlarme(){
-  pararSons(ALARME.nos);ALARME.nos=[];ALARME.tocando=false;clearInterval(ALARME.vib);clearTimeout(ALARME.fimAuto);try{navigator.vibrate&&navigator.vibrate(0)}catch(e){}
+  try{if(ALARME.el){ALARME.el.pause();ALARME.el.currentTime=0}}catch(e){}
+  (ALARME.wa||[]).forEach(o=>{try{o.stop()}catch(e){}});ALARME.wa=[];
+  ALARME.tocando=false;clearInterval(ALARME.vib);clearTimeout(ALARME.fimAuto);try{navigator.vibrate&&navigator.vibrate(0)}catch(e){}
   document.querySelectorAll(".alarme").forEach(x=>x.remove());if(!P.rodando)document.title="Logic Academy";
 }
+function testarSom(){somPreparar();if(ALARME.tocando){pararAlarme();return}tocarSomAlarme();ALARME.tocando=true;clearTimeout(ALARME.fimAuto);ALARME.fimAuto=setTimeout(pararAlarme,3200);toast("Tocando o alarme por 3 segundos. Se não ouvir, aumente o volume de mídia.")}
 let notifPedida=false;
 if(STANDALONE&&location.protocol==="https:"&&"serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 function pedirNotificacao(){if(notifPedida||!("Notification" in window)||Notification.permission!=="default")return;notifPedida=true;try{Notification.requestPermission().catch(()=>{})}catch(e){}}
-function notificar(t,b){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const o={body:b,tag:"pomodoro",renotify:true,requireInteraction:true};
-  if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.ready.then(r=>r.showNotification(t,o)).catch(()=>{});else new Notification(t,o)}catch(e){}}
+function notificar(t,b){try{if(document.visibilityState==="visible"&&document.hasFocus())return;if(!("Notification" in window)||Notification.permission!=="granted")return;
+  const o={body:b,tag:"pomodoro",renotify:true,requireInteraction:true,silent:false,vibrate:[500,250,500,250,500]};
+  if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration)navigator.serviceWorker.getRegistration().then(r=>{if(r)r.showNotification(t,o);else new Notification(t,o)}).catch(()=>{try{new Notification(t,o)}catch(e){}});else new Notification(t,o)}catch(e){}}
 // ao voltar para a aba, confere na hora se o tempo acabou
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&P.rodando)tickPomo()});
 function bip(){try{if(!actx)return;[0,.25,.5].forEach(t=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=880;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.0001,actx.currentTime+t);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+t+.2);o.start(actx.currentTime+t);o.stop(actx.currentTime+t+.22)})}catch(e){}}
@@ -2562,6 +2581,7 @@ function renderPomodoro(){
           <div class="field"><label for="pomo-mat">Estudando agora</label><select id="pomo-mat"><option value="">Sem matéria</option>${mats.map(m=>`<option ${m===P.materia?"selected":""}>${esc(m)}</option>`).join("")}</select></div>
           <div class="grid3" style="gap:8px">${[["foco","Foco"],["curta","Pausa"],["longa","Longa"]].map(([k,n])=>`<div class="field"><label for="d-${k}" class="small">${n} (min)</label><input type="number" id="d-${k}" min="1" max="180" value="${P.dur[k]}"></div>`).join("")}</div>
           <label class="row small" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" id="pomo-auto" ${P.auto?"checked":""} style="accent-color:var(--fg)">Iniciar a próxima fase automaticamente</label>
+          <button class="btn sm ghost" type="button" id="pomo-som" style="align-self:flex-start">${ico("timer")}Testar som do alarme</button>
         </div>
         <div class="card"><div class="card-h"><h3>Hoje: ${fmtH(hoje.min)}</h3><span class="small muted">${S.pomoLog.sessoes||0} sessões no total</span></div>
           ${Object.keys(hoje.mat).length?`<div class="bars-h">${Object.entries(hoje.mat).sort((a,b)=>b[1]-a[1]).map(([m,v])=>`<div class="r"><span>${esc(m)}</span><span class="mono small">${fmtH(v)}</span><div class="prog"><i style="width:${Math.round(v/hoje.min*100)}%"></i></div></div>`).join("")}</div>`:`<p class="small muted">Conclua uma sessão de foco para ver seu tempo aqui.</p>`}
@@ -2578,6 +2598,7 @@ function renderPomodoro(){
   const fim=$("#pomo-fim");if(fim)fim.onclick=encerrarRegistrar;
   $("#pomo-mat").onchange=e=>{P.materia=e.target.value;P.bloco=null;salvarPomoLocal()};
   $("#pomo-auto").onchange=e=>{P.auto=e.target.checked;salvarPomoLocal()};
+  $("#pomo-som").onclick=testarSom;
   ["foco","curta","longa"].forEach(k=>$("#d-"+k).addEventListener("change",e=>{const v=Math.max(1,Math.min(180,+e.target.value||P.dur[k]));P.dur[k]=v;e.target.value=v;
     if(!P.rodando&&P.modo===k){P.restante=pomoTotal();P.acumulado=0}S.perfil.pomo={...P.dur};gravar("perfil",S.perfil);tickPomo()}));
   tickPomo();
