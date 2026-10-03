@@ -511,6 +511,85 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .qb-nv.facil{color:#4ade80}:root:not([data-theme="light"]) .qb-nv.medio{color:#fbbf24}:root:not([data-theme="light"]) .qb-nv.dificil{color:#f87171}}
 :root[data-theme="dark"] .qb-nv.facil{color:#4ade80}:root[data-theme="dark"] .qb-nv.medio{color:#fbbf24}:root[data-theme="dark"] .qb-nv.dificil{color:#f87171}
 @media (max-width:640px){.qb-niveis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.qb-niveis>span{grid-column:1/-1}.qb-niveis .qb-chip{padding:7px 4px;text-align:center;overflow:hidden;text-overflow:ellipsis}}
+
+/* ===== Alarme do pomodoro ===== */
+.alarme{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);animation:alarme-in .2s ease-out}
+.alarme-box{width:min(420px,100%);background:var(--surface);color:var(--fg);border-radius:calc(var(--r) + 8px);padding:28px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+.alarme-box h2{font-size:1.5rem}.alarme-box p{color:var(--muted);margin:0}
+.alarme-ic{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-fg);animation:alarme-pulso 1s ease-in-out infinite}
+.alarme-ic .i{width:38px;height:38px}
+.alarme-parar{width:100%;min-height:3.2rem;font-size:1.05rem;margin-top:8px;justify-content:center}
+@keyframes alarme-pulso{0%,100%{transform:scale(1);box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}50%{transform:scale(1.08) rotate(-6deg);box-shadow:0 0 0 18px transparent}}
+@keyframes alarme-in{from{opacity:0}to{opacity:1}}
+
+/* ===== Minha semana: um dia por vez ===== */
+.dias-tira{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:14px}
+.dia-chip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--muted);font:inherit;cursor:pointer;position:relative;min-width:0;transition:transform .15s,background .15s,color .15s}
+.dia-chip span{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.dia-chip b{font-size:1.15rem;color:var(--fg);line-height:1.1}
+.dia-chip i{width:6px;height:6px;border-radius:50%;background:transparent;position:absolute;bottom:4px}
+.dia-chip i.tem{background:var(--line-2)}.dia-chip i.ok{background:#16a34a}
+.dia-chip.hoje{border-color:var(--accent)}
+.dia-chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);transform:translateY(-2px);box-shadow:var(--shadow)}
+.dia-chip.on b{color:var(--accent-fg)}.dia-chip.on i.tem{background:color-mix(in srgb,var(--accent-fg) 60%,transparent)}
+.dia-palco{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.dia-seta{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface)}
+.dia-baralho{position:relative;min-width:0;display:grid}
+.dia-baralho::before,.dia-baralho::after{content:"";position:absolute;left:14px;right:14px;top:10px;bottom:-8px;border-radius:calc(var(--r) + 6px);background:var(--surface);border:1px solid var(--line);z-index:0}
+.dia-baralho::after{left:28px;right:28px;bottom:-16px;opacity:.6}
+.dia-card{grid-area:1/1;position:relative;z-index:1;background:var(--surface);border:1px solid var(--line);border-radius:calc(var(--r) + 6px);padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.08);min-width:0;transition:transform .25s ease;will-change:transform}
+.dia-card.hoje{border-color:var(--accent)}
+.dia-h{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.dia-h h2{font-size:1.7rem;margin-top:2px}
+.dia-num{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.dia-num b{font-size:1.2rem}
+.dia-card .lst{display:flex;flex-direction:column;gap:10px}
+.dia-card .blk{font-size:.95rem;padding:12px 14px;gap:4px;border-radius:var(--r)}
+.dia-card .blk .tm{font-size:.8rem}.dia-card .blk .tk{font-size:.88rem}
+.dia-card .blk .chk{width:22px;height:22px;top:12px;right:12px}
+.dia-card .blk .mt{font-size:1.05rem;padding-right:30px}
+.dia-aviso{margin:0;padding:8px 12px;border-radius:var(--r-sm);background:var(--sunken)}
+.dia-vazio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 10px;text-align:center}
+.dia-vazio .i{width:32px;height:32px;color:var(--muted)}
+.dia-dica{text-align:center;margin-top:22px}
+/* efeito de embaralhar: o cartão antigo sai girando para o lado e o novo entra por baixo do baralho */
+.dia-card.fantasma{z-index:2;pointer-events:none}
+.dia-card.sai-esq{animation:sai-esq .5s cubic-bezier(.4,0,.2,1) forwards}
+.dia-card.sai-dir{animation:sai-dir .5s cubic-bezier(.4,0,.2,1) forwards}
+.dia-card.entra-dir{animation:entra-dir .5s cubic-bezier(.2,.8,.2,1)}
+.dia-card.entra-esq{animation:entra-esq .5s cubic-bezier(.2,.8,.2,1)}
+.dia-card.bate-esq{animation:bate .35s}.dia-card.bate-dir{animation:bate .35s reverse}
+@keyframes sai-esq{0%{transform:none;opacity:1}45%{transform:translateX(-62%) rotate(-9deg) scale(.96);opacity:1}100%{transform:translateX(-12%) translateY(14px) rotate(-3deg) scale(.86);opacity:0}}
+@keyframes sai-dir{0%{transform:none;opacity:1}45%{transform:translateX(62%) rotate(9deg) scale(.96);opacity:1}100%{transform:translateX(12%) translateY(14px) rotate(3deg) scale(.86);opacity:0}}
+@keyframes entra-dir{0%{transform:translateY(16px) scale(.9) rotate(2deg);opacity:.2}60%{transform:translateY(-3px) scale(1.01)}100%{transform:none;opacity:1}}
+@keyframes entra-esq{0%{transform:translateY(16px) scale(.9) rotate(-2deg);opacity:.2}60%{transform:translateY(-3px) scale(1.01)}100%{transform:none;opacity:1}}
+@keyframes bate{0%,100%{transform:none}30%{transform:translateX(-18px)}60%{transform:translateX(8px)}}
+@media (max-width:640px){
+  .dia-palco{grid-template-columns:minmax(0,1fr)}.dia-seta{display:none}
+  .dia-card{padding:16px}.dia-h h2{font-size:1.45rem}
+  .dias-tira{gap:4px}.dia-chip{padding:6px 0 9px}.dia-chip b{font-size:1rem}
+}
+/* ===== Horas da semana (editor) ===== */
+.horas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,14rem),1fr));gap:10px}
+.hora-card{border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface);transition:opacity .15s}
+.hora-card.livre{opacity:.7;background:var(--sunken)}
+.hora-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.hora-ini{display:flex;align-items:center;gap:6px}.hora-ini input{width:auto;padding:4px 6px}
+.hora-ctl{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+.hora-ctl .btn{width:2.75rem;height:2.75rem;font-size:1.3rem;justify-content:center;border-radius:50%}
+.hora-ctl output{text-align:center;font-size:1.25rem;font-weight:700}
+.hora-card input[type=range]{width:100%}
+.ed-abas{align-self:flex-start}
+/* ===== Tablet e celular ===== */
+@media (min-width:861px) and (max-width:1180px){:root{--side:216px}.page{padding-inline:24px}}
+@media (max-width:860px){
+  .page{padding-block:18px 32px}
+  .btn{min-height:2.5rem}.btn.sm{min-height:2.1rem}
+  .page-h{flex-wrap:wrap;gap:10px}.page-h>.row{flex-wrap:wrap}
+  .modal{max-height:calc(100dvh - 24px)}
+  input,select,textarea{font-size:max(16px,1rem)} /* evita o zoom automático do iPhone */
+}
+@media (min-width:600px) and (max-width:860px){.dia-card{padding:24px}.page{padding-inline:28px}}
 </style>
 
 </head><body><div id="root"></div>
@@ -1074,12 +1153,15 @@ function renderWizard(){
     const tot=DIAS.reduce((a,x)=>a+(+d.horas[x.k]||0),0);
     corpo=`
       <p class="muted">Quantas horas livres você tem para estudar em cada dia, e a que horas começa?${d.categoria==="colegio"?" Conte só o tempo fora da escola.":""}</p>
-      <div>${DIAS.map(x=>`
-        <div class="dayrow">
-          <label for="h-${x.k}" style="font-weight:500">${x.n}</label>
-          <input type="range" id="h-${x.k}" min="0" max="10" step="0.5" value="${+d.horas[x.k]||0}" data-dia="${x.k}">
-          <span class="mono" id="hv-${x.k}">${(+d.horas[x.k]||0)?fmtH((+d.horas[x.k])*60):"livre"}</span>
-          <input type="time" id="t-${x.k}" value="${esc(d.inicio[x.k])}" aria-label="Início em ${x.n}">
+      <div class="horas-grid">${DIAS.map(x=>`
+        <div class="hora-card ${(+d.horas[x.k]||0)?"":"livre"}" data-hc="${x.k}">
+          <div class="hora-top"><b>${x.n}</b><label class="small muted hora-ini">começa <input type="time" id="t-${x.k}" value="${esc(d.inicio[x.k])}" aria-label="Início em ${x.n}"></label></div>
+          <div class="hora-ctl">
+            <button type="button" class="btn icon" data-hmenos="${x.k}" aria-label="Menos meia hora em ${x.n}">−</button>
+            <output class="mono" id="hv-${x.k}" aria-live="polite">${(+d.horas[x.k]||0)?fmtH((+d.horas[x.k])*60):"livre"}</output>
+            <button type="button" class="btn icon" data-hmais="${x.k}" aria-label="Mais meia hora em ${x.n}">+</button>
+          </div>
+          <input type="range" id="h-${x.k}" min="0" max="10" step="0.5" value="${+d.horas[x.k]||0}" data-dia="${x.k}" aria-label="Horas em ${x.n}">
         </div>`).join("")}</div>
       <p><span class="eyebrow">Total na semana</span> <b class="mono" id="h-tot">${fmtH(tot*60)}</b></p>`;
   }else{
@@ -1094,16 +1176,20 @@ function renderWizard(){
         <textarea id="q-obs" placeholder="Ex.: tenho trabalho de História para entregar na sexta; às quartas tenho treino; quero revisar Redação todo domingo.">${esc(d.obs)}</textarea></div>`;
   }
   const pode=st===0?!!d.categoria:st===1?d.materias.length>0:st===2?DIAS.some(x=>(+d.horas[x.k]||0)>0):true;
+  const ed=!!S.editar,podeSalvar=d.materias.length>0&&DIAS.some(x=>(+d.horas[x.k]||0)>0);
   $("#root").innerHTML=`
     <div class="wizard stack">
       <div class="row" style="justify-content:space-between"><div class="brand"><span class="logo">${LOGO}</span>Logic Academy</div>
         <button class="btn ghost sm" type="button" data-theme-lbl>${temaBtnHtml()}</button></div>
+      ${ed?`<div class="seg ed-abas" role="tablist"><button type="button" data-edpasso="1" class="${st===1?"on":""}">1. Matérias</button><button type="button" data-edpasso="2" class="${st===2?"on":""}">2. Horas da semana</button></div>
+      <div><span class="eyebrow">Editar meus estudos</span><h1 style="margin-top:4px">${st===1?"Suas matérias":"Horas da semana"}</h1></div>`:`
       <div class="steps" aria-hidden="true">${PASSOS.map((_,i)=>`<span class="${i<=st?"on":""}"></span>`).join("")}</div>
-      <div><span class="eyebrow">Passo ${st+1} de ${PASSOS.length}</span><h1 style="margin-top:4px">${PASSOS[st]}</h1></div>
+      <div><span class="eyebrow">Passo ${st+1} de ${PASSOS.length}</span><h1 style="margin-top:4px">${PASSOS[st]}</h1></div>`}
       <form class="card stack" id="qform" novalidate>${corpo}
         <div class="navq">
-          <button class="btn ghost" type="button" id="q-back" ${st===0&&!S.plano?"hidden":""}>${st===0?"Cancelar":"Voltar"}</button>
-          <button class="btn primary" type="submit" id="q-next" ${pode?"":"disabled"}>${st===PASSOS.length-1?ico("spark")+"Gerar meu plano com IA":"Continuar"}</button>
+          <button class="btn ghost" type="button" id="q-back" ${st===0&&!S.plano?"hidden":""}>${ed?(st===1?"Cancelar":"Voltar"):st===0?"Cancelar":"Voltar"}</button>
+          ${ed?`<div class="row" style="gap:8px">${st===1?`<button class="btn" type="submit" id="q-next" ${pode?"":"disabled"}>Horas da semana</button>`:""}<button class="btn primary" type="button" id="q-salvar" ${podeSalvar?"":"disabled"}>${ico("spark")}Salvar e atualizar a semana</button></div>`
+          :`<button class="btn primary" type="submit" id="q-next" ${pode?"":"disabled"}>${st===PASSOS.length-1?ico("spark")+"Gerar meu plano com IA":"Continuar"}</button>`}
         </div>
       </form>
     </div>`;
@@ -1112,14 +1198,19 @@ function renderWizard(){
 function ligarWizard(){
   const d=S.draft,f=$("#qform");
   $("[data-theme-lbl]").onclick=trocarTema;
+  const salvarEdicao=()=>{lerWizard();if(!(d.materias.length&&DIAS.some(x=>(+d.horas[x.k]||0)>0)))return;
+    S.perfil=clone(d);gravar("perfil",S.perfil,true);S.editar=false;S.view="semana";S.diaOff=0;renderShell();gerar()};
+  if(S.editar){const sv=$("#q-salvar");if(sv)sv.onclick=salvarEdicao;
+    $$("[data-edpasso]").forEach(b=>b.onclick=()=>{lerWizard();S.step=+b.dataset.edpasso;renderWizard();scrollTo(0,0)})}
   f.addEventListener("submit",e=>{e.preventDefault();lerWizard();
+    if(S.editar){if(S.step===1){S.step=2;renderWizard();scrollTo(0,0)}else salvarEdicao();return}
     if(S.step<PASSOS.length-1){S.step++;renderWizard();scrollTo(0,0);return}
     const novo=!S.plano;S.perfil=clone(d);S.perfil.tema=temaAtual();Object.assign(P.dur,{foco:+d.bloco,curta:+d.pausa});if(!P.rodando)P.restante=pomoTotal();
     gravar("perfil",S.perfil,true);
     if(S.mode==="nuvem"&&!S.soc.perfis[S.uid])gravarPub("perfis",{nome:d.nome||"Estudante",bio:"",foto:"",objetivo:descObjetivo(d),desde:Date.now()});
     S.view="semana";renderShell();gerar({novo});
   });
-  $("#q-back").onclick=()=>{lerWizard();if(S.step===0){renderShell()}else{S.step--;renderWizard()}};
+  $("#q-back").onclick=()=>{lerWizard();if(S.editar&&S.step===1){S.editar=false;renderShell();return}if(S.step===0){renderShell()}else{S.step--;renderWizard()}};
   if(S.step===0){
     $$("[data-cat]",f).forEach(b=>b.onclick=()=>{lerWizard();d.categoria=b.dataset.cat;renderWizard()});
     $$("[data-prova]",f).forEach(b=>b.onclick=()=>{lerWizard();d.temProva=b.dataset.prova==="1";renderWizard()});
@@ -1137,9 +1228,13 @@ function ligarWizard(){
   }
   if(S.step===2){
     $$("[data-dia]",f).forEach(r=>r.addEventListener("input",()=>{d.horas[r.dataset.dia]=+r.value;$("#hv-"+r.dataset.dia).textContent=+r.value?fmtH(+r.value*60):"livre";
-      const tot=DIAS.reduce((a,x)=>a+(+d.horas[x.k]||0),0);$("#h-tot").textContent=fmtH(tot*60);$("#q-next").disabled=tot<=0}));
+      r.closest(".hora-card").classList.toggle("livre",!+r.value);
+      const tot=DIAS.reduce((a,x)=>a+(+d.horas[x.k]||0),0);$("#h-tot").textContent=fmtH(tot*60);const qn=$("#q-next");if(qn)qn.disabled=tot<=0;const sv=$("#q-salvar");if(sv)sv.disabled=tot<=0}));
+    const passo=(k,v)=>{const r=$("#h-"+k);r.value=Math.max(0,Math.min(10,+r.value+v));r.dispatchEvent(new Event("input"))};
+    $$("[data-hmenos]",f).forEach(b=>b.onclick=()=>passo(b.dataset.hmenos,-.5));$$("[data-hmais]",f).forEach(b=>b.onclick=()=>passo(b.dataset.hmais,.5));
   }
 }
+function abrirEditorEstudos(){S.draft=migrar(clone(S.perfil));S.step=1;S.editar=true;renderWizard();scrollTo(0,0)}
 function lerWizard(){
   const d=S.draft,v=id=>{const e=document.getElementById(id);return e?e.value:undefined};
   if(S.step===0){d.nome=(v("q-nome")||"").trim();if(v("q-serie")!==undefined)d.serie=v("q-serie");if(v("q-turno")!==undefined)d.turno=v("q-turno");
@@ -1358,9 +1453,9 @@ const P={modo:"foco",dur:{foco:50,curta:10,longa:20},rodando:false,fimEm:0,resta
 const MODOS={foco:"Foco",curta:"Pausa curta",longa:"Pausa longa"};
 function pomoTotal(){return P.dur[P.modo]*60e3}
 function pomoRestante(){return P.rodando?Math.max(0,P.fimEm-Date.now()):P.restante}
-function iniciarPomo(){if(P.rodando)return;P.rodando=true;P.fimEm=Date.now()+P.restante;P.iniciadoEm=Date.now();clearInterval(P.tick);P.tick=setInterval(tickPomo,250);somPreparar();tickPomo();publicarRanking()}
-function pausarPomo(){if(!P.rodando)return;P.restante=pomoRestante();if(P.modo==="foco")P.acumulado+=Date.now()-P.iniciadoEm;P.rodando=false;clearInterval(P.tick);tickPomo();publicarRanking()}
-function resetPomo(modo){pausarPomo();if(modo)P.modo=modo;P.restante=pomoTotal();P.acumulado=0;tickPomo()}
+function iniciarPomo(auto){if(P.rodando)return;if(auto!==true)pararAlarme();P.rodando=true;P.fimEm=Date.now()+P.restante;P.iniciadoEm=Date.now();clearInterval(P.tick);P.tick=setInterval(tickPomo,250);somPreparar();agendarAlarme(P.restante);pedirNotificacao();tickPomo();publicarRanking()}
+function pausarPomo(){if(!P.rodando)return;cancelarAlarmeAgendado();P.restante=pomoRestante();if(P.modo==="foco")P.acumulado+=Date.now()-P.iniciadoEm;P.rodando=false;clearInterval(P.tick);tickPomo();publicarRanking()}
+function resetPomo(modo){pausarPomo();cancelarAlarmeAgendado();if(modo)P.modo=modo;P.restante=pomoTotal();P.acumulado=0;tickPomo()}
 function tickPomo(){
   const r=pomoRestante();
   if(P.rodando&&r<=0){concluirFase();return}
@@ -1372,7 +1467,7 @@ function tickPomo(){
   document.title=P.rodando?`${mm}:${ss} · ${MODOS[P.modo]} — Logic Academy`:"Logic Academy";
 }
 function concluirFase(){
-  clearInterval(P.tick);P.rodando=false;bip();
+  clearInterval(P.tick);P.rodando=false;const eraFoco=P.modo==="foco";
   if(P.modo==="foco"){
     registrar(P.dur.foco,P.materia);P.ciclos++;setTimeout(()=>modalSessao(P.dur.foco,P.materia),400);
     if(P.bloco)marcarBloco(P.bloco,true);
@@ -1380,7 +1475,9 @@ function concluirFase(){
   }else{P.modo="foco";toast("Pausa encerrada. Pronto para o próximo foco?")}
   P.restante=pomoTotal();P.acumulado=0;
   if(S.view==="pomodoro")renderPomodoro();else tickPomo();
-  if($("#pomo-auto")&&$("#pomo-auto").checked||P.auto)iniciarPomo();
+  const auto=$("#pomo-auto")&&$("#pomo-auto").checked||P.auto;
+  tocarAlarme(eraFoco?"Fim do foco!":"Fim da pausa!",eraFoco?`Hora da ${MODOS[P.modo].toLowerCase()}. ${auto?"A pausa já começou.":"Toque para começar quando quiser."}`:`Hora de voltar a estudar.${auto?" O próximo foco já começou.":""}`);
+  if(auto)iniciarPomo(true);
 }
 function encerrarRegistrar(){
   if(P.modo!=="foco")return;let ms=P.acumulado+(P.rodando?Date.now()-P.iniciadoEm:0);
@@ -1405,6 +1502,45 @@ function registrar(min,materia,fonte){
 }
 let actx=null;
 function somPreparar(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume()}catch(e){}}
+/* ---- Alarme do pomodoro: agendado no relógio de áudio (toca na hora certa mesmo com a aba em segundo plano) e repete até a pessoa parar ---- */
+const ALARME={nos:[],fut:[],futT0:0,tocando:false,vib:null,fimAuto:null};
+const ALARME_SEG=90; // toca por até 1 min 30 s se ninguém parar
+function agendarSons(seg){ // seg = daqui a quantos segundos começa; devolve os sons criados
+  const out=[];if(!actx)return out;const t0=actx.currentTime+Math.max(0,seg);
+  for(let c=0;c*1.6<ALARME_SEG;c++)[0,.2,.4].forEach((d,i)=>{const t=t0+c*1.6+d,o=actx.createOscillator(),g=actx.createGain();
+    o.type="square";o.frequency.value=i===1?1175:988;o.connect(g);g.connect(actx.destination);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.22,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.17);o.start(t);o.stop(t+.18);out.push(o)});
+  return out}
+const pararSons=l=>l.forEach(o=>{try{o.stop()}catch(e){}});
+function agendarAlarme(ms){cancelarAlarmeAgendado();try{if(actx&&actx.state==="running"){ALARME.fut=agendarSons(ms/1000);ALARME.futT0=Date.now()+ms}}catch(e){}}
+function cancelarAlarmeAgendado(){pararSons(ALARME.fut);ALARME.fut=[]}
+function tocarAlarme(titulo,texto){
+  somPreparar();pararSons(ALARME.nos);
+  // o som agendado para este fim já está tocando: passa a ser o alarme atual; senão começa agora
+  if(ALARME.fut.length&&Math.abs(Date.now()-ALARME.futT0)<5000){ALARME.nos=ALARME.fut;ALARME.fut=[]}
+  else{cancelarAlarmeAgendado();try{ALARME.nos=agendarSons(0)}catch(e){ALARME.nos=[]}}
+  ALARME.tocando=true;try{navigator.vibrate&&navigator.vibrate([500,250,500,250,500])}catch(e){}
+  clearInterval(ALARME.vib);ALARME.vib=setInterval(()=>{try{navigator.vibrate&&navigator.vibrate([500,250,500])}catch(e){}},2500);
+  clearTimeout(ALARME.fimAuto);ALARME.fimAuto=setTimeout(pararAlarme,ALARME_SEG*1000);
+  if(document.hidden)notificar(titulo,texto);
+  document.querySelectorAll(".alarme").forEach(x=>x.remove());
+  const el=document.createElement("div");el.className="alarme";el.setAttribute("role","alertdialog");el.setAttribute("aria-label",titulo);
+  el.innerHTML=`<div class="alarme-box"><span class="alarme-ic">${ico("timer")}</span><h2>${esc(titulo)}</h2><p>${esc(texto)}</p>
+    <button class="btn primary alarme-parar" type="button" id="alarme-parar">${ico("pause")}Parar alarme</button></div>`;
+  document.body.appendChild(el);const b=el.querySelector("#alarme-parar");b.onclick=pararAlarme;setTimeout(()=>b.focus(),50);
+  document.title="⏰ "+titulo+" — Logic Academy";
+}
+function pararAlarme(){
+  pararSons(ALARME.nos);ALARME.nos=[];ALARME.tocando=false;clearInterval(ALARME.vib);clearTimeout(ALARME.fimAuto);try{navigator.vibrate&&navigator.vibrate(0)}catch(e){}
+  document.querySelectorAll(".alarme").forEach(x=>x.remove());if(!P.rodando)document.title="Logic Academy";
+}
+let notifPedida=false;
+if(STANDALONE&&location.protocol==="https:"&&"serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+function pedirNotificacao(){if(notifPedida||!("Notification" in window)||Notification.permission!=="default")return;notifPedida=true;try{Notification.requestPermission().catch(()=>{})}catch(e){}}
+function notificar(t,b){try{if(!("Notification" in window)||Notification.permission!=="granted")return;const o={body:b,tag:"pomodoro",renotify:true,requireInteraction:true};
+  if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.ready.then(r=>r.showNotification(t,o)).catch(()=>{});else new Notification(t,o)}catch(e){}}
+// ao voltar para a aba, confere na hora se o tempo acabou
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&P.rodando)tickPomo()});
 function bip(){try{if(!actx)return;[0,.25,.5].forEach(t=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=880;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.0001,actx.currentTime+t);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+t+.2);o.start(actx.currentTime+t);o.stop(actx.currentTime+t+.22)})}catch(e){}}
 function minutosDia(d){return S.pomoLog&&S.pomoLog.dias[d]?S.pomoLog.dias[d].min:0}
 function sequencia(){let n=0;for(let i=0;i<120;i++){if(minutosDia(diasAtras(i))>0)n++;else if(i>0)break}return n}
@@ -2214,14 +2350,48 @@ function ligarBlocos(){
 }
 
 /* ================= Minha semana ================= */
+// Minha semana: um dia por vez (arraste para os lados) ou a grade da semana inteira
+const SEM_MODO_KEY="la_semana_modo";
+function semanaModo(){try{return localStorage.getItem(SEM_MODO_KEY)||"dia"}catch(e){return "dia"}}
+function blocoDiaHtml(x,b,editavel){return `
+          <div class="blk t-${b.tipo} ${b.feito?"done":""}">
+            <input class="chk" type="checkbox" data-chk="${x.k}|${b.id}" ${b.feito?"checked":""} ${editavel?"":"disabled"} aria-label="Concluir ${esc(b.materia)} às ${b.inicio}">
+            <span class="tm">${b.inicio}–${b.fim} · ${esc(b.tipo)}</span>
+            <span class="mt">${esc(b.materia)}</span>
+            ${b.tarefa?`<span class="tk">${esc(b.tarefa)}</span>`:""}
+            ${b.feito||!editavel?"":`<button class="btn sm ghost play" type="button" data-play="${x.k}|${b.id}">${ico("play")}Pomodoro</button>`}
+          </div>`}
+function cartaoDia(off){
+  const pl=S.plano,hi=hojeIdx(),idx=((hi+off)%7+7)%7,x=DIAS[idx],bl=pl.semana[x.k]||[];
+  const dt=new Date();dt.setDate(dt.getDate()+off);
+  const semanaAtual=off>=-hi&&off<=6-hi; // os blocos marcados valem só para a semana atual
+  const m=bl.reduce((a,b)=>a+b.min,0),f=bl.filter(b=>b.feito).length,pct=bl.length?Math.round(f/bl.length*100):0;
+  const rot=off===0?"Hoje":off===1?"Amanhã":off===-1?"Ontem":x.n;
+  return `<article class="dia-card ${off===0?"hoje":""}" data-off="${off}">
+      <header class="dia-h"><div style="min-width:0"><span class="eyebrow">${rot===x.n?esc(dt.toLocaleDateString("pt-BR",{day:"numeric",month:"long"})):x.n+" · "+esc(dt.toLocaleDateString("pt-BR",{day:"numeric",month:"long"}))}</span><h2>${rot}</h2></div>
+        <div class="dia-num"><b class="mono">${m?fmtH(m):"Livre"}</b><span class="small muted">${bl.length?`${f} de ${bl.length} blocos`:"sem estudo"}</span></div></header>
+      ${bl.length?`<div class="prog"><i style="width:${semanaAtual?pct:0}%"></i></div>`:""}
+      ${semanaAtual?"":`<p class="small muted dia-aviso">${off>0?"Prévia":"Dia de outra semana"}: o plano se repete toda semana; marque os blocos no próprio dia.</p>`}
+      <div class="lst">${bl.length?bl.map(b=>blocoDiaHtml(x,semanaAtual?b:{...b,feito:false},semanaAtual)).join(""):`<div class="dia-vazio">${ico("sun")}<b>Dia livre</b><span class="small muted">Nada planejado. Descanse ou revise algo leve.</span></div>`}</div>
+    </article>`}
 function renderSemana(){
   const p=S.perfil,pl=S.plano;if(!pl){$("#main").innerHTML=`<div class="page">${pageHead("Minha semana")}<div class="empty-state">Seu plano ainda não foi gerado.<button class="btn primary" id="gerar0">Gerar plano</button></div></div>`;$("#gerar0").onclick=()=>gerar();return}
   const todos=DIAS.flatMap(x=>pl.semana[x.k]||[]);const tot=todos.reduce((a,b)=>a+b.min,0);
   const por={};todos.forEach(b=>por[b.materia]=(por[b.materia]||0)+b.min);const dist=Object.entries(por).sort((a,b)=>b[1]-a[1]),mx=dist.length?dist[0][1]:1;
-  const hi=hojeIdx();
+  const hi=hojeIdx(),modo=semanaModo();if(S.diaOff==null)S.diaOff=0;
+  const off=S.diaOff,seg=new Date();seg.setDate(seg.getDate()-hi);
   $("#main").innerHTML=`<div class="page">
     ${pageHead("Minha semana",`${fmtH(tot)} planejadas · ${todos.filter(b=>b.feito).length} de ${todos.length} blocos feitos`,
-      `<span class="pill ${pl.geradoPor==="ia"?"solid":""}"><span class="dot"></span>${pl.geradoPor==="ia"?"Gerado pela IA":"Algoritmo local"}</span>${pl.prova?`<span class="pill">Inclui ${esc(pl.prova)}</span>`:""}`)}
+      `<div class="seg" role="group" aria-label="Visualização"><button type="button" data-smodo="dia" class="${modo==="dia"?"on":""}">Dia</button><button type="button" data-smodo="semana" class="${modo==="semana"?"on":""}">Semana</button></div><button class="btn sm" type="button" id="sem-editar">${ico("gear")}Matérias e horários</button>`)}
+    ${modo==="dia"?`
+    <div class="dias-tira" role="tablist" aria-label="Dias">${DIAS.map((x,i)=>{const o=i-hi,d=new Date(seg);d.setDate(seg.getDate()+i);const bl=pl.semana[x.k]||[];const feito=bl.length&&bl.every(b=>b.feito);const sel=((hi+off)%7+7)%7===i&&off>=-hi-7&&true;
+      return `<button type="button" role="tab" class="dia-chip ${o===0?"hoje":""} ${((hi+off)%7+7)%7===i?"on":""}" data-dsel="${o}" aria-selected="${((hi+off)%7+7)%7===i}"><span>${x.n.slice(0,3)}</span><b>${d.getDate()}</b><i class="${feito?"ok":bl.length?"tem":""}"></i></button>`}).join("")}</div>
+    <div class="dia-palco" id="dia-palco" aria-live="polite">
+      <button class="btn icon ghost dia-seta ant" type="button" id="dia-ant" aria-label="Dia anterior" ${off<=-7?"disabled":""}>${ico("back")}</button>
+      <div class="dia-baralho" id="dia-baralho">${cartaoDia(off)}</div>
+      <button class="btn icon ghost dia-seta prox" type="button" id="dia-prox" aria-label="Próximo dia" ${off>=13?"disabled":""}>${ico("next")}</button>
+    </div>
+    <p class="small muted dia-dica">Arraste o cartão para os lados para ver os outros dias.${off!==0?` <button class="btn sm ghost" type="button" id="dia-hoje">Voltar para hoje</button>`:""}</p>`:`
     <div class="week-wrap"><div class="week">${DIAS.map((x,i)=>{const bl=pl.semana[x.k]||[];const m=bl.reduce((a,b)=>a+b.min,0);return `
       <section class="day ${i===hi?"hoje":""}" aria-label="${x.n}">
         <header><b>${x.n}</b><span class="small muted mono">${m?fmtH(m):"livre"}</span></header>
@@ -2234,6 +2404,7 @@ function renderSemana(){
             ${b.feito?"":`<button class="btn sm ghost play" type="button" data-play="${x.k}|${b.id}">${ico("play")}Pomodoro</button>`}
           </div>`).join(""):`<p class="empty">Sem estudo planejado.</p>`}</div>
       </section>`}).join("")}</div></div>
+`}
     <div class="cols" style="margin-top:16px">
       <div class="card stack"><div><span class="eyebrow">Por que o plano ficou assim</span><p style="margin-top:6px">${esc(pl.resumo)}</p></div>
         ${pl.dicas&&pl.dicas.length?`<div><span class="eyebrow">Dicas</span><ul style="margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px">${pl.dicas.map(d=>`<li>${esc(d)}</li>`).join("")}</ul></div>`:""}
@@ -2249,9 +2420,39 @@ function renderSemana(){
         <div class="bars-h">${dist.map(([m,min])=>`<div class="r"><span>${esc(m)}</span><span class="mono small">${fmtH(min)}</span><div class="prog"><i style="width:${Math.round(min/mx*100)}%"></i></div></div>`).join("")}</div></div>
     </div></div>`;
   ligarBlocos();
+  $$("[data-smodo]").forEach(b=>b.onclick=()=>{try{localStorage.setItem(SEM_MODO_KEY,b.dataset.smodo)}catch(e){}renderSemana()});
+  $("#sem-editar").onclick=abrirEditorEstudos;
+  if(modo==="dia")ligarDiaSwipe();
   $("#ajuste").addEventListener("submit",e=>{e.preventDefault();const t=$("#aj-txt").value.trim();if(!t){$("#aj-txt").focus();return}gerar({pedido:t})});
   $("#refazer").onclick=()=>gerar();
 }
+// troca de dia com efeito de embaralhar cartas
+function mudarDia(novo,dir){
+  novo=Math.max(-7,Math.min(13,novo));if(novo===S.diaOff)return bater(dir);
+  const bar=$("#dia-baralho"),velho=bar&&bar.querySelector(".dia-card");
+  if(velho){const fant=velho.cloneNode(true);fant.classList.add("fantasma",dir>0?"sai-esq":"sai-dir");fant.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));bar.appendChild(fant)}
+  S.diaOff=novo;const fant=bar&&bar.querySelector(".fantasma");
+  renderSemana();const nb=$("#dia-baralho");if(fant&&nb){nb.appendChild(fant);setTimeout(()=>fant.remove(),520)}
+  const c=nb&&nb.querySelector(".dia-card:not(.fantasma)");if(c)c.classList.add(dir>0?"entra-dir":"entra-esq");
+  const chip=$(".dia-chip.on");if(chip)chip.scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});
+}
+function bater(dir){const c=$("#dia-baralho .dia-card");if(!c)return;c.classList.remove("bate-esq","bate-dir");void c.offsetWidth;c.classList.add(dir>0?"bate-esq":"bate-dir")}
+function ligarDiaSwipe(){
+  $("#dia-ant").onclick=()=>mudarDia(S.diaOff-1,-1);$("#dia-prox").onclick=()=>mudarDia(S.diaOff+1,1);
+  const vh=$("#dia-hoje");if(vh)vh.onclick=()=>mudarDia(0,S.diaOff>0?-1:1);
+  $$("[data-dsel]").forEach(b=>b.onclick=()=>{const o=+b.dataset.dsel;mudarDia(o,o>S.diaOff?1:-1)});
+  const palco=$("#dia-palco");let x0=0,y0=0,dx=0,arr=false,id=null;
+  const carta=()=>$("#dia-baralho .dia-card:not(.fantasma)");
+  palco.addEventListener("pointerdown",e=>{if(e.target.closest("button,input,a,label"))return;x0=e.clientX;y0=e.clientY;dx=0;arr=false;id=e.pointerId});
+  palco.addEventListener("pointermove",e=>{if(id!==e.pointerId)return;dx=e.clientX-x0;const dy=e.clientY-y0;
+    if(!arr){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.2){arr=true;try{palco.setPointerCapture(id)}catch(_){}}else if(Math.abs(dy)>10){id=null;return}else return}
+    const c=carta();if(c){c.style.transition="none";c.style.transform=`translateX(${dx}px) rotate(${dx/30}deg)`}});
+  const fim=e=>{if(id!==e.pointerId)return;id=null;const c=carta();if(c){c.style.transition="";c.style.transform=""}
+    if(arr&&Math.abs(dx)>60)mudarDia(S.diaOff+(dx<0?1:-1),dx<0?1:-1)};
+  palco.addEventListener("pointerup",fim);palco.addEventListener("pointercancel",fim);
+}
+document.addEventListener("keydown",e=>{if(S.view!=="semana"||semanaModo()!=="dia"||/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||"")||document.querySelector(".modal-bg,.alarme"))return;
+  if(e.key==="ArrowRight"){e.preventDefault();mudarDia(S.diaOff+1,1)}else if(e.key==="ArrowLeft"){e.preventDefault();mudarDia(S.diaOff-1,-1)}});
 
 /* ================= Tela do pomodoro ================= */
 function renderPomodoro(){
@@ -3212,7 +3413,7 @@ function renderConfig(){
       <div class="card row" style="justify-content:space-between"><div><h3>Meta diária de estudo</h3><p class="small muted">Aparece no início como um anel de progresso. Hoje: ${fmtH(metaHoje())}.</p></div>
         <select id="cf-meta" style="width:auto">${[[0,"Automática (pelo plano)"],[30,"30 min"],[60,"1 hora"],[90,"1h30"],[120,"2 horas"],[180,"3 horas"],[240,"4 horas"],[300,"5 horas"],[360,"6 horas"],[480,"8 horas"]].map(([v,n])=>`<option value="${v}" ${(+S.perfil.metaDia||0)===v?"selected":""}>${n}</option>`).join("")}</select></div>
       <div class="card row" style="justify-content:space-between"><div><h3>Suas respostas</h3><p class="small muted">${esc(descObjetivo(S.perfil))} · ${S.perfil.materias.length} matérias · ${fmtH(DIAS.reduce((a,x)=>a+(+S.perfil.horas[x.k]||0),0)*60)} por semana</p></div>
-        <button class="btn" type="button" id="cf-tri">Refazer triagem</button></div>
+        <button class="btn" type="button" id="cf-ed">${ico("gear")}Matérias e horários</button><button class="btn" type="button" id="cf-tri">Refazer triagem</button></div>
       <div class="card row" style="justify-content:space-between"><div><h3>Armazenamento</h3><p class="small muted">${S.mode==="nuvem"?"Seus dados estão salvos na nuvem, ligados à sua conta.":"Seus dados estão só neste navegador. Entre com a conta para salvar na nuvem."}</p></div>
         <span class="pill ${S.mode==="nuvem"?"solid":""}"><span class="dot"></span>${S.mode==="nuvem"?"Nuvem":"Local"}</span></div>
       <div class="card"><details><summary>Ver o prompt que a IA recebe para montar a semana</summary><pre class="prompt">${esc(montarPrompt(S.perfil,{prova:S.plano&&S.plano.prova?provaCtx():null}))}</pre></details></div>
@@ -3221,7 +3422,8 @@ function renderConfig(){
   $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
   $("#cf-crono").onclick=()=>go("cronometro");
   $("#cf-meta").onchange=e=>{S.perfil.metaDia=+e.target.value;gravar("perfil",S.perfil);toast("Meta diária salva.");renderConfig()};
-  $("#cf-tri").onclick=()=>{S.step=0;S.draft=migrar(clone(S.perfil));renderWizard();scrollTo(0,0)};
+  $("#cf-ed").onclick=abrirEditorEstudos;
+  $("#cf-tri").onclick=()=>{S.editar=false;S.step=0;S.draft=migrar(clone(S.perfil));renderWizard();scrollTo(0,0)};
 }
 
 aplicarUI(uiAtual());
