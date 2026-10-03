@@ -656,6 +656,24 @@ async function loginProvedor(qual){
     if(/popup-blocked|operation-not-supported-in-this-environment|web-storage-unsupported/.test(c)){try{await FB.auth.signInWithRedirect(prov);return}catch(e2){e=e2}}
     if(c==="auth/popup-closed-by-user"||c==="auth/cancelled-popup-request")return;renderLogin(msgErroAuth(e,qual))}
 }
+function msgErroEmail(e){const c=e&&e.code||"";
+  return {"auth/email-already-in-use":"Já existe uma conta com este e-mail. Use “Entrar”.","auth/invalid-email":"Este e-mail não parece válido.","auth/weak-password":"A senha precisa ter pelo menos 6 caracteres.",
+    "auth/wrong-password":"E-mail ou senha incorretos.","auth/user-not-found":"E-mail ou senha incorretos.","auth/invalid-credential":"E-mail ou senha incorretos.","auth/invalid-login-credentials":"E-mail ou senha incorretos.",
+    "auth/too-many-requests":"Muitas tentativas. Espere alguns minutos e tente de novo.","auth/operation-not-allowed":"O login por e-mail ainda não foi ativado no Firebase (Authentication → Método de login → E-mail/senha).",
+    "auth/network-request-failed":"Sem conexão com a internet. Tente de novo.","auth/missing-password":"Digite sua senha."}[c]||"Não foi possível continuar ("+(c||"erro")+").";}
+function ligarLoginEmail(){
+  $$("[data-auth]").forEach(b=>b.onclick=()=>{S.authTab=b.dataset.auth;renderLogin()});
+  const g=$("#btnGoogle");if(g)g.onclick=()=>loginProvedor("google");
+  const f=$("#f-email");if(!f||!FB)return;const msg=t=>{$("#au-msg").textContent=t;$("#au-msg").className="small "+(t?"err":"")};
+  f.addEventListener("submit",async e=>{e.preventDefault();const email=$("#au-email").value.trim(),senha=$("#au-senha").value;const nm=$("#au-nome")?$("#au-nome").value.trim():"";
+    if(!email){msg("Digite seu e-mail.");return}if(senha.length<6){msg("A senha precisa ter pelo menos 6 caracteres.");return}if(S.authTab==="criar"&&!nm){msg("Digite seu nome.");return}
+    $("#au-ok").disabled=true;msg("");
+    try{if(S.authTab==="criar"){S.nomeCadastro=nm;const r=await FB.auth.createUserWithEmailAndPassword(email,senha);try{await r.user.updateProfile({displayName:nm})}catch(_){}}
+      else await FB.auth.signInWithEmailAndPassword(email,senha)}
+    catch(err){msg(msgErroEmail(err));$("#au-ok").disabled=false}});
+  const esq=$("#au-esqueci");if(esq)esq.onclick=async()=>{const email=$("#au-email").value.trim();if(!email){msg("Digite seu e-mail acima e toque de novo em “Esqueci minha senha”.");return}
+    try{await FB.auth.sendPasswordResetEmail(email);$("#au-msg").className="small";$("#au-msg").textContent="Enviamos um link para redefinir a senha. Confira seu e-mail (e a caixa de spam)."}catch(err){msg(msgErroEmail(err))}};
+}
 async function iniciarCaps(){
   if(STANDALONE){
     try{await carregarScript("firebase-config.js")}catch(e){}
@@ -680,9 +698,17 @@ function renderLogin(erro){
       </div>
       <div class="card stack" style="max-width:420px">
         ${STANDALONE?`
-        <button class="btn" id="btnGoogle" type="button" ${FB?"":"disabled"} style="padding:11px">${G_ICON}Entrar com Google</button>
-        <button class="btn" id="btnApple" type="button" ${FB?"":"disabled"} style="padding:11px">${A_ICON}Entrar com Apple</button>
-        <p class="hint">${!S.caps?'<span class="row"><span class="spinner"></span>Preparando o login…</span>':FB?"Seu perfil, plano e progresso ficam salvos na nuvem e abrem em qualquer dispositivo. Grupos, chat e ranking exigem login.":"O login com Google e Apple ainda não foi configurado neste site. Por enquanto, use como visitante."}</p>`
+        <div class="seg" role="tablist" style="align-self:flex-start"><button type="button" data-auth="entrar" class="${S.authTab!=="criar"?"on":""}">Entrar</button><button type="button" data-auth="criar" class="${S.authTab==="criar"?"on":""}">Criar conta</button></div>
+        <form class="stack sm" id="f-email" novalidate>
+          ${S.authTab==="criar"?`<div class="field"><label for="au-nome">Seu nome</label><input type="text" id="au-nome" autocomplete="name" maxlength="40" ${FB?"":"disabled"}></div>`:""}
+          <div class="field"><label for="au-email">E-mail</label><input type="email" id="au-email" autocomplete="email" inputmode="email" ${FB?"":"disabled"} style="background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:8px 11px;width:100%"></div>
+          <div class="field"><label for="au-senha">Senha</label><input type="password" id="au-senha" autocomplete="${S.authTab==="criar"?"new-password":"current-password"}" minlength="6" ${FB?"":"disabled"} style="background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:8px 11px;width:100%">${S.authTab==="criar"?'<span class="hint">Pelo menos 6 caracteres.</span>':""}</div>
+          <button class="btn primary" type="submit" id="au-ok" ${FB?"":"disabled"} style="padding:11px">${S.authTab==="criar"?"Criar minha conta":"Entrar"}</button>
+          ${S.authTab!=="criar"?`<button class="btn ghost sm" type="button" id="au-esqueci" ${FB?"":"disabled"} style="align-self:flex-start">Esqueci minha senha</button>`:""}
+          <p class="small" id="au-msg" role="status"></p>
+        </form>
+        ${FB&&FB.cfg.google?`<button class="btn" id="btnGoogle" type="button" style="padding:11px">${G_ICON}Entrar com Google</button>`:""}
+        <p class="hint">${!S.caps?'<span class="row"><span class="spinner"></span>Preparando o login…</span>':FB?"Cada pessoa tem a própria conta. Perfil, plano e progresso ficam salvos na nuvem e abrem em qualquer dispositivo.":"O login por e-mail ainda não foi ligado neste site. Por enquanto, use como visitante."}</p>`
         :`<button class="btn primary" id="btnNuvem" type="button" ${ok?"":"disabled"} style="padding:11px">${ico("user")}Entrar com minha conta</button>
         <p class="hint">${!S.caps?'<span class="row"><span class="spinner"></span>Verificando a conexão com sua conta…</span>':ok?"Seu perfil, plano e progresso ficam salvos na nuvem e abrem em qualquer dispositivo. Grupos, chat e ranking exigem login.":"Login indisponível nesta visualização. Abra a página no claude.ai com sua conta conectada."}</p>`}
         <div class="row" style="gap:8px;color:var(--muted);font-size:.78rem"><span style="flex:1;height:1px;background:var(--line)"></span>ou<span style="flex:1;height:1px;background:var(--line)"></span></div>
@@ -702,7 +728,7 @@ function renderLogin(erro){
     </aside>
   </div>`;
   $("#btnLocal").onclick=()=>entrar("local");
-  if(STANDALONE){$("#btnGoogle").onclick=()=>loginProvedor("google");$("#btnApple").onclick=()=>loginProvedor("apple")}
+  if(STANDALONE)ligarLoginEmail();
   else $("#btnNuvem").onclick=()=>entrar("nuvem");
   $("[data-theme-lbl]").onclick=trocarTema;
 }
@@ -714,7 +740,7 @@ async function entrar(modo){
   if(modo==="nuvem"){
     const id=await S.userCap.id();
     if(!id){renderLogin("Não encontramos uma conta conectada. Entre no claude.ai e abra a página de novo, ou continue como visitante.");return}
-    S.mode="nuvem";S.uid=id;try{nomeConta=(await S.userCap.me()).name||""}catch(e){}
+    S.mode="nuvem";S.uid=id;try{nomeConta=(await S.userCap.me()).name||S.nomeCadastro||""}catch(e){}
   }else{S.mode="local";S.uid="local"}
   $("#root").innerHTML=`<div class="wizard"><div class="row muted"><span class="spinner"></span>Carregando seus dados…</div></div>`;
   try{[S.perfil,S.plano,S.edital,S.pomoLog]=await Promise.all(["perfil","plano","edital","pomo"].map(ler))}
@@ -726,7 +752,7 @@ async function entrar(modo){
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
   else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
 }
-function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pausarPomo();if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
+function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pausarPomo();S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
   Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{}}});renderLogin()}
 
 function perfilPadrao(nome){
