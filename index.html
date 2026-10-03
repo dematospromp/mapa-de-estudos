@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Logic Academy: organizador de estudos com banco de questões oficiais do ENEM, plano semanal, pomodoro, cronômetro, desafios, revisões, estatísticas, grupos de estudo e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Logic Academy</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" sizes="32x32" href="icones/favicon-32.png"><link rel="icon" type="image/png" sizes="16x16" href="icones/favicon-16.png"><link rel="apple-touch-icon" href="icones/apple-touch-icon.png"><meta name="theme-color" content="#0a0a0a"><meta name="apple-mobile-web-app-title" content="Logic Academy"><meta name="application-name" content="Logic Academy"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Logic Academy: organizador de estudos com banco de questões oficiais do ENEM, plano semanal, pomodoro, cronômetro, desafios, revisões, estatísticas, grupos de estudo e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Logic Academy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -630,6 +630,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .msg:hover .msg-del,.msg-del:focus,.msg-del.conf{opacity:1}.msg-del.conf{color:var(--danger,#dc2626);font-weight:600}
 @media (hover:none){.msg-del{opacity:.55}}
 @media (max-width:640px){.g-hero-c{padding:0 14px 14px}.g-acoes{margin-left:0;width:100%}.g-acoes .btn{flex:1;justify-content:center}}
+
+/* celular e app instalado: sem o efeito elástico que arrasta a tela inteira e mostra o fundo vazio */
+html,body{overscroll-behavior:none;background:var(--bg)}
+.msgs,.qb-lista,.mentor-msgs,.side,.modal{overscroll-behavior:contain}
 </style>
 
 </head><body><div id="root"></div>
@@ -1924,7 +1928,9 @@ function reduzirImg(file,max,q){return new Promise((ok,no)=>{const img=new Image
   c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);ok(c.toDataURL("image/jpeg",q||.72))};img.onerror=no;img.src=url})}
 // entrar: grupos com senha pedem a senha (conferida pelo servidor)
 async function entrarGrupoFB(gid,quieto,senha){
-  const g=FBC.grupos[gid],db=S.db,base=db.collection("grupos").doc(gid);
+  const db=S.db,base=db.collection("grupos").doc(gid);let g=FBC.grupos[gid];
+  // confere no servidor se o grupo tem senha agora (a cópia no aparelho pode estar desatualizada)
+  try{const d=await base.get({source:"server"});if(!d.exists){toast("Este grupo não existe mais.");return false}g=FBC.grupos[gid]={...d.data(),id:gid}}catch(e){}
   try{if(g&&g.temSenha&&g.dono!==S.uid){
       if(senha==null){senha=await pedirSenhaGrupo(g);if(senha==null)return false}
       const b=db.batch();b.set(base.collection("entradas").doc(S.uid),{chave:await hashSenha(gid,senha),em:Date.now()});b.set(base.collection("membros").doc(S.uid),{em:Date.now()});await b.commit()}
@@ -1965,9 +1971,10 @@ function renderGruposFB(){
   </div>`;
   const f=$("#g-form");$("#g-novo").onclick=()=>{f.hidden=false;$("#g-nome").focus()};$("#g-cancel").onclick=()=>f.hidden=true;
   $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
-  f.addEventListener("submit",async e=>{e.preventDefault();const nome=$("#g-nome").value.trim(),desc=$("#g-desc").value.trim(),senha=$("#g-senha").value;if(!nome)return;const bt=f.querySelector("[type=submit]");bt.disabled=true;
+  f.addEventListener("submit",async e=>{e.preventDefault();const nome=$("#g-nome").value.trim(),desc=$("#g-desc").value.trim();let senha=$("#g-senha").value;if(!nome)return;const bt=f.querySelector("[type=submit]");bt.disabled=true;
     try{const ref=S.db.collection("grupos").doc();await ref.set({nome,desc,bio:"",foto:"",fundo:"",admins:[],temSenha:false,dono:S.uid,criadoEm:Date.now()});
-      if(senha){const b=S.db.batch();b.set(ref.collection("privado").doc("senha"),{hash:await hashSenha(ref.id,senha)});b.update(ref,{temSenha:true});await b.commit()}
+      if(senha){try{const b=S.db.batch();b.set(ref.collection("privado").doc("senha"),{hash:await hashSenha(ref.id,senha)});b.update(ref,{temSenha:true});await b.commit()}
+        catch(e2){toast("O grupo foi criado, mas a senha não foi salva ("+(e2&&e2.code||"erro")+"). Defina a senha nas configurações do grupo.");senha=""}}
       FBC.grupos[ref.id]={nome,desc,bio:"",foto:"",fundo:"",admins:[],temSenha:!!senha,dono:S.uid,id:ref.id,criadoEm:Date.now()};await entrarGrupoFB(ref.id,true);toast("Grupo criado.");S.grupoAberto=ref.id;FBC.grupoTab="config";renderView()}
     catch(err){bt.disabled=false;toast("Não foi possível criar o grupo ("+(err&&err.code||"erro")+").")}});
   ligarCartoesGrupo();

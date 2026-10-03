@@ -8,6 +8,7 @@ Site: https://dematospromp.github.io/mapa-de-estudos/
 - `index.html`: o site.
 - `firebase-config.js`: liga o login com Google/Apple e a nuvem. Enquanto estiver `null`, o site funciona como visitante.
 - `firestore.rules`: regras de segurança para colar no Firestore.
+- `manifest.webmanifest` e `icones/`: nome e ícone do app quando ele é adicionado à tela inicial.
 - `sw.js`: mostra a notificação do alarme do pomodoro no celular (não guarda páginas em cache).
 - `questoes/`: banco de questões (provas oficiais do ENEM 2009–2023, INEP, obtidas pela API ENEM em enem.dev), um arquivo por área, com matéria e tópico identificados automaticamente.
 
