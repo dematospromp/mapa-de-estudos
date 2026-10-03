@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro, cronômetro, desafios e recompensas, revisões, estatísticas, grupos de estudo e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Logic Academy: organizador de estudos com banco de questões oficiais do ENEM, plano semanal, pomodoro, cronômetro, desafios, revisões, estatísticas, grupos de estudo e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Logic Academy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -198,6 +198,7 @@ input[type=range]{width:100%;accent-color:var(--fg)}
 .mat-acc>summary::-webkit-details-marker{display:none}
 .mat-acc[open]>summary{border-bottom:1px solid var(--line)}
 .tops{padding:8px 16px 14px;display:flex;flex-direction:column}
+.qb-link{margin-left:auto;flex:none;gap:4px;font-size:.75rem}.qb-link .i{width:14px;height:14px}
 .top{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:.88rem}
 .top:first-child{border-top:0}
 .top.done span{color:var(--muted);text-decoration:line-through}
@@ -374,6 +375,102 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 @keyframes cai{to{transform:translate(calc(var(--x)*3),360px) rotate(540deg);opacity:0}}
 .titulo-pill{display:inline-flex;margin-top:4px}
 .emblemas{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ===== Banco de questões ===== */
+.qb-resumo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.qb-resumo .stat{padding:12px 14px}.qb-resumo .v{font-size:1.25rem}
+.qb-filtros{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.qb-busca{display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:0 12px;background:var(--surface)}
+.qb-busca:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.qb-busca .i{width:18px;height:18px;color:var(--muted);flex:none}
+.qb-busca input{border:0;box-shadow:none!important;padding:10px 0;background:transparent;flex:1;min-width:0}
+.qb-chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.qb-chips::-webkit-scrollbar{display:none}
+.qb-chip{flex:none;border:1px solid var(--line-2);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 14px;font:inherit;font-size:.86rem;cursor:pointer;white-space:nowrap}
+.qb-chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.qb-sel{display:grid;grid-template-columns:1fr 1fr 2fr .8fr 1fr;gap:10px}
+.qb-sel label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.qb-sel label>span{font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.qb-sel select{width:100%;min-width:0}
+.qb-cols{display:grid;grid-template-columns:minmax(280px,380px) minmax(0,1fr);gap:16px;align-items:start}
+.qb-lista{display:flex;flex-direction:column;gap:8px;max-height:calc(100dvh - 120px);overflow-y:auto;position:sticky;top:16px;padding:2px 4px 2px 2px}
+.qb-cont{padding:0 2px 2px}
+.qb-item{display:flex;flex-direction:column;gap:6px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px;cursor:pointer;font:inherit;color:var(--fg);transition:border-color .12s,box-shadow .12s}
+.qb-item:hover{border-color:var(--line-2)}
+.qb-item.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.qb-item .pill{font-size:.72rem}
+.qb-top{font-weight:600}
+.qb-res{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qb-st{font-size:.75rem;font-weight:600;display:inline-flex;align-items:center;gap:3px;color:var(--muted)}
+.qb-st .i{width:13px;height:13px}
+.qb-st.ok{color:var(--ok,#16a34a)}.qb-st.no{color:var(--danger,#dc2626)}
+.qb-vazio{align-items:center;text-align:center;padding:48px 24px;color:var(--muted)}
+.qb-vazio .i{width:36px;height:36px}
+.qb-det{display:flex;flex-direction:column;gap:14px}
+.qb-det-top{gap:8px;align-items:center;flex-wrap:nowrap}
+.qb-voltar{display:none}
+.qb-texto,.qb-enun{line-height:1.65;overflow-wrap:anywhere}
+.qb-texto p,.qb-enun p{margin:0 0 .7em}
+.qb-texto img,.qb-at img{max-width:100%;height:auto;border-radius:6px;background:#fff;display:block;margin:6px 0}
+.qb-enun{font-weight:600}
+.qb-img-falha{border:1px dashed var(--line-2);border-radius:8px;padding:12px;margin:6px 0}
+.qb-alts{display:flex;flex-direction:column;gap:8px}
+.qb-alt{display:flex;align-items:stretch;gap:6px}
+.qb-alt-b{flex:1;display:flex;gap:12px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:var(--r);padding:10px 12px;font:inherit;cursor:pointer;min-width:0}
+.qb-alt-b:hover:not(:disabled){border-color:var(--line-2)}
+.qb-alt-b:disabled{cursor:default}
+.qb-l{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.85rem;border:1.5px solid var(--line-2)}
+.qb-at{min-width:0;overflow-wrap:anywhere;padding-top:3px}
+.qb-at p{margin:0}
+.qb-alt.on .qb-alt-b{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.qb-alt.on .qb-l{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.qb-alt.certa .qb-alt-b{border-color:#16a34a;background:color-mix(in srgb,#16a34a 10%,var(--surface))}
+.qb-alt.certa .qb-l{background:#16a34a;border-color:#16a34a;color:#fff}
+.qb-alt.errada .qb-alt-b{border-color:#dc2626;background:color-mix(in srgb,#dc2626 10%,var(--surface))}
+.qb-alt.errada .qb-l{background:#dc2626;border-color:#dc2626;color:#fff}
+.qb-alt.cortada .qb-at{text-decoration:line-through;opacity:.45}
+.qb-cut{align-self:center;opacity:.55}.qb-cut:hover{opacity:1}
+.qb-resultado{border-radius:var(--r-sm);padding:10px 14px;border:1px solid}
+.qb-resultado.ok{border-color:#16a34a;background:color-mix(in srgb,#16a34a 10%,var(--surface))}
+.qb-resultado.no{border-color:#dc2626;background:color-mix(in srgb,#dc2626 9%,var(--surface))}
+.qb-acoes{gap:8px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:1100px){.qb-sel{grid-template-columns:1fr 1fr 1fr}.qb-sel-t{grid-column:1/-1;order:-1}}
+@media (max-width:860px){
+  .qb-cols{grid-template-columns:1fr}
+  .qb-lista{position:static;max-height:none;overflow:visible;padding:0}
+  .qb-com-sel .qb-lista,.qb-com-sel .qb-resumo,.qb-com-sel .qb-filtros,.qb-com-sel .page-h,.qb-com-sel>.hint{display:none}
+  .qb-page:not(.qb-com-sel) .qb-det-wrap{display:none}
+  .qb-voltar{display:inline-flex}
+  .qb-det{border-radius:0;margin:0 -16px;border-left:0;border-right:0;padding:14px 16px}
+  .qb-acoes{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));background:var(--surface);margin:0 -16px -14px;padding:10px 16px}
+}
+@media (max-width:640px){.qb-resumo{grid-template-columns:1fr 1fr}.qb-sel{grid-template-columns:1fr 1fr}.qb-resumo .v{font-size:1.1rem}}
+/* ===== Mentoria ===== */
+.mentor-chat{display:flex;flex-direction:column;padding:0;overflow:hidden;height:calc(100dvh - 230px);min-height:360px}
+.mentor-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.mt{max-width:min(640px,88%);padding:10px 14px;border-radius:16px;line-height:1.55;overflow-wrap:anywhere}
+.mt p{margin:0 0 .5em}.mt p:last-child{margin:0}.mt ul{margin:.2em 0 .5em;padding-left:1.2em}
+.mt.eu{align-self:flex-end;background:var(--accent);color:var(--accent-fg);border-bottom-right-radius:4px;white-space:pre-wrap}
+.mt.ia{align-self:flex-start;background:var(--sunken);border-bottom-left-radius:4px}
+.mentor-vazio{margin:auto;align-items:center;text-align:center;max-width:460px;color:var(--fg)}
+.mentor-vazio>.i{width:40px;height:40px}
+.mentor-vazio .pill{cursor:pointer}
+.mentor-comp{display:flex;gap:8px;align-items:flex-end;border-top:1px solid var(--line);padding:10px;margin:0;border-radius:0}
+.mentor-comp textarea{flex:1;resize:none;min-height:42px}
+/* ===== Barra inferior no celular ===== */
+.tabbar{display:none}
+@media (max-width:860px){
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:25;background:color-mix(in srgb,var(--surface) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px))}
+  .tabbar a,.tabbar button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font:inherit;font-size:.68rem;color:var(--muted);text-decoration:none;background:none;border:0;border-radius:10px;cursor:pointer;position:relative;min-width:0}
+  .tabbar .i{width:22px;height:22px}
+  .tabbar .on{color:var(--fg);font-weight:600}
+  .tabbar .on .i{color:var(--accent)}
+  .tabbar .badge{position:absolute;top:2px;right:calc(50% - 20px);font-size:.62rem;padding:0 5px;min-width:16px}
+  .tabbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  #main{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+  .toasts{bottom:calc(76px + env(safe-area-inset-bottom,0px))!important}
+  .sr-mob{display:none}
+}
 </style>
 
 </head><body><div id="root"></div>
@@ -698,7 +795,7 @@ const I={
   file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',plus:'<path d="M12 5v14M5 12h14"/>',
   book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M19 19v2H6"/>'};
 const ico=(n,cls)=>`<svg class="i ${cls||""}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
-const LOGO=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 18V8l7 5 7-5v10"/></svg>`;
+const LOGO=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5v14h10"/><path d="M12 5h5v5"/></svg>`;
 
 /* ================= Estado ================= */
 const STANDALONE=!(window.claude&&window.claude.use);
@@ -799,7 +896,7 @@ function renderLogin(erro){
   $("#root").innerHTML=`
   <div class="auth">
     <section class="auth-l">
-      <div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div>
+      <div class="brand"><span class="logo">${LOGO}</span>Logic Academy</div>
       <div class="stack sm">
         <h1>${STANDALONE?"Organize seus estudos do seu jeito.":"Organize seus estudos com ajuda da IA."}</h1>
         <p class="muted" style="font-size:1.02rem;max-width:48ch">Do colégio ao concurso: responda algumas perguntas e receba uma semana de estudos montada para você, com pomodoro, tópicos do edital e grupos de estudo.</p>
@@ -942,7 +1039,7 @@ function renderWizard(){
   const pode=st===0?!!d.categoria:st===1?d.materias.length>0:st===2?DIAS.some(x=>(+d.horas[x.k]||0)>0):true;
   $("#root").innerHTML=`
     <div class="wizard stack">
-      <div class="row" style="justify-content:space-between"><div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div>
+      <div class="row" style="justify-content:space-between"><div class="brand"><span class="logo">${LOGO}</span>Logic Academy</div>
         <button class="btn ghost sm" type="button" data-theme-lbl>${temaBtnHtml()}</button></div>
       <div class="steps" aria-hidden="true">${PASSOS.map((_,i)=>`<span class="${i<=st?"on":""}"></span>`).join("")}</div>
       <div><span class="eyebrow">Passo ${st+1} de ${PASSOS.length}</span><h1 style="margin-top:4px">${PASSOS[st]}</h1></div>
@@ -1215,7 +1312,7 @@ function tickPomo(){
   const c=$("#pomo-c");if(c){const L=2*Math.PI*46;c.style.strokeDasharray=L;c.style.strokeDashoffset=L*(1-r/pomoTotal())}
   const pb=$("#pomo-play");if(pb)pb.innerHTML=P.rodando?ico("pause")+"Pausar":ico("play")+(P.restante<pomoTotal()?"Continuar":"Iniciar");
   const mini=$("#mini-pomo");if(mini){mini.hidden=!(P.rodando||P.restante<pomoTotal());mini.innerHTML=`${ico(P.rodando?"timer":"pause")}<div style="min-width:0"><b>${mm}:${ss}</b><div style="font-size:.74rem;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${MODOS[P.modo]}${P.materia?" · "+esc(P.materia):""}</div></div>`}
-  document.title=P.rodando?`${mm}:${ss} · ${MODOS[P.modo]} — Mapa de Estudos`:"Mapa de Estudos";
+  document.title=P.rodando?`${mm}:${ss} · ${MODOS[P.modo]} — Logic Academy`:"Logic Academy";
 }
 function concluirFase(){
   clearInterval(P.tick);P.rodando=false;bip();
@@ -1687,6 +1784,236 @@ function renderAmigosFB(){
   $$("[data-dm]").forEach(b=>b.onclick=()=>abrirDM(b.dataset.dm));
 }
 
+/* ================= Banco de questões (provas oficiais) ================= */
+Object.assign(I,{
+  qbank:'<path d="M9 3h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1z"/><path d="M10 11a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2M12 17h.01"/>',
+  mentor:'<path d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3z"/><path d="M9.5 20.5h5"/><path d="m12 7-1.2 2.4 2.4.4-1.2 2.2"/>',
+  bookmark:'<path d="M6 3h12v18l-6-4-6 4z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  back:'<path d="M15 18l-6-6 6-6"/>',next:'<path d="M9 18l6-6-6-6"/>',cut:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.1 8.1 20 20M8.1 15.9 20 4"/>',
+  more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',filter:'<path d="M3 5h18l-7 8v6l-4 2v-8z"/>'});
+const QB_AREAS=[["matematica","Matemática"],["natureza","Ciências da Natureza"],["humanas","Ciências Humanas"],["linguagens","Linguagens"]];
+const QB_MAT={mat:"Matemática",fis:"Física",qui:"Química",bio:"Biologia",his:"História",geo:"Geografia",fil:"Filosofia",soc:"Sociologia",por:"Língua Portuguesa",lit:"Literatura",art:"Artes",edf:"Educação Física",tic:"Tecnologias da informação",ing:"Inglês",esp:"Espanhol"};
+const QB_AREA_MAT={matematica:["mat"],natureza:["fis","qui","bio"],humanas:["his","geo","fil","soc"],linguagens:["por","lit","art","edf","tic","ing","esp"]};
+const QB_INDICE={"fonte":"INEP — provas oficiais do ENEM, via API ENEM (enem.dev)","areas":{"linguagens":{"n":672,"topicos":[["art","Artes visuais, música, teatro e dança",68],["edf","Educação física, esporte e saúde",62],["esp","Interpretação de textos em espanhol",56],["ing","Interpretação de textos em inglês",40],["lit","Gêneros literários",35],["lit","Literatura contemporânea",12],["lit","Modernismo",7],["lit","Parnasianismo e Simbolismo",4],["lit","Quinhentismo e Barroco",3],["lit","Realismo e Naturalismo",5],["lit","Romantismo",1],["lit","Trovadorismo, Humanismo e Classicismo",2],["por","Classes de palavras",7],["por","Coesão e coerência",6],["por","Figuras de linguagem",4],["por","Gêneros e tipos textuais",80],["por","Interpretação e compreensão de textos",212],["por","Pontuação",5],["por","Semântica: sentido das palavras no contexto",9],["por","Sintaxe do período simples e composto",1],["por","Variação linguística e funções da linguagem",24],["tic","Tecnologias da informação e comunicação",29]]},"humanas":{"n":726,"topicos":[["fil","Filosofia antiga: pré-socráticos, Sócrates, Platão e Aristóteles",10],["fil","Filosofia contemporânea",6],["fil","Filosofia medieval",4],["fil","Iluminismo e Kant",4],["fil","Outros temas",17],["fil","Racionalismo e empirismo",11],["fil","Ética e filosofia política",25],["geo","Agropecuária e questão agrária",27],["geo","Biomas e domínios morfoclimáticos",14],["geo","Cartografia: coordenadas, escalas e projeções",13],["geo","Clima e fenômenos atmosféricos",20],["geo","Estrutura geológica, relevo e solos",34],["geo","Geopolítica e conflitos mundiais",15],["geo","Globalização, blocos econômicos e comércio",8],["geo","Hidrografia e recursos hídricos",34],["geo","Industrialização e fontes de energia",28],["geo","Outros temas",5],["geo","População: crescimento, estrutura e migrações",35],["geo","Questões ambientais e acordos internacionais",13],["geo","Regionalização e economia do Brasil",9],["geo","Urbanização e rede urbana",27],["his","Antiguidade: Egito, Mesopotâmia, Grécia e Roma",19],["his","Brasil Colônia: açúcar, mineração e escravidão",34],["his","Brasil Império",6],["his","Brasil República: Primeira República e Era Vargas",25],["his","Ditadura militar no Brasil",6],["his","Expansão marítima e colonização da América",6],["his","Guerra Fria e descolonização da África e da Ásia",6],["his","História da África e dos povos indígenas",22],["his","Idade Média: feudalismo, Igreja e mundo islâmico",12],["his","Iluminismo, Revoluções Inglesas e Revolução Industrial",10],["his","Imperialismo e Primeira Guerra Mundial",4],["his","Independência dos EUA e Revolução Francesa",2],["his","Independências na América e no Brasil",4],["his","Outros temas",39],["his","Redemocratização e Brasil contemporâneo",1],["his","Renascimento, Reformas e Absolutismo",3],["his","Revolução Russa, crise de 1929 e totalitarismos",3],["his","Segunda Guerra Mundial",1],["soc","Clássicos: Durkheim, Weber e Marx",4],["soc","Cultura, identidade e diversidade",61],["soc","Desigualdade e estratificação social",4],["soc","Estado, poder e democracia",35],["soc","Globalização e meios de comunicação",13],["soc","Movimentos sociais e cidadania",6],["soc","Outros temas",7],["soc","Trabalho e sociedade",34]]},"natureza":{"n":680,"topicos":[["bio","Bioquímica: água, sais, carboidratos, lipídios, proteínas e ácidos nucleicos",15],["bio","Biotecnologia e engenharia genética",1],["bio","Botânica",22],["bio","Citologia: membrana, organelas e núcleo",24],["bio","Classificação dos seres vivos",19],["bio","Divisão celular: mitose e meiose",2],["bio","Ecologia: cadeias, ciclos, populações e biomas",10],["bio","Evolução",3],["bio","Fisiologia humana",15],["bio","Genética: leis de Mendel e heranças",20],["bio","Histologia e embriologia",5],["bio","Metabolismo energético: fotossíntese e respiração",7],["bio","Outros temas",2],["bio","Problemas ambientais",1],["bio","Vírus, bactérias, protistas e fungos",35],["bio","Zoologia",9],["fis","Cinemática: movimentos uniforme, variado e circular",43],["fis","Eletrodinâmica: corrente, resistores e circuitos",35],["fis","Estática e hidrostática",14],["fis","Física moderna: noções",5],["fis","Gases ideais e termodinâmica",5],["fis","Gravitação universal e leis de Kepler",7],["fis","Impulso, quantidade de movimento e colisões",2],["fis","Leis de Newton e aplicações",14],["fis","Magnetismo e indução eletromagnética",12],["fis","Ondas, MHS e acústica",32],["fis","Outros temas",31],["fis","Termometria, calorimetria e dilatação",35],["fis","Trabalho, energia e potência",27],["fis","Óptica geométrica: espelhos, lentes e refração",20],["qui","Eletroquímica: pilhas e eletrólise",7],["qui","Equilíbrio químico, pH e pOH",8],["qui","Forças intermoleculares e polaridade",14],["qui","Funções inorgânicas: ácidos, bases, sais e óxidos",43],["qui","Isomeria",5],["qui","Matéria, substâncias, misturas e separação",10],["qui","Modelos atômicos e estrutura do átomo",9],["qui","Mol, massa molar e estequiometria",19],["qui","Outros temas",9],["qui","Química ambiental",8],["qui","Química orgânica: cadeias e funções",18],["qui","Radioatividade",3],["qui","Reações orgânicas e polímeros",8],["qui","Reações químicas e balanceamento",26],["qui","Soluções e concentrações",18],["qui","Tabela periódica e propriedades periódicas",3]]},"matematica":{"n":681,"topicos":[["mat","Análise combinatória",7],["mat","Conjuntos e conjuntos numéricos",16],["mat","Estatística: média, moda, mediana e dispersão",44],["mat","Função afim e função quadrática",6],["mat","Funções: domínio, imagem e gráficos",36],["mat","Geometria analítica: ponto, reta, circunferência e cônicas",2],["mat","Geometria espacial: prismas, pirâmides, cilindros, cones e esferas",35],["mat","Geometria plana: ângulos, semelhança, polígonos e áreas",139],["mat","Matemática financeira: juros simples e compostos",4],["mat","Outros temas",67],["mat","Probabilidade",24],["mat","Progressões aritméticas e geométricas",5],["mat","Razão, proporção, porcentagem e regra de três",296]]}}};
+const QB_TOTAL=Object.values(QB_INDICE.areas).reduce((a,x)=>a+x.n,0);
+const QB_POR_TOPICO=(()=>{const m={};Object.values(QB_INDICE.areas).forEach(a=>a.topicos.forEach(([mt,t,n])=>{m[t]=(m[t]||0)+n}));return m})();
+const QB_POR_PAGINA=30;
+function qbEstado(){
+  if(!S.qb)S.qb={dados:{},carregando:{},f:{area:"",m:"",t:"",ano:"",sit:"",busca:"",edital:false},sel:null,lim:QB_POR_PAGINA,esc:{},corte:{},doc:null};
+  return S.qb}
+async function qbDoc(){const q=qbEstado();if(q.doc)return q.doc;let d=null;try{d=await ler("questoes")}catch(e){}
+  q.doc=d&&typeof d==="object"?{r:d.r||{},s:d.s||{}}:{r:{},s:{}};return q.doc}
+function qbSalvar(){gravar("questoes",qbEstado().doc)}
+async function qbCarregar(area){const q=qbEstado();if(q.dados[area])return q.dados[area];
+  if(!q.carregando[area])q.carregando[area]=fetch("questoes/enem-"+area+".json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
+    .then(l=>{l.forEach(x=>x.area=area);q.dados[area]=l;return l}).catch(e=>{delete q.carregando[area];throw e});
+  return q.carregando[area]}
+const qbImgFalhou=img=>{const d=document.createElement("div");d.className="qb-img-falha small muted";d.textContent="Não foi possível carregar a figura desta questão. Verifique a conexão e abra a questão de novo.";img.replaceWith(d)};
+document.addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&t.closest(".qb-det"))qbImgFalhou(t)},true);
+const qbNorm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+// texto das questões vem em markdown simples: negrito, itálico, imagens e quebras de linha
+function qbMd(s){
+  let h=esc(s||"");
+  h=h.replace(/!\[[^\]]*\]\((https:\/\/enem\.dev\/[^)\s]+)\)/g,(m,u)=>`<img src="${u}" alt="Figura da questão" loading="lazy">`);
+  h=h.replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/(^|[\s(>])_([^_\n]+)_(?=[\s.,;:)!?<]|$)/g,"$1<i>$2</i>").replace(/(^|[\s(>])\*([^*\n]+)\*(?=[\s.,;:)!?<]|$)/g,"$1<i>$2</i>");
+  return h.split(/\n{2,}/).map(p=>p.trim()?`<p>${p.replace(/ {2,}\n|\n/g,"<br>")}</p>`:"").join("")}
+function qbTopicosEdital(){if(!S.edital)return null;const set=new Set();S.edital.materias.forEach(m=>m.topicos.forEach(t=>set.add(qbNorm(t.t))));return set}
+function qbLista(){
+  const q=qbEstado(),f=q.f,doc=q.doc||{r:{},s:{}};
+  const areas=f.area?[f.area]:QB_AREAS.map(a=>a[0]);let l=[];areas.forEach(a=>{if(q.dados[a])l=l.concat(q.dados[a])});
+  const ed=f.edital?qbTopicosEdital():null,b=qbNorm(f.busca).trim();
+  return l.filter(x=>(!f.m||x.m===f.m)&&(!f.t||x.t===f.t)&&(!f.ano||x.ano===+f.ano)&&(!ed||ed.has(qbNorm(x.t)))
+    &&(!f.sit||(f.sit==="nao"&&!doc.r[x.id])||(f.sit==="erradas"&&doc.r[x.id]&&!doc.r[x.id][1])||(f.sit==="certas"&&doc.r[x.id]&&doc.r[x.id][1])||(f.sit==="salvas"&&doc.s[x.id]))
+    &&(!b||qbNorm(x.c+" "+x.i+" "+x.a.map(a=>a[0]).join(" ")+" "+x.t).includes(b)||String(x.ano)===b))}
+const qbRotulo=x=>`ENEM ${x.ano}`;
+const qbDia=x=>`${x.dia}º dia`;
+function qbResumoTexto(x){const t=(x.i||x.c||"").replace(/!\[[^\]]*\]\([^)]*\)/g,"[figura]").replace(/[*_#>]/g,"").replace(/\s+/g," ").trim();return t.length>150?t.slice(0,150)+"…":t}
+async function renderQuestoes(){
+  const q=qbEstado();
+  $("#main").innerHTML=`<div class="page qb-page">${pageHead("Banco de questões",`${QB_TOTAL.toLocaleString("pt-BR")} questões oficiais que caíram no ENEM de 2009 a 2023, com o gabarito oficial do INEP.`)}
+    <div class="card qb-load row muted"><span class="spinner"></span>Carregando questões…</div></div>`;
+  await qbDoc();
+  const areas=q.f.area?[q.f.area]:QB_AREAS.map(a=>a[0]);
+  try{await Promise.all(areas.map(qbCarregar))}
+  catch(e){if(S.view!=="questoes")return;$(".qb-load").outerHTML=`<div class="card stack" style="align-items:flex-start"><b>Não foi possível carregar as questões.</b><p class="small muted">Verifique sua conexão e tente de novo.</p><button class="btn" type="button" id="qb-tentar">Tentar de novo</button></div>`;$("#qb-tentar").onclick=renderQuestoes;return}
+  if(S.view!=="questoes")return;
+  qbTela();
+}
+function qbTela(){
+  const q=qbEstado(),f=q.f,doc=q.doc,lista=qbLista();
+  const feitas=Object.keys(doc.r).length,certas=Object.values(doc.r).filter(r=>r[1]).length,salvas=Object.keys(doc.s).length;
+  const mats=(f.area?QB_AREA_MAT[f.area]:Object.keys(QB_MAT));
+  const tops=[];Object.entries(QB_INDICE.areas).forEach(([a,x])=>{if(f.area&&a!==f.area)return;x.topicos.forEach(([m,t,n])=>{if((!f.m||m===f.m)&&!tops.some(o=>o[1]===t&&o[0]===m))tops.push([m,t,n])})});
+  tops.sort((a,b)=>a[0]===b[0]?(a[1]==="Outros temas")-(b[1]==="Outros temas")||a[1].localeCompare(b[1]):QB_MAT[a[0]].localeCompare(QB_MAT[b[0]]));
+  const anos=[];for(let a=2023;a>=2009;a--)anos.push(a);
+  if(q.sel&&!lista.some(x=>x.id===q.sel))q.sel=null;
+  const filtrosAtivos=["m","t","ano","sit","busca"].filter(k=>f[k]).length+(f.edital?1:0)+(f.area?1:0);
+  $("#main").innerHTML=`<div class="page qb-page ${q.sel?"qb-com-sel":""}">
+    ${pageHead("Banco de questões",`${QB_TOTAL.toLocaleString("pt-BR")} questões oficiais que caíram no ENEM de 2009 a 2023, com o gabarito oficial do INEP.`)}
+    <div class="qb-resumo">
+      <div class="stat"><div class="eyebrow">Resolvidas</div><div class="v">${feitas}</div></div>
+      <div class="stat"><div class="eyebrow">Acertos</div><div class="v">${feitas?Math.round(certas/feitas*100)+"%":"—"}</div></div>
+      <div class="stat"><div class="eyebrow">Salvas</div><div class="v">${salvas}</div></div>
+      <div class="stat"><div class="eyebrow">Neste filtro</div><div class="v">${lista.length}</div></div>
+    </div>
+    <div class="card qb-filtros">
+      <div class="qb-busca">${ico("search")}<input id="qb-busca" type="search" placeholder="Buscar por palavra, assunto ou ano" value="${esc(f.busca)}" aria-label="Buscar questões"></div>
+      <div class="qb-chips" role="tablist" aria-label="Área">${[["","Todas"]].concat(QB_AREAS).map(([k,n])=>`<button type="button" class="qb-chip ${f.area===k?"on":""}" data-qarea="${k}">${n}</button>`).join("")}</div>
+      <div class="qb-sel">
+        <label><span>Prova</span><select id="qb-prova"><option>ENEM (INEP)</option></select></label>
+        <label><span>Matéria</span><select id="qb-m"><option value="">Todas</option>${mats.map(m=>`<option value="${m}" ${f.m===m?"selected":""}>${QB_MAT[m]}</option>`).join("")}</select></label>
+        <label class="qb-sel-t"><span>Tópico</span><select id="qb-t"><option value="">Todos os tópicos</option>${tops.map(([m,t,n])=>`<option value="${esc(t)}" ${f.t===t?"selected":""}>${f.m?"":QB_MAT[m]+" · "}${esc(t)} (${n})</option>`).join("")}</select></label>
+        <label><span>Ano</span><select id="qb-ano"><option value="">Todos</option>${anos.map(a=>`<option ${+f.ano===a?"selected":""}>${a}</option>`).join("")}</select></label>
+        <label><span>Situação</span><select id="qb-sit">${[["","Todas"],["nao","Não resolvidas"],["erradas","Que errei"],["certas","Que acertei"],["salvas","Salvas"]].map(([k,n])=>`<option value="${k}" ${f.sit===k?"selected":""}>${n}</option>`).join("")}</select></label>
+      </div>
+      <div class="row" style="justify-content:space-between;gap:10px">
+        ${S.edital?`<label class="row small" style="gap:8px;cursor:pointer"><input type="checkbox" class="tg" id="qb-ed" ${f.edital?"checked":""}><span>Só tópicos da minha prova (${esc(S.edital.nome||"edital")})</span></label>`:`<span class="small muted">Escaneie um edital para filtrar pelos tópicos da sua prova.</span>`}
+        ${filtrosAtivos?`<button class="btn ghost sm" type="button" id="qb-limpar">Limpar filtros</button>`:""}
+      </div>
+    </div>
+    <div class="qb-cols">
+      <section class="qb-lista" aria-label="Lista de questões">
+        <div class="small muted qb-cont">${lista.length?`${lista.length.toLocaleString("pt-BR")} ${lista.length===1?"questão":"questões"}`:""}</div>
+        ${lista.length?lista.slice(0,q.lim).map(x=>{const r=doc.r[x.id];return `<button type="button" class="qb-item ${q.sel===x.id?"on":""}" data-qsel="${x.id}">
+          <div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill solid">${qbRotulo(x)}</span><span class="pill">Questão ${x.n}</span><span class="pill">${QB_MAT[x.m]}</span>
+          ${r?`<span class="qb-st ${r[1]?"ok":"no"}">${r[1]?"✓ acertou":"✗ errou"}</span>`:""}${doc.s[x.id]?`<span class="qb-st">${ico("bookmark")}</span>`:""}</div>
+          <div class="small qb-top">${esc(x.t)}</div><div class="small muted qb-res">${esc(qbResumoTexto(x))}</div></button>`}).join("")
+          +(lista.length>q.lim?`<button class="btn" type="button" id="qb-mais" style="width:100%">Mostrar mais ${Math.min(QB_POR_PAGINA,lista.length-q.lim)}</button>`:"")
+          :`<div class="card stack" style="text-align:center;align-items:center;padding:32px 16px">${ico("search")}<b>Nenhuma questão com esses filtros</b><span class="small muted">Tente outro tópico, ano ou limpe os filtros.</span></div>`}
+      </section>
+      <section class="qb-det-wrap" id="qb-det" aria-live="polite">${q.sel?qbDetalhe(lista.find(x=>x.id===q.sel),lista):`<div class="card qb-vazio stack">${ico("qbank")}<b>Escolha uma questão</b><span class="small muted">Use os filtros para achar questões de um tópico e toque em uma delas para resolver. Atalhos: A–E para marcar, Enter para responder, → para a próxima.</span></div>`}</section>
+    </div>
+    <p class="hint" style="margin-top:14px">Fonte: provas oficiais do ENEM (INEP), obtidas pela API ENEM (enem.dev). As questões são as originais; matéria e tópico foram identificados automaticamente pelo conteúdo e podem ter pequenas imprecisões. Outras provas e concursos entrarão no banco quando houver fonte oficial aberta.</p>
+  </div>`;
+  qbLigar(lista);
+}
+function qbDetalhe(x,lista){
+  if(!x)return "";const q=qbEstado(),doc=q.doc,r=doc.r[x.id],sel=q.esc[x.id]!=null?q.esc[x.id]:(r?r[0]:null),resp=!!r&&q.esc[x.id]==null||q.mostrar===x.id,corte=q.corte[x.id]||{};
+  const i=lista.findIndex(y=>y.id===x.id);
+  return `<article class="card qb-det">
+    <div class="row qb-det-top"><button class="btn sm ghost qb-voltar" type="button" id="qb-voltar">${ico("back")}Lista</button>
+      <div class="row" style="gap:6px;flex-wrap:wrap;flex:1"><span class="pill solid">${qbRotulo(x)}</span><span class="pill">${qbDia(x)}</span><span class="pill">Questão ${x.n}</span>${x.lg?`<span class="pill">${x.lg==="ingles"?"Inglês":"Espanhol"}</span>`:""}</div>
+      <button class="btn sm ${doc.s[x.id]?"primary":"ghost"}" type="button" id="qb-salvar" aria-pressed="${!!doc.s[x.id]}" title="Salvar questão">${ico("bookmark")}${doc.s[x.id]?"Salva":"Salvar"}</button></div>
+    <div class="small muted">${QB_MAT[x.m]} · ${esc(x.t)}</div>
+    <div class="qb-texto">${qbMd(x.c)}</div>
+    ${x.i?`<div class="qb-enun">${qbMd(x.i)}</div>`:""}
+    <div class="qb-alts" role="radiogroup" aria-label="Alternativas">${x.a.map(([t,img],k)=>{const L="ABCDE"[k];
+      const cls=[sel===k?"on":"",resp&&k===x.r?"certa":"",resp&&sel===k&&k!==x.r?"errada":"",corte[k]?"cortada":""].join(" ");
+      return `<div class="qb-alt ${cls}"><button type="button" class="qb-alt-b" role="radio" aria-checked="${sel===k}" data-qalt="${k}" ${resp?"disabled":""}><span class="qb-l">${L}</span><span class="qb-at">${img?`<img src="${esc(img)}" alt="Alternativa ${L}" loading="lazy">`:""}${t?qbMd(t):""}</span></button>
+        ${resp?"":`<button type="button" class="btn icon ghost sm qb-cut" data-qcut="${k}" title="Riscar alternativa ${L}" aria-label="Riscar alternativa ${L}">${ico("cut")}</button>`}</div>`}).join("")}</div>
+    ${resp?`<div class="qb-resultado ${sel===x.r?"ok":"no"}">${sel===x.r?"<b>Você acertou!</b>":`<b>Resposta correta: ${"ABCDE"[x.r]}</b>${sel!=null?` · você marcou ${"ABCDE"[sel]}`:""}`} <span class="small">Gabarito oficial do INEP.</span></div>`:""}
+    <div class="row qb-acoes">
+      <button class="btn sm ghost" type="button" id="qb-ant" ${i<=0?"disabled":""}>${ico("back")}Anterior</button>
+      <div class="row" style="gap:8px;margin-left:auto">${resp?`<button class="btn sm" type="button" id="qb-refazer">Refazer</button>`:`<button class="btn primary" type="button" id="qb-resp" ${sel==null?"disabled":""}>Responder</button>`}
+      <button class="btn sm ${resp?"primary":"ghost"}" type="button" id="qb-prox" ${i<0||i>=lista.length-1?"disabled":""}>Próxima${ico("next")}</button></div>
+    </div>
+  </article>`}
+function qbAbrir(id){const q=qbEstado();q.sel=id;q.mostrar=null;qbTela();
+  if(matchMedia("(max-width:860px)").matches)scrollTo(0,0);else{const d=$("#qb-det");if(d&&d.getBoundingClientRect().top<0)d.scrollIntoView({block:"start"})}}
+function qbResponder(x){const q=qbEstado(),k=q.esc[x.id];if(k==null)return;const ok=k===x.r;
+  q.doc.r[x.id]=[k,ok?1:0,Date.now()];delete q.esc[x.id];q.mostrar=x.id;qbSalvar();
+  // conta nas questões do dia, nos desafios e nas estatísticas
+  if(S.pomoLog){const L=garantirTotais(S.pomoLog),nm=QB_MAT[x.m],h=L.dias[dataISO()]=L.dias[dataISO()]||{min:0,mat:{}};
+    L.q=L.q||{};L.q[nm]=L.q[nm]||{feitas:0,acertos:0};L.q[nm].feitas++;if(ok)L.q[nm].acertos++;h.q=(h.q||0)+1;if(ok)h.acertos=(h.acertos||0)+1;
+    gravar("pomo",L);setTimeout(()=>{verificarConquistas(true);atualizarBadgeDesafios()},50)}
+  qbTela()}
+function qbLigar(lista){
+  const q=qbEstado(),f=q.f;
+  let tb;const bi=$("#qb-busca");bi.oninput=()=>{clearTimeout(tb);tb=setTimeout(()=>{f.busca=bi.value;q.lim=QB_POR_PAGINA;const pos=bi.selectionStart;qbTela();const n=$("#qb-busca");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}},250)};
+  $$("[data-qarea]").forEach(b=>b.onclick=()=>{f.area=b.dataset.qarea;if(f.m&&f.area&&!QB_AREA_MAT[f.area].includes(f.m)){f.m="";f.t=""}q.lim=QB_POR_PAGINA;q.sel=null;renderQuestoes()});
+  $("#qb-m").onchange=e=>{f.m=e.target.value;f.t="";q.lim=QB_POR_PAGINA;if(f.m&&!f.area){const a=Object.keys(QB_AREA_MAT).find(k=>QB_AREA_MAT[k].includes(f.m));f.area=a}renderQuestoes()};
+  $("#qb-t").onchange=e=>{f.t=e.target.value;if(f.t&&!f.m){const o=Object.entries(QB_INDICE.areas).flatMap(([a,x])=>x.topicos.map(t=>[a,...t])).find(t=>t[2]===f.t);if(o&&o[2]!=="Outros temas"){f.m=o[1];f.area=o[0]}}q.lim=QB_POR_PAGINA;renderQuestoes()};
+  $("#qb-ano").onchange=e=>{f.ano=e.target.value;q.lim=QB_POR_PAGINA;qbTela()};
+  $("#qb-sit").onchange=e=>{f.sit=e.target.value;q.lim=QB_POR_PAGINA;qbTela()};
+  const ed=$("#qb-ed");if(ed)ed.onchange=()=>{f.edital=ed.checked;q.lim=QB_POR_PAGINA;qbTela()};
+  const lp=$("#qb-limpar");if(lp)lp.onclick=()=>{Object.assign(f,{area:"",m:"",t:"",ano:"",sit:"",busca:"",edital:false});q.lim=QB_POR_PAGINA;renderQuestoes()};
+  const mais=$("#qb-mais");if(mais)mais.onclick=()=>{q.lim+=QB_POR_PAGINA;const y=scrollY;qbTela();scrollTo(0,y)};
+  $$("[data-qsel]").forEach(b=>b.onclick=()=>qbAbrir(b.dataset.qsel));
+  const x=lista.find(y=>y.id===q.sel);if(!x)return;const i=lista.indexOf(x);
+  $$("[data-qalt]").forEach(b=>b.onclick=()=>{q.esc[x.id]=+b.dataset.qalt;q.mostrar=null;const y=scrollY;qbTela();scrollTo(0,y)});
+  $$("[data-qcut]").forEach(b=>b.onclick=()=>{const c=q.corte[x.id]=q.corte[x.id]||{};c[b.dataset.qcut]=!c[b.dataset.qcut];const y=scrollY;qbTela();scrollTo(0,y)});
+  const rb=$("#qb-resp");if(rb)rb.onclick=()=>{const y=scrollY;qbResponder(x);scrollTo(0,y)};
+  const rf=$("#qb-refazer");if(rf)rf.onclick=()=>{delete q.doc.r[x.id];q.esc[x.id]=null;delete q.esc[x.id];q.mostrar=null;qbSalvar();qbTela()};
+  $("#qb-salvar").onclick=()=>{if(q.doc.s[x.id])delete q.doc.s[x.id];else q.doc.s[x.id]=Date.now();qbSalvar();const y=scrollY;qbTela();scrollTo(0,y)};
+  $("#qb-voltar").onclick=()=>{q.sel=null;qbTela();const it=$(`[data-qsel="${x.id}"]`);if(it)it.scrollIntoView({block:"center"})};
+  $("#qb-ant").onclick=()=>{if(i>0)qbAbrir(lista[i-1].id)};
+  $("#qb-prox").onclick=()=>{if(i<lista.length-1){if(i+1>=q.lim)q.lim+=QB_POR_PAGINA;qbAbrir(lista[i+1].id)}};
+}
+document.addEventListener("keydown",e=>{
+  if(S.view!=="questoes"||!S.qb||!S.qb.sel||e.ctrlKey||e.metaKey||e.altKey)return;if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement&&document.activeElement.tagName))return;if(document.querySelector(".modal-bg"))return;
+  const k=e.key.toUpperCase();
+  if("ABCDE".includes(k)&&k.length===1){const b=$(`[data-qalt="${"ABCDE".indexOf(k)}"]`);if(b&&!b.disabled){e.preventDefault();b.click()}}
+  else if(e.key==="Enter"){const b=$("#qb-resp");if(b&&!b.disabled){e.preventDefault();b.click()}}
+  else if(e.key==="ArrowRight"){const b=$("#qb-prox");if(b&&!b.disabled){e.preventDefault();b.click()}}
+  else if(e.key==="ArrowLeft"){const b=$("#qb-ant");if(b&&!b.disabled){e.preventDefault();b.click()}}
+});
+
+/* ================= Mentoria com IA ================= */
+function contextoMentoria(){
+  const p=S.perfil||{},L=garantirTotais(S.pomoLog||{dias:{},sessoes:0}),hoje=dataISO();
+  const sem=[];for(let i=0;i<7;i++){const d=diasAtras(i);sem.push(`${d}: ${Math.round(minutosDia(d))} min`)}
+  const mats=Object.entries(L.tot.mat||{}).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([m,v])=>`${m} ${Math.round(v)} min`).join("; ");
+  const qd=(S.qb&&S.qb.doc&&S.qb.doc.r)||{},porTop={};
+  Object.entries(qd).forEach(([id,r])=>{let x=null;if(S.qb&&S.qb.dados)for(const a in S.qb.dados){x=S.qb.dados[a].find(y=>y.id===id);if(x)break}
+    const k=x?QB_MAT[x.m]+" — "+x.t:"(questão do banco)";const o=porTop[k]=porTop[k]||[0,0];o[0]++;if(r[1])o[1]++});
+  const ed=S.edital?S.edital.materias.map(m=>`${m.nome}: ${m.topicos.filter(t=>t.feito).length}/${m.topicos.length} tópicos`).join("; "):"nenhuma";
+  const pl=S.plano?DIAS.map(x=>`${x.n}: ${(S.plano.semana[x.k]||[]).map(b=>`${b.inicio} ${b.materia}${b.feito?" (feito)":""}`).join(", ")||"livre"}`).join(" | "):"sem plano";
+  return [`Objetivo: ${descObjetivo(p)}`,
+    `Matérias e dificuldade (1 a 5): ${(p.materias||[]).map(m=>`${m.nome} ${m.dif||"?"}`).join(", ")||"não informado"}`,
+    `Meta de hoje: ${metaHoje()} min; estudado hoje: ${Math.round(minutosDia(hoje))} min; sequência: ${sequencia()} dias; total no app: ${Math.round(L.tot.min/60)} h`,
+    `Últimos 7 dias: ${sem.join(", ")}`,`Tempo por matéria: ${mats||"sem registros"}`,
+    `Prova/edital: ${S.edital?(S.edital.nome||"prova")+" — "+ed:"nenhuma"}`,
+    `Banco de questões (feitas/acertos por tópico): ${Object.entries(porTop).map(([k,[f,c]])=>`${k}: ${c}/${f}`).join("; ")||"nenhuma resolvida"}`,
+    `Plano da semana: ${pl}`].join("\n")}
+async function renderMentoria(){
+  if(!S.sample){
+    $("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Mentoria com IA")}
+      <div class="card stack" style="align-items:center;text-align:center;padding:40px 24px">
+        <span class="logo" style="width:56px;height:56px;border-radius:14px">${ico("mentor")}</span>
+        <span class="pill">Em breve</span>
+        <h2>Esta aba receberá atualizações futuras</h2>
+        <p class="muted" style="max-width:56ch">A mentoria vai conversar com você sobre seus estudos usando seus dados do Logic Academy: horas por matéria, desempenho no banco de questões, tópicos da prova e o plano da semana. Ela indicará o que revisar, como ajustar a rotina e quais questões praticar.</p>
+        <div class="sugs" style="justify-content:center">${["Diagnóstico da semana","O que revisar hoje","Plano para a reta final","Análise dos erros","Dicas de método"].map(x=>`<span class="pill">${x}</span>`).join("")}</div>
+        <button class="btn" type="button" data-link="questoes">${ico("qbank")}Praticar no banco de questões</button>
+      </div></div>`;
+    $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));return}
+  if(!S.mentor){let d=null;try{d=await ler("mentoria")}catch(e){}S.mentor={msgs:Array.isArray(d&&d.msgs)?d.msgs:[],ocupado:false}}
+  if(S.qb&&!S.qb.doc)await qbDoc();else if(!S.qb){qbEstado();await qbDoc()}
+  if(S.view!=="mentoria")return;
+  const m=S.mentor,sug=["Como foi minha semana de estudos?","O que devo revisar hoje?","Monte um plano para os próximos 7 dias","Onde estou errando mais no banco de questões?"];
+  $("#main").innerHTML=`<div class="page mentor-page">${pageHead("Mentoria com IA","Converse sobre seus estudos. A IA vê seu plano, suas horas, os tópicos da prova e seu desempenho no banco de questões.",m.msgs.length?`<button class="btn ghost sm" type="button" id="mt-limpar">Nova conversa</button>`:"")}
+    <div class="card mentor-chat"><div class="mentor-msgs" id="mt-msgs">${m.msgs.length?m.msgs.map(x=>`<div class="mt ${x.r==="user"?"eu":"ia"}">${x.r==="user"?esc(x.t):mtFormatar(x.t)}</div>`).join(""):`<div class="mentor-vazio stack">${ico("mentor")}<b>Olá! Sou sua mentora de estudos.</b><span class="small muted">Pergunte qualquer coisa sobre sua rotina, sua prova ou suas dificuldades.</span><div class="sugs" style="justify-content:center">${sug.map(s=>`<button type="button" class="pill" data-sug-mt="${esc(s)}">${esc(s)}</button>`).join("")}</div></div>`}
+      ${m.ocupado?`<div class="mt ia" id="mt-escrevendo"><span class="spinner"></span> Pensando…</div>`:""}</div>
+      <form class="composer mentor-comp" id="mt-form"><textarea id="mt-in" rows="1" maxlength="2000" placeholder="Escreva sua pergunta…" aria-label="Mensagem para a mentoria" ${m.ocupado?"disabled":""}></textarea><button class="btn primary" type="submit" ${m.ocupado?"disabled":""}>${ico("send")}<span class="sr-mob">Enviar</span></button></form>
+    </div>
+    <p class="hint" style="margin-top:10px">A IA pode errar. Confira informações importantes, como datas e conteúdo do edital, nas fontes oficiais.</p></div>`;
+  ajustarChatMentoria();const box=$("#mt-msgs");box.scrollTop=box.scrollHeight;
+  const ta=$("#mt-in");ta.oninput=()=>{ta.style.height="auto";ta.style.height=Math.min(160,ta.scrollHeight)+"px"};
+  ta.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#mt-form").requestSubmit()}};
+  $("#mt-form").onsubmit=e=>{e.preventDefault();const t=ta.value.trim();if(t)mentorEnviar(t)};
+  $$("[data-sug-mt]").forEach(b=>b.onclick=()=>mentorEnviar(b.dataset.sugMt));
+  const lb=$("#mt-limpar");if(lb)lb.onclick=()=>{m.msgs=[];gravar("mentoria",{msgs:[]});renderMentoria()};
+  if(!m.ocupado)ta.focus({preventScroll:true});
+}
+// o chat ocupa a altura que sobra na tela (acima da barra inferior no celular)
+function ajustarChatMentoria(){const c=$(".mentor-chat");if(!c)return;const tb=$(".tabbar"),baixo=tb&&getComputedStyle(tb).display!=="none"?tb.offsetHeight+12:24;
+  c.style.height=Math.max(360,innerHeight-c.getBoundingClientRect().top-scrollY+scrollY-baixo-30)+"px"}
+addEventListener("resize",()=>{if(S.view==="mentoria")ajustarChatMentoria()});
+function mtFormatar(t){return esc(t).replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").split(/\n{2,}/).map(p=>{const l=p.split("\n");
+  if(l.every(x=>/^\s*([-*•]|\d+[.)])\s+/.test(x)))return `<ul>${l.map(x=>`<li>${x.replace(/^\s*([-*•]|\d+[.)])\s+/,"")}</li>`).join("")}</ul>`;return `<p>${l.join("<br>")}</p>`}).join("")}
+async function mentorEnviar(t){
+  const m=S.mentor;if(m.ocupado)return;m.msgs.push({r:"user",t});m.ocupado=true;renderMentoria();
+  const sistema=`Você é a mentora de estudos do Logic Academy, um site brasileiro de organização de estudos. Responda em português do Brasil, de forma direta, acolhedora e prática, em no máximo 220 palavras, com listas curtas quando ajudar. Baseie-se nos dados do estudante abaixo; quando faltar informação, diga o que ele pode registrar no site. Pode sugerir abas do site: Minha semana, Pomodoro, Cronômetro, Banco de questões, Tópicos da prova, Desafios, Estatísticas. Não invente datas de provas nem conteúdo de editais.\n\nDADOS DO ESTUDANTE (hoje é ${new Date().toLocaleDateString("pt-BR")}):\n${contextoMentoria()}`;
+  const hist=m.msgs.slice(-12).map(x=>({role:x.r==="user"?"user":"assistant",content:x.t}));while(hist.length&&hist[0].role!=="user")hist.shift();
+  hist[0]={...hist[0],content:sistema+"\n\nPERGUNTA:\n"+hist[0].content};
+  try{
+    const r=await S.sample(hist,{modelTier:"default",cache:false,onText:({text})=>{const el=$("#mt-escrevendo");if(el){el.innerHTML=mtFormatar(text);const b=$("#mt-msgs");if(b)b.scrollTop=b.scrollHeight}}});
+    m.msgs.push({r:"ia",t:(r&&r.text||"").trim()||"Não consegui responder agora. Tente de novo."});
+  }catch(e){
+    m.msgs.push({r:"ia",t:e&&e.code==="rate_limited"?"Muitas perguntas seguidas. Espere um pouco e tente de novo.":e&&e.code==="not_granted"?"A IA não foi liberada nesta visualização.":"Não consegui responder agora ("+(e&&e.code||"erro")+"). Tente de novo."+(e&&e.text?"\n\n"+e.text:"")})}
+  m.ocupado=false;m.msgs=m.msgs.slice(-40);gravar("mentoria",{msgs:m.msgs});if(S.view==="mentoria")renderMentoria();
+}
+
 /* ---- Biblioteca ---- */
 function renderBiblioteca(){
   $("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Biblioteca")}
@@ -1703,7 +2030,7 @@ function renderBiblioteca(){
 
 /* ================= Shell com barra lateral ================= */
 const NAV=[
-  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["desafios","Desafios","trophy"],["estatisticas","Estatísticas","chart"],["biblioteca","Biblioteca","book"]]],
+  ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["questoes","Banco de questões","qbank"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["desafios","Desafios","trophy"],["estatisticas","Estatísticas","chart"],["mentoria","Mentoria com IA","mentor"],["biblioteca","Biblioteca","book"]]],
   ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
   ["Comunidade",[["grupos","Grupos de estudo","users"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
   ["Conta",[["perfil","Meu perfil","user"],["aparencia","Aparência","palette"],["config","Configurações","gear"]]]];
@@ -1712,7 +2039,7 @@ function renderShell(){
   <div class="shell" id="shell">
     <div class="overlay" id="ovl"></div>
     <aside class="side" aria-label="Menu">
-      <div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div>
+      <div class="brand"><span class="logo">${LOGO}</span>Logic Academy</div>
       <div id="mini-pomo" class="mini-pomo" hidden role="button" tabindex="0"></div>
       <div id="mini-crono" class="mini-pomo" hidden role="button" tabindex="0"></div>
       <nav class="nav" id="nav">${NAV.map(([sec,items])=>`<div class="nav-sec">${sec}</div>`+items.map(([k,n,i])=>`<a data-go="${k}" ${k==="topicos"&&!S.edital?"hidden":""} href="#${k}">${ico(i)}<span>${n}</span>${k==="topicos"&&S.edital?`<span class="badge">${progEdital()}%</span>`:""}</a>`).join("")).join("")}</nav>
@@ -1723,16 +2050,17 @@ function renderShell(){
       </div>
     </aside>
     <div class="main">
-      <div class="topbar-m"><button class="btn icon ghost" id="menu-btn" type="button" aria-label="Abrir menu">${ico("menu")}</button><div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div></div>
+      <div class="topbar-m"><button class="btn icon ghost" id="menu-btn" type="button" aria-label="Abrir menu">${ico("menu")}</button><div class="brand"><span class="logo">${LOGO}</span>Logic Academy</div></div>
       <main id="main"></main>
     </div>
+    <nav class="tabbar" aria-label="Navegação rápida">${[["inicio","Início","home"],["semana","Semana","cal"],["questoes","Questões","qbank"],["desafios","Desafios","trophy"]].map(([k,n,i])=>`<a data-go="${k}" href="#${k}">${ico(i)}<span>${n}</span></a>`).join("")}<button type="button" id="tab-mais">${ico("menu")}<span>Mais</span></button></nav>
   </div>`;
   $$("[data-go]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.go)}));
   $("[data-theme-lbl]").onclick=trocarTema;
   $("#btn-sair").onclick=sair;
   $("#side-me").onclick=()=>go("perfil");
   $("#mini-pomo").onclick=()=>go("pomodoro");$("#mini-crono").onclick=()=>go("cronometro");tickCrono();
-  $("#menu-btn").onclick=()=>$("#shell").classList.add("open");
+  $("#menu-btn").onclick=()=>$("#shell").classList.add("open");$("#tab-mais").onclick=()=>$("#shell").classList.add("open");
   $("#ovl").onclick=()=>$("#shell").classList.remove("open");
   renderSideUser();renderView();tickPomo();atualizarBadgeDesafios();
 }
@@ -1745,7 +2073,7 @@ function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
 function renderView(){
   $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
-  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,questoes:renderQuestoes,mentoria:renderMentoria,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
   f();
 }
 const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;
@@ -2057,7 +2385,7 @@ function renderTopicos(){
       <details class="mat-acc" ${mi===0?"open":""}>
         <summary><div style="min-width:0"><div style="font-weight:600">${esc(m.nome)}</div><div class="small muted">${m.questoes?m.questoes+" questões · ":""}${f} de ${m.topicos.length} tópicos</div></div>
           <div class="prog"><i style="width:${m.topicos.length?f/m.topicos.length*100:0}%"></i></div><span class="mono small">${m.topicos.length?Math.round(f/m.topicos.length*100):0}%</span></summary>
-        <div class="tops">${m.topicos.map(t=>`<label class="top ${t.feito?"done":""}"><input class="chk" type="checkbox" data-top="${m.id}|${t.id}" ${t.feito?"checked":""}><span>${esc(t.t)}</span></label>`).join("")}
+        <div class="tops">${m.topicos.map(t=>`<label class="top ${t.feito?"done":""}"><input class="chk" type="checkbox" data-top="${m.id}|${t.id}" ${t.feito?"checked":""}><span>${esc(t.t)}</span>${QB_POR_TOPICO[t.t]?`<button type="button" class="btn sm ghost qb-link" data-qtop="${esc(t.t)}" title="Praticar questões deste tópico">${ico("qbank")}${QB_POR_TOPICO[t.t]}</button>`:""}</label>`).join("")}
           <form class="row" data-addtop="${m.id}" style="padding-top:8px;flex-wrap:nowrap"><input type="text" placeholder="Adicionar tópico" maxlength="200" aria-label="Novo tópico em ${esc(m.nome)}"><button class="btn sm" type="submit">${ico("plus")}</button></form>
         </div>
       </details>`}).join("")}</div>
@@ -2065,6 +2393,8 @@ function renderTopicos(){
   </div>`;
   $$("[data-top]").forEach(c=>c.addEventListener("change",()=>{const [mi,ti]=c.dataset.top.split("|");const m=ed.materias.find(x=>x.id===mi),t=m&&m.topicos.find(x=>x.id===ti);if(!t)return;t.feito=c.checked;t.feitoEm=c.checked?Date.now():0;setTimeout(atualizarBadgeDesafios,50);gravar("edital",ed);renderTopicosKeepOpen()}));
   $$("[data-addtop]").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();const i=f.querySelector("input"),v=i.value.trim();if(!v)return;ed.materias.find(x=>x.id===f.dataset.addtop).topicos.push({id:uid(),t:v,feito:false});gravar("edital",ed);renderTopicosKeepOpen()}));
+  $$("[data-qtop]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const q=qbEstado();Object.assign(q.f,{area:"",m:"",t:b.dataset.qtop,ano:"",sit:"",busca:"",edital:false});
+    const o=Object.entries(QB_INDICE.areas).flatMap(([a,x])=>x.topicos.map(t=>[a,...t])).find(t=>t[2]===b.dataset.qtop);if(o){q.f.area=o[0];q.f.m=o[1]}q.sel=null;q.lim=QB_POR_PAGINA;go("questoes")});
   $("#tp-tri").onclick=()=>{S.triProva=null;go("triagemProva")};
   let conf=false;$("#tp-del").onclick=()=>{if(!conf){conf=true;$("#tp-del").textContent="Clique de novo para confirmar";$("#tp-del-c").textContent="Os tópicos e o progresso desta prova serão apagados.";return}
     S.edital=null;if(S.mode==="nuvem")meuDoc("edital").delete().catch(()=>{});else try{localStorage.removeItem("mapa_edital")}catch(e){}

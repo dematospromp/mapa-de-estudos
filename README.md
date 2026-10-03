@@ -1,6 +1,6 @@
-# Mapa de Estudos
+# Logic Academy
 
-Organizador de estudos: triagem do aluno (colégio, vestibular, concurso, faculdade), plano semanal, pomodoro, catálogo de provas de todo o Brasil e leitura de editais em PDF.
+Organizador de estudos: triagem do aluno (colégio, vestibular, concurso, faculdade), plano semanal, pomodoro, banco de questões oficiais, catálogo de provas de todo o Brasil e leitura de editais em PDF.
 
 Site: https://dematospromp.github.io/mapa-de-estudos/
 
@@ -8,6 +8,7 @@ Site: https://dematospromp.github.io/mapa-de-estudos/
 - `index.html`: o site.
 - `firebase-config.js`: liga o login com Google/Apple e a nuvem. Enquanto estiver `null`, o site funciona como visitante.
 - `firestore.rules`: regras de segurança para colar no Firestore.
+- `questoes/`: banco de questões (provas oficiais do ENEM 2009–2023, INEP, obtidas pela API ENEM em enem.dev), um arquivo por área, com matéria e tópico identificados automaticamente.
 
 ## Ativar as contas por e-mail (gratuito)
 1. Crie um projeto em https://console.firebase.google.com (plano Spark, gratuito).
