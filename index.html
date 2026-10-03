@@ -471,6 +471,46 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
   .toasts{bottom:calc(76px + env(safe-area-inset-bottom,0px))!important}
   .sr-mob{display:none}
 }
+
+/* ===== Matérias: dificuldade e prioridade (cartões que se ajustam a fontes grandes) ===== */
+.mat.mat2{display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.mat.mat2.fora{opacity:.55}
+.mat2-h{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.mat2-h .nm{font-weight:600;min-width:0;overflow-wrap:break-word;hyphens:auto}
+.mat2 .x{flex:none;width:2.2rem;height:2.2rem;border-radius:50%}
+.mat2-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:10px 16px}
+.mat2-c{display:flex;flex-direction:column;gap:6px;min-width:0}
+.mat2-l{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.mat2-l b{color:var(--fg);font-weight:600}
+.escala{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-sm);padding:3px}
+.escala.e3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.escala button{min-height:2.5rem;min-width:0;border:0;background:transparent;border-radius:calc(var(--r-sm) - 2px);font:inherit;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;padding:0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.escala button:hover{color:var(--fg)}
+.escala button.on{background:var(--accent);color:var(--accent-fg);box-shadow:var(--shadow)}
+/* fontes grandes: componentes segmentados quebram linha em vez de vazar */
+.seg{flex-wrap:wrap;max-width:100%}
+.seg button{min-height:2rem}
+
+/* fontes grandes: cartões de números se reorganizam em vez de espremer */
+.stat-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.stat-meta>div:last-child{min-width:0;flex:1 1 6rem}
+.stat .v{overflow-wrap:anywhere}
+@media (max-width:640px){.stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,9.5rem),1fr))}}
+@media (max-width:860px){.tabbar a,.tabbar button{font-size:clamp(10px,.68rem,12.5px)}.tabbar .i{width:22px;height:22px;flex:none}}
+
+.qb-niveis{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qb-niveis>span{font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:.72rem;margin-right:2px}
+.qb-chip.facil.on{background:#15803d;border-color:#15803d;color:#fff}
+.qb-chip.medio.on{background:#b45309;border-color:#b45309;color:#fff}
+.qb-chip.dificil.on{background:#b91c1c;border-color:#b91c1c;color:#fff}
+.qb-nv{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:999px;border:1px solid}
+.qb-nv::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.qb-nv.facil{color:#15803d;border-color:color-mix(in srgb,#15803d 40%,transparent);background:color-mix(in srgb,#15803d 10%,transparent)}
+.qb-nv.medio{color:#b45309;border-color:color-mix(in srgb,#b45309 40%,transparent);background:color-mix(in srgb,#b45309 10%,transparent)}
+.qb-nv.dificil{color:#b91c1c;border-color:color-mix(in srgb,#b91c1c 40%,transparent);background:color-mix(in srgb,#b91c1c 10%,transparent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .qb-nv.facil{color:#4ade80}:root:not([data-theme="light"]) .qb-nv.medio{color:#fbbf24}:root:not([data-theme="light"]) .qb-nv.dificil{color:#f87171}}
+:root[data-theme="dark"] .qb-nv.facil{color:#4ade80}:root[data-theme="dark"] .qb-nv.medio{color:#fbbf24}:root[data-theme="dark"] .qb-nv.dificil{color:#f87171}
+@media (max-width:640px){.qb-niveis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.qb-niveis>span{grid-column:1/-1}.qb-niveis .qb-chip{padding:7px 4px;text-align:center;overflow:hidden;text-overflow:ellipsis}}
 </style>
 
 </head><body><div id="root"></div>
@@ -795,6 +835,7 @@ const I={
   file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',plus:'<path d="M12 5v14M5 12h14"/>',
   book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M19 19v2H6"/>'};
 const ico=(n,cls)=>`<svg class="i ${cls||""}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+const DIF_NOMES=["Muito fácil","Fácil","Média","Difícil","Muito difícil"],DOM_NOMES=["Não sei nada","Sei pouco","Razoável","Sei bem","Domino"];
 const LOGO=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5v14h10"/><path d="M12 5h5v5"/></svg>`;
 
 /* ================= Estado ================= */
@@ -844,7 +885,7 @@ async function iniciarFirebase(){
   const cfg=window.MAPA_FIREBASE_CONFIG;if(!cfg||!cfg.apiKey)return null;
   const b="https://www.gstatic.com/firebasejs/10.12.2/";
   await carregarScript(b+"firebase-app-compat.js");await Promise.all([carregarScript(b+"firebase-auth-compat.js"),carregarScript(b+"firebase-firestore-compat.js")]);
-  firebase.initializeApp(cfg);const auth=firebase.auth();
+  firebase.initializeApp(cfg);const auth=firebase.auth();auth.languageCode="pt-BR"; // e-mails do Firebase (redefinir senha) em português
   try{await auth.getRedirectResult()}catch(e){S.erroLogin=msgErroAuth(e)}
   return {auth,db:firebase.firestore(),cfg};
 }
@@ -876,8 +917,21 @@ function ligarLoginEmail(){
     try{if(S.authTab==="criar"){S.nomeCadastro=nm;const r=await FB.auth.createUserWithEmailAndPassword(email,senha);try{await r.user.updateProfile({displayName:nm})}catch(_){}}
       else await FB.auth.signInWithEmailAndPassword(email,senha)}
     catch(err){msg(msgErroEmail(err));$("#au-ok").disabled=false}});
-  const esq=$("#au-esqueci");if(esq)esq.onclick=async()=>{const email=$("#au-email").value.trim();if(!email){msg("Digite seu e-mail acima e toque de novo em “Esqueci minha senha”.");return}
-    try{await FB.auth.sendPasswordResetEmail(email);$("#au-msg").className="small";$("#au-msg").textContent="Enviamos um link para redefinir a senha. Confira seu e-mail (e a caixa de spam)."}catch(err){msg(msgErroEmail(err))}};
+  const esq=$("#au-esqueci");if(esq)esq.onclick=()=>enviarRedefinicao($("#au-email").value.trim(),esq,$("#au-msg"));
+}
+// Redefinir senha: o Firebase não revela se o e-mail tem conta, então a mensagem é neutra e explica onde procurar
+let redefEspera=0;
+async function enviarRedefinicao(email,btn,out){
+  const msg=(t,err)=>{if(out){out.className="small "+(err?"err":"");out.innerHTML=t}else toast(t.replace(/<[^>]+>/g," "))};
+  if(!email){msg("Digite seu e-mail acima e toque de novo em “Esqueci minha senha”.",1);return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){msg("Este e-mail não parece válido. Confira se digitou certo.",1);return}
+  if(Date.now()<redefEspera){msg(`Aguarde ${Math.ceil((redefEspera-Date.now())/1000)} s para pedir outro e-mail.`,1);return}
+  if(btn)btn.disabled=true;
+  try{await FB.auth.sendPasswordResetEmail(email);redefEspera=Date.now()+60000;
+    msg(`<b>Pedido enviado para ${esc(email)}.</b> Se existir uma conta com este e-mail, o link chega em alguns minutos.<ul style="margin:6px 0 0;padding-left:18px"><li>Procure também em <b>Spam</b> e em <b>Promoções</b>.</li><li>O remetente é <b>noreply@${esc((FB.cfg&&FB.cfg.authDomain)||"firebaseapp.com")}</b>.</li><li>Confira se é o mesmo e-mail que você usou para criar a conta. Se você entrou com o Google, use “Continuar com Google”.</li></ul>`);
+    if(btn){let n=60;const tx=btn.textContent;const iv=setInterval(()=>{n--;btn.textContent=n>0?`Reenviar em ${n} s`:tx;if(n<=0){clearInterval(iv);btn.disabled=false}},1000);btn.textContent=`Reenviar em ${n} s`}}
+  catch(err){if(btn)btn.disabled=false;const c=err&&err.code||"";
+    msg(c==="auth/too-many-requests"?"Muitos pedidos seguidos. Espere alguns minutos e tente de novo.":c==="auth/user-disabled"?"Esta conta foi desativada.":c==="auth/missing-email"?"Digite seu e-mail.":msgErroEmail(err),1)}
 }
 async function iniciarCaps(){
   if(STANDALONE){
@@ -1003,15 +1057,18 @@ function renderWizard(){
         <div class="row" style="flex-wrap:nowrap"><input type="text" id="q-mat" placeholder="Ex.: Cálculo II, Anatomia, Matemática…" maxlength="50"><button class="btn" id="q-add" type="button">${ico("plus")}Adicionar</button></div>
         <span class="hint">Digite qualquer matéria e aperte Enter, ou toque nas sugestões abaixo.</span></div>
       ${sg.length?`<div class="sugs">${sg.map(s=>`<button class="sug" type="button" data-sug="${esc(s)}">+ ${esc(s)}</button>`).join("")}</div>`:""}
-      ${d.materias.length?`<div><div class="row eyebrow" style="justify-content:space-between;margin-bottom:6px"><span>Matéria</span><span>Dificuldade · Prioridade</span></div>
+      ${d.materias.length?`<div class="stack sm"><div class="eyebrow">Suas matérias (${d.materias.length})</div>
         ${d.materias.map(m=>`
-        <div class="mat" data-id="${m.id}">
-          <span class="nm">${esc(m.nome)}</span>
-          <span class="seg" role="group" aria-label="Dificuldade em ${esc(m.nome)}">${[1,2,3,4,5].map(n=>`<button type="button" data-dif="${n}" class="${m.dif===n?"on":""}" aria-pressed="${m.dif===n}">${n}</button>`).join("")}</span>
-          <span class="seg" role="group" aria-label="Prioridade de ${esc(m.nome)}">${[["baixa","Baixa"],["media","Média"],["alta","Alta"]].map(([v,n])=>`<button type="button" data-prio="${v}" class="${m.prio===v?"on":""}" aria-pressed="${m.prio===v}">${n}</button>`).join("")}</span>
-          <button class="x" type="button" data-del="1" aria-label="Remover ${esc(m.nome)}">✕</button>
+        <div class="mat mat2" data-id="${m.id}">
+          <div class="mat2-h"><span class="nm">${esc(m.nome)}</span><button class="x" type="button" data-del="1" aria-label="Remover ${esc(m.nome)}">✕</button></div>
+          <div class="mat2-g">
+            <div class="mat2-c"><div class="mat2-l"><span>Dificuldade</span><b>${DIF_NOMES[m.dif-1]||""}</b></div>
+              <div class="escala" role="group" aria-label="Dificuldade em ${esc(m.nome)}">${[1,2,3,4,5].map(n=>`<button type="button" data-dif="${n}" class="${m.dif===n?"on":""}" aria-pressed="${m.dif===n}" title="${DIF_NOMES[n-1]}">${n}</button>`).join("")}</div></div>
+            <div class="mat2-c"><div class="mat2-l"><span>Prioridade</span><b>${{baixa:"Baixa",media:"Média",alta:"Alta"}[m.prio]||""}</b></div>
+              <div class="escala e3" role="group" aria-label="Prioridade de ${esc(m.nome)}">${[["baixa","Baixa"],["media","Média"],["alta","Alta"]].map(([v,n])=>`<button type="button" data-prio="${v}" class="${m.prio===v?"on":""}" aria-pressed="${m.prio===v}">${n}</button>`).join("")}</div></div>
+          </div>
         </div>`).join("")}
-        <p class="hint" style="margin-top:8px">Dificuldade: 1 = muito fácil, 5 = muito difícil. Prioridade: o peso da matéria no seu objetivo.</p></div>`
+        <p class="hint">Dificuldade: 1 = muito fácil, 5 = muito difícil. Prioridade: o peso da matéria no seu objetivo.</p></div>`
       :`<div class="empty-state">Nenhuma matéria ainda. Adicione pelo menos uma para continuar.</div>`}`;
   }else if(st===2){
     const tot=DIAS.reduce((a,x)=>a+(+d.horas[x.k]||0),0);
@@ -1794,12 +1851,16 @@ Object.assign(I,{
 const QB_AREAS=[["matematica","Matemática"],["natureza","Ciências da Natureza"],["humanas","Ciências Humanas"],["linguagens","Linguagens"]];
 const QB_MAT={mat:"Matemática",fis:"Física",qui:"Química",bio:"Biologia",his:"História",geo:"Geografia",fil:"Filosofia",soc:"Sociologia",por:"Língua Portuguesa",lit:"Literatura",art:"Artes",edf:"Educação Física",tic:"Tecnologias da informação",ing:"Inglês",esp:"Espanhol"};
 const QB_AREA_MAT={matematica:["mat"],natureza:["fis","qui","bio"],humanas:["his","geo","fil","soc"],linguagens:["por","lit","art","edf","tic","ing","esp"]};
-const QB_INDICE={"fonte":"INEP — provas oficiais do ENEM, via API ENEM (enem.dev)","areas":{"linguagens":{"n":672,"topicos":[["art","Artes visuais, música, teatro e dança",68],["edf","Educação física, esporte e saúde",62],["esp","Interpretação de textos em espanhol",56],["ing","Interpretação de textos em inglês",40],["lit","Gêneros literários",35],["lit","Literatura contemporânea",12],["lit","Modernismo",7],["lit","Parnasianismo e Simbolismo",4],["lit","Quinhentismo e Barroco",3],["lit","Realismo e Naturalismo",5],["lit","Romantismo",1],["lit","Trovadorismo, Humanismo e Classicismo",2],["por","Classes de palavras",7],["por","Coesão e coerência",6],["por","Figuras de linguagem",4],["por","Gêneros e tipos textuais",80],["por","Interpretação e compreensão de textos",212],["por","Pontuação",5],["por","Semântica: sentido das palavras no contexto",9],["por","Sintaxe do período simples e composto",1],["por","Variação linguística e funções da linguagem",24],["tic","Tecnologias da informação e comunicação",29]]},"humanas":{"n":726,"topicos":[["fil","Filosofia antiga: pré-socráticos, Sócrates, Platão e Aristóteles",10],["fil","Filosofia contemporânea",6],["fil","Filosofia medieval",4],["fil","Iluminismo e Kant",4],["fil","Outros temas",17],["fil","Racionalismo e empirismo",11],["fil","Ética e filosofia política",25],["geo","Agropecuária e questão agrária",27],["geo","Biomas e domínios morfoclimáticos",14],["geo","Cartografia: coordenadas, escalas e projeções",13],["geo","Clima e fenômenos atmosféricos",20],["geo","Estrutura geológica, relevo e solos",34],["geo","Geopolítica e conflitos mundiais",15],["geo","Globalização, blocos econômicos e comércio",8],["geo","Hidrografia e recursos hídricos",34],["geo","Industrialização e fontes de energia",28],["geo","Outros temas",5],["geo","População: crescimento, estrutura e migrações",35],["geo","Questões ambientais e acordos internacionais",13],["geo","Regionalização e economia do Brasil",9],["geo","Urbanização e rede urbana",27],["his","Antiguidade: Egito, Mesopotâmia, Grécia e Roma",19],["his","Brasil Colônia: açúcar, mineração e escravidão",34],["his","Brasil Império",6],["his","Brasil República: Primeira República e Era Vargas",25],["his","Ditadura militar no Brasil",6],["his","Expansão marítima e colonização da América",6],["his","Guerra Fria e descolonização da África e da Ásia",6],["his","História da África e dos povos indígenas",22],["his","Idade Média: feudalismo, Igreja e mundo islâmico",12],["his","Iluminismo, Revoluções Inglesas e Revolução Industrial",10],["his","Imperialismo e Primeira Guerra Mundial",4],["his","Independência dos EUA e Revolução Francesa",2],["his","Independências na América e no Brasil",4],["his","Outros temas",39],["his","Redemocratização e Brasil contemporâneo",1],["his","Renascimento, Reformas e Absolutismo",3],["his","Revolução Russa, crise de 1929 e totalitarismos",3],["his","Segunda Guerra Mundial",1],["soc","Clássicos: Durkheim, Weber e Marx",4],["soc","Cultura, identidade e diversidade",61],["soc","Desigualdade e estratificação social",4],["soc","Estado, poder e democracia",35],["soc","Globalização e meios de comunicação",13],["soc","Movimentos sociais e cidadania",6],["soc","Outros temas",7],["soc","Trabalho e sociedade",34]]},"natureza":{"n":680,"topicos":[["bio","Bioquímica: água, sais, carboidratos, lipídios, proteínas e ácidos nucleicos",15],["bio","Biotecnologia e engenharia genética",1],["bio","Botânica",22],["bio","Citologia: membrana, organelas e núcleo",24],["bio","Classificação dos seres vivos",19],["bio","Divisão celular: mitose e meiose",2],["bio","Ecologia: cadeias, ciclos, populações e biomas",10],["bio","Evolução",3],["bio","Fisiologia humana",15],["bio","Genética: leis de Mendel e heranças",20],["bio","Histologia e embriologia",5],["bio","Metabolismo energético: fotossíntese e respiração",7],["bio","Outros temas",2],["bio","Problemas ambientais",1],["bio","Vírus, bactérias, protistas e fungos",35],["bio","Zoologia",9],["fis","Cinemática: movimentos uniforme, variado e circular",43],["fis","Eletrodinâmica: corrente, resistores e circuitos",35],["fis","Estática e hidrostática",14],["fis","Física moderna: noções",5],["fis","Gases ideais e termodinâmica",5],["fis","Gravitação universal e leis de Kepler",7],["fis","Impulso, quantidade de movimento e colisões",2],["fis","Leis de Newton e aplicações",14],["fis","Magnetismo e indução eletromagnética",12],["fis","Ondas, MHS e acústica",32],["fis","Outros temas",31],["fis","Termometria, calorimetria e dilatação",35],["fis","Trabalho, energia e potência",27],["fis","Óptica geométrica: espelhos, lentes e refração",20],["qui","Eletroquímica: pilhas e eletrólise",7],["qui","Equilíbrio químico, pH e pOH",8],["qui","Forças intermoleculares e polaridade",14],["qui","Funções inorgânicas: ácidos, bases, sais e óxidos",43],["qui","Isomeria",5],["qui","Matéria, substâncias, misturas e separação",10],["qui","Modelos atômicos e estrutura do átomo",9],["qui","Mol, massa molar e estequiometria",19],["qui","Outros temas",9],["qui","Química ambiental",8],["qui","Química orgânica: cadeias e funções",18],["qui","Radioatividade",3],["qui","Reações orgânicas e polímeros",8],["qui","Reações químicas e balanceamento",26],["qui","Soluções e concentrações",18],["qui","Tabela periódica e propriedades periódicas",3]]},"matematica":{"n":681,"topicos":[["mat","Análise combinatória",7],["mat","Conjuntos e conjuntos numéricos",16],["mat","Estatística: média, moda, mediana e dispersão",44],["mat","Função afim e função quadrática",6],["mat","Funções: domínio, imagem e gráficos",36],["mat","Geometria analítica: ponto, reta, circunferência e cônicas",2],["mat","Geometria espacial: prismas, pirâmides, cilindros, cones e esferas",35],["mat","Geometria plana: ângulos, semelhança, polígonos e áreas",139],["mat","Matemática financeira: juros simples e compostos",4],["mat","Outros temas",67],["mat","Probabilidade",24],["mat","Progressões aritméticas e geométricas",5],["mat","Razão, proporção, porcentagem e regra de três",296]]}}};
+const QB_INDICE={"fonte":"INEP — provas oficiais do ENEM, via API ENEM (enem.dev); nível pela TRI (microdados do INEP)","areas":{"linguagens":{"n":718,"topicos":[["art","Artes visuais, música, teatro e dança",73],["edf","Educação física, esporte e saúde",67],["esp","Interpretação de textos em espanhol",61],["ing","Interpretação de textos em inglês",40],["lit","Gêneros literários",35],["lit","Literatura contemporânea",12],["lit","Modernismo",7],["lit","Parnasianismo e Simbolismo",4],["lit","Pré-Modernismo",1],["lit","Quinhentismo e Barroco",3],["lit","Realismo e Naturalismo",6],["lit","Romantismo",1],["lit","Trovadorismo, Humanismo e Classicismo",2],["por","Classes de palavras",7],["por","Coesão e coerência",7],["por","Figuras de linguagem",4],["por","Gêneros e tipos textuais",82],["por","Interpretação e compreensão de textos",231],["por","Pontuação",5],["por","Semântica: sentido das palavras no contexto",9],["por","Sintaxe do período simples e composto",1],["por","Variação linguística e funções da linguagem",26],["tic","Tecnologias da informação e comunicação",34]]},"humanas":{"n":680,"topicos":[["fil","Filosofia antiga: pré-socráticos, Sócrates, Platão e Aristóteles",10],["fil","Filosofia contemporânea",6],["fil","Filosofia medieval",4],["fil","Iluminismo e Kant",4],["fil","Outros temas",13],["fil","Racionalismo e empirismo",11],["fil","Ética e filosofia política",25],["geo","Agropecuária e questão agrária",26],["geo","Biomas e domínios morfoclimáticos",14],["geo","Cartografia: coordenadas, escalas e projeções",13],["geo","Clima e fenômenos atmosféricos",20],["geo","Estrutura geológica, relevo e solos",34],["geo","Geopolítica e conflitos mundiais",15],["geo","Globalização, blocos econômicos e comércio",8],["geo","Hidrografia e recursos hídricos",31],["geo","Industrialização e fontes de energia",27],["geo","Outros temas",5],["geo","População: crescimento, estrutura e migrações",31],["geo","Questões ambientais e acordos internacionais",13],["geo","Regionalização e economia do Brasil",7],["geo","Urbanização e rede urbana",27],["his","Antiguidade: Egito, Mesopotâmia, Grécia e Roma",18],["his","Brasil Colônia: açúcar, mineração e escravidão",32],["his","Brasil Império",6],["his","Brasil República: Primeira República e Era Vargas",24],["his","Ditadura militar no Brasil",6],["his","Expansão marítima e colonização da América",6],["his","Guerra Fria e descolonização da África e da Ásia",6],["his","História da África e dos povos indígenas",22],["his","Idade Média: feudalismo, Igreja e mundo islâmico",12],["his","Iluminismo, Revoluções Inglesas e Revolução Industrial",8],["his","Imperialismo e Primeira Guerra Mundial",4],["his","Independência dos EUA e Revolução Francesa",2],["his","Independências na América e no Brasil",4],["his","Outros temas",32],["his","Redemocratização e Brasil contemporâneo",1],["his","Renascimento, Reformas e Absolutismo",1],["his","Revolução Russa, crise de 1929 e totalitarismos",3],["his","Segunda Guerra Mundial",1],["soc","Clássicos: Durkheim, Weber e Marx",4],["soc","Cultura, identidade e diversidade",51],["soc","Desigualdade e estratificação social",4],["soc","Estado, poder e democracia",33],["soc","Globalização e meios de comunicação",10],["soc","Movimentos sociais e cidadania",6],["soc","Outros temas",7],["soc","Trabalho e sociedade",33]]},"natureza":{"n":680,"topicos":[["bio","Bioquímica: água, sais, carboidratos, lipídios, proteínas e ácidos nucleicos",15],["bio","Biotecnologia e engenharia genética",1],["bio","Botânica",22],["bio","Citologia: membrana, organelas e núcleo",24],["bio","Classificação dos seres vivos",19],["bio","Divisão celular: mitose e meiose",2],["bio","Ecologia: cadeias, ciclos, populações e biomas",10],["bio","Evolução",3],["bio","Fisiologia humana",15],["bio","Genética: leis de Mendel e heranças",20],["bio","Histologia e embriologia",5],["bio","Metabolismo energético: fotossíntese e respiração",7],["bio","Outros temas",2],["bio","Problemas ambientais",1],["bio","Vírus, bactérias, protistas e fungos",35],["bio","Zoologia",9],["fis","Cinemática: movimentos uniforme, variado e circular",43],["fis","Eletrodinâmica: corrente, resistores e circuitos",35],["fis","Estática e hidrostática",14],["fis","Física moderna: noções",5],["fis","Gases ideais e termodinâmica",5],["fis","Gravitação universal e leis de Kepler",7],["fis","Impulso, quantidade de movimento e colisões",2],["fis","Leis de Newton e aplicações",14],["fis","Magnetismo e indução eletromagnética",12],["fis","Ondas, MHS e acústica",32],["fis","Outros temas",31],["fis","Termometria, calorimetria e dilatação",35],["fis","Trabalho, energia e potência",27],["fis","Óptica geométrica: espelhos, lentes e refração",20],["qui","Eletroquímica: pilhas e eletrólise",7],["qui","Equilíbrio químico, pH e pOH",8],["qui","Forças intermoleculares e polaridade",14],["qui","Funções inorgânicas: ácidos, bases, sais e óxidos",43],["qui","Isomeria",5],["qui","Matéria, substâncias, misturas e separação",10],["qui","Modelos atômicos e estrutura do átomo",9],["qui","Mol, massa molar e estequiometria",19],["qui","Outros temas",9],["qui","Química ambiental",8],["qui","Química orgânica: cadeias e funções",18],["qui","Radioatividade",3],["qui","Reações orgânicas e polímeros",8],["qui","Reações químicas e balanceamento",26],["qui","Soluções e concentrações",18],["qui","Tabela periódica e propriedades periódicas",3]]},"matematica":{"n":681,"topicos":[["mat","Análise combinatória",7],["mat","Conjuntos e conjuntos numéricos",16],["mat","Estatística: média, moda, mediana e dispersão",44],["mat","Função afim e função quadrática",6],["mat","Funções: domínio, imagem e gráficos",36],["mat","Geometria analítica: ponto, reta, circunferência e cônicas",2],["mat","Geometria espacial: prismas, pirâmides, cilindros, cones e esferas",35],["mat","Geometria plana: ângulos, semelhança, polígonos e áreas",139],["mat","Matemática financeira: juros simples e compostos",4],["mat","Outros temas",67],["mat","Probabilidade",24],["mat","Progressões aritméticas e geométricas",5],["mat","Razão, proporção, porcentagem e regra de três",296]]}}};
 const QB_TOTAL=Object.values(QB_INDICE.areas).reduce((a,x)=>a+x.n,0);
 const QB_POR_TOPICO=(()=>{const m={};Object.values(QB_INDICE.areas).forEach(a=>a.topicos.forEach(([mt,t,n])=>{m[t]=(m[t]||0)+n}));return m})();
 const QB_POR_PAGINA=30;
+// nível pela dificuldade oficial da TRI (parâmetro b dos microdados do INEP), em terços de cada área
+const QB_NIVEIS=[[1,"Fácil","facil"],[2,"Médio","medio"],[3,"Difícil","dificil"]];
+const qbNivel=x=>QB_NIVEIS.find(n=>n[0]===x.d);
+const qbSeloNivel=x=>{const n=qbNivel(x);return n?`<span class="qb-nv ${n[2]}">${n[1]}</span>`:""};
 function qbEstado(){
-  if(!S.qb)S.qb={dados:{},carregando:{},f:{area:"",m:"",t:"",ano:"",sit:"",busca:"",edital:false},sel:null,lim:QB_POR_PAGINA,esc:{},corte:{},doc:null};
+  if(!S.qb)S.qb={dados:{},carregando:{},f:{area:"",m:"",t:"",ano:"",sit:"",busca:"",edital:false,nivel:0},sel:null,lim:QB_POR_PAGINA,esc:{},corte:{},doc:null};
   return S.qb}
 async function qbDoc(){const q=qbEstado();if(q.doc)return q.doc;let d=null;try{d=await ler("questoes")}catch(e){}
   q.doc=d&&typeof d==="object"?{r:d.r||{},s:d.s||{}}:{r:{},s:{}};return q.doc}
@@ -1822,7 +1883,7 @@ function qbLista(){
   const q=qbEstado(),f=q.f,doc=q.doc||{r:{},s:{}};
   const areas=f.area?[f.area]:QB_AREAS.map(a=>a[0]);let l=[];areas.forEach(a=>{if(q.dados[a])l=l.concat(q.dados[a])});
   const ed=f.edital?qbTopicosEdital():null,b=qbNorm(f.busca).trim();
-  return l.filter(x=>(!f.m||x.m===f.m)&&(!f.t||x.t===f.t)&&(!f.ano||x.ano===+f.ano)&&(!ed||ed.has(qbNorm(x.t)))
+  return l.filter(x=>(!f.nivel||x.d===f.nivel)&&(!f.m||x.m===f.m)&&(!f.t||x.t===f.t)&&(!f.ano||x.ano===+f.ano)&&(!ed||ed.has(qbNorm(x.t)))
     &&(!f.sit||(f.sit==="nao"&&!doc.r[x.id])||(f.sit==="erradas"&&doc.r[x.id]&&!doc.r[x.id][1])||(f.sit==="certas"&&doc.r[x.id]&&doc.r[x.id][1])||(f.sit==="salvas"&&doc.s[x.id]))
     &&(!b||qbNorm(x.c+" "+x.i+" "+x.a.map(a=>a[0]).join(" ")+" "+x.t).includes(b)||String(x.ano)===b))}
 const qbRotulo=x=>`ENEM ${x.ano}`;
@@ -1847,7 +1908,7 @@ function qbTela(){
   tops.sort((a,b)=>a[0]===b[0]?(a[1]==="Outros temas")-(b[1]==="Outros temas")||a[1].localeCompare(b[1]):QB_MAT[a[0]].localeCompare(QB_MAT[b[0]]));
   const anos=[];for(let a=2023;a>=2009;a--)anos.push(a);
   if(q.sel&&!lista.some(x=>x.id===q.sel))q.sel=null;
-  const filtrosAtivos=["m","t","ano","sit","busca"].filter(k=>f[k]).length+(f.edital?1:0)+(f.area?1:0);
+  const filtrosAtivos=["m","t","ano","sit","busca","nivel"].filter(k=>f[k]).length+(f.edital?1:0)+(f.area?1:0);
   $("#main").innerHTML=`<div class="page qb-page ${q.sel?"qb-com-sel":""}">
     ${pageHead("Banco de questões",`${QB_TOTAL.toLocaleString("pt-BR")} questões oficiais que caíram no ENEM de 2009 a 2023, com o gabarito oficial do INEP.`)}
     <div class="qb-resumo">
@@ -1859,6 +1920,7 @@ function qbTela(){
     <div class="card qb-filtros">
       <div class="qb-busca">${ico("search")}<input id="qb-busca" type="search" placeholder="Buscar por palavra, assunto ou ano" value="${esc(f.busca)}" aria-label="Buscar questões"></div>
       <div class="qb-chips" role="tablist" aria-label="Área">${[["","Todas"]].concat(QB_AREAS).map(([k,n])=>`<button type="button" class="qb-chip ${f.area===k?"on":""}" data-qarea="${k}">${n}</button>`).join("")}</div>
+      <div class="qb-niveis" role="group" aria-label="Nível de dificuldade"><span class="small muted">Nível</span>${[[0,"Todos",""]].concat(QB_NIVEIS).map(([k,n,c])=>`<button type="button" class="qb-chip ${c} ${f.nivel===k?"on":""}" data-qnivel="${k}" aria-pressed="${f.nivel===k}">${n}</button>`).join("")}</div>
       <div class="qb-sel">
         <label><span>Prova</span><select id="qb-prova"><option>ENEM (INEP)</option></select></label>
         <label><span>Matéria</span><select id="qb-m"><option value="">Todas</option>${mats.map(m=>`<option value="${m}" ${f.m===m?"selected":""}>${QB_MAT[m]}</option>`).join("")}</select></label>
@@ -1875,7 +1937,7 @@ function qbTela(){
       <section class="qb-lista" aria-label="Lista de questões">
         <div class="small muted qb-cont">${lista.length?`${lista.length.toLocaleString("pt-BR")} ${lista.length===1?"questão":"questões"}`:""}</div>
         ${lista.length?lista.slice(0,q.lim).map(x=>{const r=doc.r[x.id];return `<button type="button" class="qb-item ${q.sel===x.id?"on":""}" data-qsel="${x.id}">
-          <div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill solid">${qbRotulo(x)}</span><span class="pill">Questão ${x.n}</span><span class="pill">${QB_MAT[x.m]}</span>
+          <div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill solid">${qbRotulo(x)}</span><span class="pill">Questão ${x.n}</span>${qbSeloNivel(x)}<span class="pill">${QB_MAT[x.m]}</span>${x.x?`<span class="qb-st no" title="O INEP retirou esta questão do cálculo da nota">fora da nota</span>`:""}
           ${r?`<span class="qb-st ${r[1]?"ok":"no"}">${r[1]?"✓ acertou":"✗ errou"}</span>`:""}${doc.s[x.id]?`<span class="qb-st">${ico("bookmark")}</span>`:""}</div>
           <div class="small qb-top">${esc(x.t)}</div><div class="small muted qb-res">${esc(qbResumoTexto(x))}</div></button>`}).join("")
           +(lista.length>q.lim?`<button class="btn" type="button" id="qb-mais" style="width:100%">Mostrar mais ${Math.min(QB_POR_PAGINA,lista.length-q.lim)}</button>`:"")
@@ -1883,7 +1945,7 @@ function qbTela(){
       </section>
       <section class="qb-det-wrap" id="qb-det" aria-live="polite">${q.sel?qbDetalhe(lista.find(x=>x.id===q.sel),lista):`<div class="card qb-vazio stack">${ico("qbank")}<b>Escolha uma questão</b><span class="small muted">Use os filtros para achar questões de um tópico e toque em uma delas para resolver. Atalhos: A–E para marcar, Enter para responder, → para a próxima.</span></div>`}</section>
     </div>
-    <p class="hint" style="margin-top:14px">Fonte: provas oficiais do ENEM (INEP), obtidas pela API ENEM (enem.dev). As questões são as originais; matéria e tópico foram identificados automaticamente pelo conteúdo e podem ter pequenas imprecisões. Outras provas e concursos entrarão no banco quando houver fonte oficial aberta.</p>
+    <p class="hint" style="margin-top:14px">Fonte: provas oficiais do ENEM (INEP), obtidas pela API ENEM (enem.dev). As questões são as originais. O nível (fácil, médio ou difícil) vem da dificuldade oficial de cada item na TRI, divulgada pelo INEP nos microdados do ENEM, dividida em três partes iguais por área. Matéria e tópico foram identificados automaticamente pelo conteúdo e podem ter pequenas imprecisões. Outras provas e concursos entrarão no banco quando houver fonte oficial aberta.</p>
   </div>`;
   qbLigar(lista);
 }
@@ -1892,9 +1954,10 @@ function qbDetalhe(x,lista){
   const i=lista.findIndex(y=>y.id===x.id);
   return `<article class="card qb-det">
     <div class="row qb-det-top"><button class="btn sm ghost qb-voltar" type="button" id="qb-voltar">${ico("back")}Lista</button>
-      <div class="row" style="gap:6px;flex-wrap:wrap;flex:1"><span class="pill solid">${qbRotulo(x)}</span><span class="pill">${qbDia(x)}</span><span class="pill">Questão ${x.n}</span>${x.lg?`<span class="pill">${x.lg==="ingles"?"Inglês":"Espanhol"}</span>`:""}</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;flex:1"><span class="pill solid">${qbRotulo(x)}</span><span class="pill">${qbDia(x)}</span><span class="pill">Questão ${x.n}</span>${qbSeloNivel(x)}${x.lg?`<span class="pill">${x.lg==="ingles"?"Inglês":"Espanhol"}</span>`:""}</div>
       <button class="btn sm ${doc.s[x.id]?"primary":"ghost"}" type="button" id="qb-salvar" aria-pressed="${!!doc.s[x.id]}" title="Salvar questão">${ico("bookmark")}${doc.s[x.id]?"Salva":"Salvar"}</button></div>
     <div class="small muted">${QB_MAT[x.m]} · ${esc(x.t)}</div>
+    ${x.x?`<div class="qb-resultado no small"><b>Esta questão não contou na nota.</b> O INEP a retirou do cálculo da nota (TRI). Você pode resolvê-la como treino; por isso ela não tem nível.</div>`:""}
     <div class="qb-texto">${qbMd(x.c)}</div>
     ${x.i?`<div class="qb-enun">${qbMd(x.i)}</div>`:""}
     <div class="qb-alts" role="radiogroup" aria-label="Alternativas">${x.a.map(([t,img],k)=>{const L="ABCDE"[k];
@@ -1926,7 +1989,8 @@ function qbLigar(lista){
   $("#qb-ano").onchange=e=>{f.ano=e.target.value;q.lim=QB_POR_PAGINA;qbTela()};
   $("#qb-sit").onchange=e=>{f.sit=e.target.value;q.lim=QB_POR_PAGINA;qbTela()};
   const ed=$("#qb-ed");if(ed)ed.onchange=()=>{f.edital=ed.checked;q.lim=QB_POR_PAGINA;qbTela()};
-  const lp=$("#qb-limpar");if(lp)lp.onclick=()=>{Object.assign(f,{area:"",m:"",t:"",ano:"",sit:"",busca:"",edital:false});q.lim=QB_POR_PAGINA;renderQuestoes()};
+  const lp=$("#qb-limpar");if(lp)lp.onclick=()=>{Object.assign(f,{area:"",m:"",t:"",ano:"",sit:"",busca:"",edital:false,nivel:0});q.lim=QB_POR_PAGINA;renderQuestoes()};
+  $$("[data-qnivel]").forEach(b=>b.onclick=()=>{f.nivel=+b.dataset.qnivel;q.lim=QB_POR_PAGINA;qbTela()});
   const mais=$("#qb-mais");if(mais)mais.onclick=()=>{q.lim+=QB_POR_PAGINA;const y=scrollY;qbTela();scrollTo(0,y)};
   $$("[data-qsel]").forEach(b=>b.onclick=()=>qbAbrir(b.dataset.qsel));
   const x=lista.find(y=>y.id===q.sel);if(!x)return;const i=lista.indexOf(x);
@@ -2113,7 +2177,7 @@ function renderInicio(){
   $("#main").innerHTML=`<div class="page">
     ${pageHead(`${saud}${nome?", "+esc(nome):""}`,`${DIAS[hi].n}, ${new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long"})} · ${esc(descObjetivo(p))}`,`<button class="btn primary" type="button" id="ini-pomo">${ico("play")}Começar a estudar</button>`)}
     <div class="stats">
-      <div class="stat" style="display:flex;gap:12px;align-items:center">${anelMeta(minutosDia(dataISO()),metaHoje())}<div style="min-width:0"><div class="eyebrow">Meta de hoje</div><div class="v" style="font-size:1.25rem">${fmtH(minutosDia(dataISO()))}</div><div class="s">de ${fmtH(metaHoje())}${minutosDia(dataISO())>=metaHoje()?" · batida!":""}</div></div></div>
+      <div class="stat stat-meta">${anelMeta(minutosDia(dataISO()),metaHoje())}<div style="min-width:0"><div class="eyebrow">Meta de hoje</div><div class="v" style="font-size:1.25rem">${fmtH(minutosDia(dataISO()))}</div><div class="s">de ${fmtH(metaHoje())}${minutosDia(dataISO())>=metaHoje()?" · batida!":""}</div></div></div>
       <div class="stat"><div class="eyebrow">Sequência</div><div class="v">${sequencia()} ${sequencia()===1?"dia":"dias"}</div><div class="s">dias seguidos estudando</div></div>
       <div class="stat"><div class="eyebrow">Semana</div><div class="v">${feitos}/${todos.length}</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>
       <div class="stat"><div class="eyebrow">${dp!=null?esc(p.nomeProva||"Prova"):"Matérias"}</div><div class="v">${dp!=null?(dp>=0?dp+" dias":"já passou"):p.materias.length}</div><div class="s">${dp!=null?"até a prova":"no seu plano"}</div></div>
@@ -2413,7 +2477,7 @@ function renderTopicos(){
   </div>`;
   $$("[data-top]").forEach(c=>c.addEventListener("change",()=>{const [mi,ti]=c.dataset.top.split("|");const m=ed.materias.find(x=>x.id===mi),t=m&&m.topicos.find(x=>x.id===ti);if(!t)return;t.feito=c.checked;t.feitoEm=c.checked?Date.now():0;setTimeout(atualizarBadgeDesafios,50);gravar("edital",ed);renderTopicosKeepOpen()}));
   $$("[data-addtop]").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();const i=f.querySelector("input"),v=i.value.trim();if(!v)return;ed.materias.find(x=>x.id===f.dataset.addtop).topicos.push({id:uid(),t:v,feito:false});gravar("edital",ed);renderTopicosKeepOpen()}));
-  $$("[data-qtop]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const q=qbEstado();Object.assign(q.f,{area:"",m:"",t:b.dataset.qtop,ano:"",sit:"",busca:"",edital:false});
+  $$("[data-qtop]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const q=qbEstado();Object.assign(q.f,{area:"",m:"",t:b.dataset.qtop,ano:"",sit:"",busca:"",edital:false,nivel:0});
     const o=Object.entries(QB_INDICE.areas).flatMap(([a,x])=>x.topicos.map(t=>[a,...t])).find(t=>t[2]===b.dataset.qtop);if(o){q.f.area=o[0];q.f.m=o[1]}q.sel=null;q.lim=QB_POR_PAGINA;go("questoes")});
   $("#tp-tri").onclick=()=>{S.triProva=null;go("triagemProva")};
   let conf=false;$("#tp-del").onclick=()=>{if(!conf){conf=true;$("#tp-del").textContent="Clique de novo para confirmar";$("#tp-del-c").textContent="Os tópicos e o progresso desta prova serão apagados.";return}
@@ -2437,16 +2501,17 @@ function renderTriagemProva(){
       </div>
       <div class="field"><span class="lbl">Em que fase você está?</span>
         <div class="opts">${[["zero","Começando do zero","Ver teoria de quase tudo"],["revisar","Revisando","Já estudei, quero reforçar e praticar"],["reta","Reta final","Foco em questões e simulados"]].map(([k,n,d])=>`<button type="button" class="opt ${t.fase===k?"on":""}" data-fase="${k}"><b>${n}</b><span>${d}</span></button>`).join("")}</div></div>
-      <div><div class="row eyebrow" style="justify-content:space-between;margin-bottom:6px"><span>Matéria da prova</span><span>Quanto você domina (1–5) · Incluir</span></div>
-        ${ed.materias.map(m=>{const tm=t.mats[m.id];return `<div class="mat" data-m="${m.id}" style="grid-template-columns:minmax(0,1fr) auto auto"><span class="nm">${esc(m.nome)}${m.questoes?` <span class="small muted">· ${m.questoes} questões</span>`:""}</span>
-          <span class="seg" role="group" aria-label="Domínio em ${esc(m.nome)}">${[1,2,3,4,5].map(n=>`<button type="button" data-dom="${n}" class="${tm.dom===n?"on":""}" aria-pressed="${tm.dom===n}">${n}</button>`).join("")}</span>
-          <label class="row small" style="gap:6px"><input type="checkbox" data-inc ${tm.fora?"":"checked"} style="accent-color:var(--fg)">incluir</label></div>`}).join("")}
-        <p class="hint" style="margin-top:8px">1 = não sei nada, 5 = domino bem.</p></div>
+      <div class="stack sm"><div class="eyebrow">Matérias da prova</div>
+        ${ed.materias.map(m=>{const tm=t.mats[m.id];return `<div class="mat mat2 ${tm.fora?"fora":""}" data-m="${m.id}">
+          <div class="mat2-h"><span class="nm">${esc(m.nome)}${m.questoes?` <span class="small muted">· ${m.questoes} questões</span>`:""}</span><label class="row small" style="gap:6px;flex:none"><input type="checkbox" class="tg" data-inc ${tm.fora?"":"checked"}>incluir</label></div>
+          <div class="mat2-c"><div class="mat2-l"><span>Quanto você domina</span><b>${DOM_NOMES[tm.dom-1]||""}</b></div>
+            <div class="escala" role="group" aria-label="Domínio em ${esc(m.nome)}">${[1,2,3,4,5].map(n=>`<button type="button" data-dom="${n}" class="${tm.dom===n?"on":""}" aria-pressed="${tm.dom===n}" title="${DOM_NOMES[n-1]}">${n}</button>`).join("")}</div></div></div>`}).join("")}
+        <p class="hint">1 = não sei nada, 5 = domino bem.</p></div>
       <div class="navq"><button class="btn ghost" type="button" id="tr-back">Voltar aos tópicos</button><button class="btn primary" type="submit">${ico("spark")}Gerar proposta de semana</button></div>
     </form></div>`;
   const f=$("#tri-f"),ler=()=>{t.dataProva=$("#tr-data").value;t.pct=+$("#tr-pct").value};
   $$("[data-fase]",f).forEach(b=>b.onclick=()=>{ler();t.fase=b.dataset.fase;renderTriagemProva()});
-  $$("[data-m]",f).forEach(r=>{const tm=t.mats[r.dataset.m];$$("[data-dom]",r).forEach(b=>b.onclick=()=>{ler();tm.dom=+b.dataset.dom;renderTriagemProva()});$("[data-inc]",r).onchange=e=>{tm.fora=!e.target.checked}});
+  $$("[data-m]",f).forEach(r=>{const tm=t.mats[r.dataset.m];$$("[data-dom]",r).forEach(b=>b.onclick=()=>{ler();tm.dom=+b.dataset.dom;renderTriagemProva()});$("[data-inc]",r).onchange=e=>{tm.fora=!e.target.checked;r.classList.toggle("fora",tm.fora)}});
   $("#tr-back").onclick=()=>{S.triProva=null;go("topicos")};
   f.addEventListener("submit",async e=>{e.preventDefault();ler();
     if(ed.materias.every(m=>t.mats[m.id].fora)){toast("Inclua pelo menos uma matéria.");return}
@@ -2726,7 +2791,7 @@ function renderPerfil(){
   $("#pf-rm").onclick=()=>{d.foto="";$("#pf-rm").hidden=true;prev()};
   $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
   $("#pf-sair").onclick=sair;
-  const rs=$("#pf-senha");if(rs)rs.onclick=async()=>{try{await FB.auth.sendPasswordResetEmail(email);toast("Enviamos um link para redefinir a senha no seu e-mail.")}catch(e){toast("Não foi possível enviar o e-mail agora.")}};
+  const rs=$("#pf-senha");if(rs)rs.onclick=()=>enviarRedefinicao(email,rs,null);
   $("#pf-salvar").onclick=async()=>{
     if(!d.nome.trim()){$("#pf-nome").focus();toast("Digite seu nome de exibição.");return}
     if(d.usuario){if(!/^[a-z0-9._]{3,20}$/.test(d.usuario)){$("#pf-user-h").textContent="Use de 3 a 20 letras, números, ponto ou _.";$("#pf-user-h").className="err";$("#pf-user").focus();return}
