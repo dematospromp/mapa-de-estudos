@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro e tópicos de provas e editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Organizador de estudos: plano semanal, pomodoro, catálogo de provas e leitura de editais."><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif;background:#fafafa}img{max-width:100%}[hidden]{display:none!important}</style><title>Mapa de Estudos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -316,6 +316,246 @@ const PRESET_ESPCEX={nome:"EsPCEx",banca:"Exército Brasileiro (DECEx)",dataProv
   ["Inglês",12,["Compreensão geral de textos (livros, revistas, jornais e internet)","Compreensão de expressões e palavras no contexto","Substantivos, adjetivos, advérbios e formação de palavras","Artigos, conjunções, preposições e pronomes","Verbos: tempos, modos, voz ativa e passiva","Perguntas (wh-questions)"]]
   ]};
 
+/* ================= Catálogo nacional de provas =================
+   Estrutura das provas conferida em fontes públicas (editais, guias oficiais e cursinhos) em outubro de 2026.
+   Os tópicos dos vestibulares usam o programa oficial quando ele foi publicado (PISM, EsPCEx) e, nos demais,
+   o conteúdo do ensino médio cobrado pela prova. Cada prova traz o link da fonte para conferência. */
+const T={
+  mat:["Conjuntos e conjuntos numéricos","Razão, proporção, porcentagem e regra de três","Funções: domínio, imagem e gráficos","Função afim e função quadrática","Função exponencial e logaritmos","Progressões aritméticas e geométricas","Trigonometria no triângulo retângulo e no ciclo trigonométrico","Funções e equações trigonométricas","Matrizes, determinantes e sistemas lineares","Análise combinatória","Probabilidade","Estatística: média, moda, mediana e dispersão","Geometria plana: ângulos, semelhança, polígonos e áreas","Geometria espacial: prismas, pirâmides, cilindros, cones e esferas","Geometria analítica: ponto, reta, circunferência e cônicas","Números complexos","Polinômios e equações algébricas","Matemática financeira: juros simples e compostos"],
+  fis:["Cinemática: movimentos uniforme, variado e circular","Leis de Newton e aplicações","Trabalho, energia e potência","Impulso, quantidade de movimento e colisões","Gravitação universal e leis de Kepler","Estática e hidrostática","Termometria, calorimetria e dilatação","Gases ideais e termodinâmica","Óptica geométrica: espelhos, lentes e refração","Ondas, MHS e acústica","Eletrostática: carga, campo e potencial","Eletrodinâmica: corrente, resistores e circuitos","Magnetismo e indução eletromagnética","Física moderna: noções"],
+  qui:["Matéria, substâncias, misturas e separação","Modelos atômicos e estrutura do átomo","Tabela periódica e propriedades periódicas","Ligações químicas e geometria molecular","Forças intermoleculares e polaridade","Funções inorgânicas: ácidos, bases, sais e óxidos","Reações químicas e balanceamento","Mol, massa molar e estequiometria","Soluções e concentrações","Termoquímica","Cinética química","Equilíbrio químico, pH e pOH","Eletroquímica: pilhas e eletrólise","Radioatividade","Química orgânica: cadeias e funções","Isomeria","Reações orgânicas e polímeros","Química ambiental"],
+  bio:["Bioquímica: água, sais, carboidratos, lipídios, proteínas e ácidos nucleicos","Citologia: membrana, organelas e núcleo","Metabolismo energético: fotossíntese e respiração","Divisão celular: mitose e meiose","Histologia e embriologia","Classificação dos seres vivos","Vírus, bactérias, protistas e fungos","Botânica","Zoologia","Fisiologia humana","Genética: leis de Mendel e heranças","Biotecnologia e engenharia genética","Evolução","Ecologia: cadeias, ciclos, populações e biomas","Problemas ambientais"],
+  his:["Antiguidade: Egito, Mesopotâmia, Grécia e Roma","Idade Média: feudalismo, Igreja e mundo islâmico","Renascimento, Reformas e Absolutismo","Expansão marítima e colonização da América","Brasil Colônia: açúcar, mineração e escravidão","Iluminismo, Revoluções Inglesas e Revolução Industrial","Independência dos EUA e Revolução Francesa","Independências na América e no Brasil","Brasil Império","Imperialismo e Primeira Guerra Mundial","Revolução Russa, crise de 1929 e totalitarismos","Segunda Guerra Mundial","Brasil República: Primeira República e Era Vargas","Guerra Fria e descolonização da África e da Ásia","Ditadura militar no Brasil","Redemocratização e Brasil contemporâneo","História da África e dos povos indígenas"],
+  geo:["Cartografia: coordenadas, escalas e projeções","Estrutura geológica, relevo e solos","Clima e fenômenos atmosféricos","Hidrografia e recursos hídricos","Biomas e domínios morfoclimáticos","Questões ambientais e acordos internacionais","População: crescimento, estrutura e migrações","Urbanização e rede urbana","Industrialização e fontes de energia","Agropecuária e questão agrária","Globalização, blocos econômicos e comércio","Geopolítica e conflitos mundiais","Regionalização e economia do Brasil"],
+  por:["Interpretação e compreensão de textos","Gêneros e tipos textuais","Coesão e coerência","Variação linguística e funções da linguagem","Figuras de linguagem","Ortografia e acentuação","Classes de palavras","Sintaxe do período simples e composto","Concordância verbal e nominal","Regência e crase","Pontuação","Colocação pronominal","Semântica: sentido das palavras no contexto"],
+  lit:["Gêneros literários","Trovadorismo, Humanismo e Classicismo","Quinhentismo e Barroco","Arcadismo","Romantismo","Realismo e Naturalismo","Parnasianismo e Simbolismo","Pré-Modernismo","Modernismo","Literatura contemporânea","Obras de leitura obrigatória"],
+  ing:["Interpretação de textos em inglês","Vocabulário em contexto e falsos cognatos","Tempos verbais","Pronomes, artigos e preposições","Conectivos","Verbos modais","Voz passiva","Comparativos e superlativos"],
+  esp:["Interpretação de textos em espanhol","Falsos amigos","Tempos verbais","Pronomes, artigos e conectivos"],
+  fil:["Filosofia antiga: pré-socráticos, Sócrates, Platão e Aristóteles","Filosofia medieval","Racionalismo e empirismo","Iluminismo e Kant","Ética e filosofia política","Filosofia contemporânea"],
+  soc:["Clássicos: Durkheim, Weber e Marx","Cultura, identidade e diversidade","Trabalho e sociedade","Desigualdade e estratificação social","Movimentos sociais e cidadania","Estado, poder e democracia","Globalização e meios de comunicação"],
+  red:["Texto dissertativo-argumentativo","Estrutura: introdução, desenvolvimento e conclusão","Repertório e argumentação","Coesão textual e norma culta"],
+  redEnem:["Texto dissertativo-argumentativo","As 5 competências da redação do ENEM","Repertório sociocultural","Proposta de intervenção com agente, ação, meio, finalidade e detalhamento"],
+  matEF:["Números naturais, inteiros, racionais e reais","Divisibilidade, MDC e MMC","Frações, potências e radicais","Razão, proporção, porcentagem e regra de três","Expressões algébricas, produtos notáveis e fatoração","Equações e inequações do 1º e do 2º grau","Sistemas de equações","Funções afim e quadrática: noções","Geometria plana: ângulos, triângulos e polígonos","Circunferência e círculo","Semelhança, teorema de Tales e de Pitágoras","Áreas e perímetros","Problemas e raciocínio"],
+  porEF:["Interpretação de textos","Gêneros textuais","Ortografia e acentuação","Classes de palavras","Sintaxe","Concordância e regência","Pontuação","Figuras de linguagem"],
+  ingEF:["Interpretação de textos","Vocabulário","Tempos verbais básicos","Pronomes e preposições"],
+  cien:["Matéria e energia","Noções de química: substâncias, misturas e reações","Noções de física: movimento, força, energia, calor, luz e eletricidade","Seres vivos e corpo humano","Ecologia e meio ambiente"],
+  socEF:["História do Brasil","Geografia do Brasil"],
+  portC:["Compreensão e interpretação de textos","Tipologia textual","Ortografia oficial e acentuação","Classes de palavras","Emprego da crase","Sintaxe da oração e do período","Pontuação","Concordância nominal e verbal","Regência nominal e verbal","Colocação pronominal","Reescrita de frases e parágrafos","Redação oficial"],
+  rlm:["Proposições, conectivos e tabelas-verdade","Equivalências e negações","Argumentação e diagramas lógicos","Conjuntos","Análise combinatória e probabilidade","Porcentagem, razão e proporção","Sequências e padrões"],
+  info:["Sistemas operacionais Windows e Linux","Editores de texto e planilhas","Internet, intranet e navegadores","Correio eletrônico","Segurança da informação: malware, backup e golpes","Computação em nuvem","Redes de computadores: noções"],
+  const:["Princípios fundamentais","Direitos e garantias fundamentais","Direitos sociais e nacionalidade","Organização do Estado","Administração Pública (arts. 37 a 41)","Poderes Legislativo, Executivo e Judiciário","Funções essenciais à Justiça","Segurança pública (art. 144)"],
+  adm:["Princípios da Administração Pública","Organização administrativa","Atos administrativos","Poderes administrativos","Agentes públicos e Lei 8.112/1990","Licitações e contratos (Lei 14.133/2021)","Improbidade administrativa","Responsabilidade civil do Estado","Controle da Administração","Processo administrativo (Lei 9.784/1999)"],
+  penal:["Aplicação da lei penal","Teoria do crime","Imputabilidade e concurso de pessoas","Crimes contra a pessoa","Crimes contra o patrimônio","Crimes contra a Administração Pública"],
+  ppenal:["Inquérito policial","Ação penal","Provas","Prisão e liberdade provisória","Prisão temporária"],
+  legesp:["Lei de Drogas (11.343/2006)","Estatuto do Desarmamento","Crimes hediondos","Abuso de autoridade (13.869/2019)","Lei Maria da Penha","Organizações criminosas","Lavagem de dinheiro","Lei de Tortura"],
+  etica:["Ética e moral","Código de Ética do Servidor (Decreto 1.171/1994)","Lei de Acesso à Informação","Lei de Conflito de Interesses"],
+  segur:["Seguridade social na Constituição","Custeio: Lei 8.212/1991","Benefícios: Lei 8.213/1991","Regulamento da Previdência (Decreto 3.048/1999)","Segurados e dependentes","Carência e salário de contribuição","Assistência social e BPC (LOAS)"],
+  banc:["Sistema Financeiro Nacional","Mercado monetário, de crédito, de capitais e de câmbio","Produtos e serviços bancários","Garantias do sistema financeiro","Prevenção à lavagem de dinheiro","Open finance e Pix","LGPD"],
+  matfin:["Juros simples e compostos","Taxas nominal, efetiva e equivalentes","Descontos","Sistemas de amortização SAC e Price","Fluxo de caixa, VPL e TIR"],
+  trans:["Código de Trânsito Brasileiro","Sistema Nacional de Trânsito","Normas gerais de circulação","Infrações e penalidades","Crimes de trânsito","Resoluções do Contran"],
+  dh:["Direitos humanos na Constituição","Declaração Universal dos Direitos Humanos","Convenção Americana (Pacto de San José)","Direitos humanos e segurança pública"],
+  contab:["Patrimônio e escrituração","Balanço patrimonial e DRE","Lançamentos contábeis"],
+  estat:["Estatística descritiva","Probabilidade","Distribuições de probabilidade","Amostragem e inferência: noções"],
+  atual:["Política, economia e sociedade","Meio ambiente e tecnologia","Brasil e mundo: fatos recentes"],
+  vendas:["Técnicas de vendas e negociação","Marketing de relacionamento","Ética e conduta no atendimento","Código de Defesa do Consumidor"]
+};
+const PISM={
+  1:[["Língua Portuguesa",5,["Leitura e compreensão de textos de diferentes campos de atuação social","Objetivos comunicativos, tema e tese","Coesão e coerência textual","Relações de sentido e contexto"]],
+   ["Literatura",5,["Gêneros: poema, canção popular e outros gêneros em interface","A prosa contemporânea de autoria feminina","Poesia africana","Representações da negritude na poesia brasileira","Representações da pobreza na prosa brasileira","Autores sugeridos: Conceição Evaristo, Carolina Maria de Jesus, Geovani Martins, Castro Alves, José Craveirinha"]],
+   ["Matemática",5,["Conjuntos numéricos","Estudo geral das funções: gráfico, crescimento e sinal","Função constante e função afim","Função quadrática","Função exponencial","Razão e proporção","Triângulos, polígonos e quadriláteros notáveis","Congruência e semelhança de triângulos","Relações métricas e trigonométricas no triângulo retângulo","Áreas de figuras planas"]],
+   ["Física",5,["Grandezas escalares e vetoriais","Descrição do movimento e movimento sob a ação da gravidade","Forças e leis de Newton","Lei da gravitação universal e leis de Kepler","Momento de uma força (torque) e máquinas simples","Trabalho, potência e energia mecânica","Conservação da energia","Quantidade de movimento, sua conservação e colisões"]],
+   ["Química",5,["História e filosofia da ciência","Estrutura e simbologia do átomo","Tabela periódica","Constituição da matéria e interações entre partículas","Ligações químicas e compostos inorgânicos","Misturas e substâncias","Transformações físicas e químicas e reações químicas","Composição do solo, da água e do ar; ciclo e tratamento da água"]],
+   ["Biologia",5,["Formas de saber e método científico","Bioquímica: água, carboidratos, lipídeos, proteínas, ácidos nucleicos e vitaminas","Tipos celulares: células animais e vegetais","Membrana plasmática, citoesqueleto e organelas","Núcleo e ciclo celular","Divisão celular","Histologia: tecidos humanos"]],
+   ["História",5,["África Antiga e Antiguidade Clássica: hominídeos, Kush, Axum, Egito, Grécia e Roma","Formação do mundo medieval, feudalismo e Igreja","Mundo islâmico","Construção do mundo moderno: expansão marítima europeia","Colonização das Américas portuguesa, espanhola e inglesa","Povos indígenas e trabalho na América colonial"]],
+   ["Geografia",5,["Localização, orientação, projeções cartográficas e novas tecnologias","Cartografia e política","Estrutura geológica, solos, relevo e exploração","Classificação climática","Domínios morfoclimáticos e recursos hídricos","Fontes de energia e sociedade","Impactos e políticas ambientais"]]],
+  2:[["Língua Portuguesa",5,["Leitura e compreensão de textos de diferentes campos de atuação social","Gêneros textuais e argumentação","Coesão, coerência e progressão textual","Variação linguística"]],
+   ["Literatura",5,["Gêneros: romance, conto, poema e outros em interface","O romance realista em Portugal e no Brasil","Experiências de realidade e formas de subjetividade","Ruptura, subjetividade e memória","Autores sugeridos: Machado de Assis, Eça de Queiroz, Clarice Lispector, Manuel Bandeira"]],
+   ["Matemática",5,["Ciclo trigonométrico","Funções trigonométricas: seno e cosseno","Trigonometria em triângulo qualquer","Progressões aritmética e geométrica","Cálculo de grandezas","Área de superfície, planificações e volume de sólidos geométricos","Medidas de tendência central e de dispersão","Tabelas e gráficos"]],
+   ["Física",5,["Temperatura e escalas termométricas","Dilatação térmica","Calor específico, capacidade térmica, calor sensível e latente","Transmissão de calor e mudanças de fase","Transformações gasosas e leis da termodinâmica","Luz e cores, reflexão e refração","Densidade, pressão e princípio de Pascal","Princípio de Arquimedes, teorema de Stevin e vazão"]],
+   ["Química",5,["Tabela periódica","Compostos orgânicos: constituição e características","Interações intermoleculares e ligações químicas","Soluções","Energia nas transformações químicas","Quantidade de matéria (mol)","Estequiometria","Poluição da água, do solo e do ar"]],
+   ["Biologia",5,["Diversidade e relações entre os seres vivos","Vírus e doenças virais","Bactérias e doenças bacterianas","Fungos, algas e protozoários","Desenvolvimento embrionário animal","Animais: poríferos, cnidários, protostômios e deuterostômios","Evolução e adaptações dos animais","Plantas: criptógamas, fanerógamas e adaptações"]],
+   ["História",5,["Crise do Antigo Regime: Revoluções Inglesas e Iluminismo","Revolução Industrial","Revolução Francesa e Império Napoleônico","Conjurações no Brasil colonial","Independências: Treze Colônias, Haiti e América espanhola","Revoluções liberais e Estados nacionais no século XIX","Independência do Brasil e Brasil Império"]],
+   ["Geografia",5,["Urbanização, rede urbana e metropolização","Espaço urbano e setor terciário","Espaço agrário e organização da produção","Evolução e dinâmica da indústria","Questões demográficas"]]],
+  3:[["Língua Portuguesa",5,["Leitura e compreensão de textos de diferentes campos de atuação social","Argumentação e posicionamento crítico","Recursos linguísticos e efeitos de sentido"]],
+   ["Literatura",5,["Gêneros: romance, conto, poema e outros em interface","Colonialismo e anticolonialismo na poesia portuguesa e brasileira","A narrativa de autoria indígena","O romance regionalista brasileiro","Autores sugeridos: Graciliano Ramos, Itamar Vieira Júnior, Augusto de Campos, Caetano Veloso"]],
+   ["Matemática",5,["Sistemas lineares","Logaritmos e função logarítmica","Geometria analítica: ponto e reta","Princípio fundamental da contagem, arranjos e combinações","Probabilidade"]],
+   ["Física",5,["Movimento harmônico simples, ondas e acústica","Eletrostática: lei de Coulomb, campo e potencial elétricos","Capacitores","Corrente, resistência, lei de Ohm e circuitos","Corrente alternada e indução magnética","Força de Lorentz, fluxo magnético e leis de Faraday e Lenz","Física quântica: dualidade onda-partícula, modelo de Bohr e espectros","Relatividade restrita"]],
+   ["Química",5,["Modelos atômicos e reações nucleares","Compostos orgânicos e inorgânicos","Isomeria","Energia nas transformações químicas","Cinética química","Equilíbrio químico","Reações orgânicas e aplicações","Aquecimento global, chuva ácida e camada de ozônio","Resíduos sólidos e produção e proteção de metais"]],
+   ["Biologia",5,["Ecologia: fluxo de energia, cadeias e ciclos biogeoquímicos","Populações, sucessão ecológica e biomas","Problemas ambientais e emergência climática","Leis de Mendel, interação gênica e grupos sanguíneos","Herança e sexo, heredogramas e mutações","Biotecnologia e organismos geneticamente modificados","Teorias evolutivas e evidências da evolução","Reprodução humana e sexualidade"]],
+   ["História",5,["Brasil República: Primeira República e Era Vargas","Primeira Guerra Mundial e Revolução Russa","Crise de 1929, fascismos e Segunda Guerra Mundial","Guerra Fria, Revolução Cubana, Coreia e Vietnã","Independências africanas","Brasil: experiência democrática (1945-1964)","Ditaduras no Brasil e na América do Sul"]],
+   ["Geografia",5,["Desigualdades sociais e fluxos populacionais","Desenvolvimento desigual do capitalismo","Globalização e fragmentação na nova ordem mundial"]],
+   ["Sociologia",0,["Sociologia como ciência","Indivíduo, sociedade e instituições sociais","Identidade e cultura","Trabalho, tecnologia e estratificação","Conflitos, desigualdades e cidadania"]],
+   ["Filosofia",0,["Fundamentos da realidade e do conhecimento","Ética e política"]]]
+};
+const PISM_SERIE={1:"1ª série do ensino médio",2:"2ª série do ensino médio",3:"3ª série do ensino médio"};
+const FONTE_PISM="https://www2.ufjf.br/copese/wp-content/uploads/sites/42/2025/05/Conte%C3%BAdo-Program%C3%A1tico-PISM-UFJF.pdf";
+const EM=(extra)=>[["Matemática",0,T.mat],["Português",0,T.por],["Literatura",0,T.lit],["Física",0,T.fis],["Química",0,T.qui],["Biologia",0,T.bio],["História",0,T.his],["Geografia",0,T.geo],["Inglês",0,T.ing]].concat(extra||[]);
+const CATALOGO=[
+  {id:"enem",nome:"ENEM",org:"Inep / MEC",uf:"BR",tipo:"Vestibular",al:["enem","exame nacional do ensino medio","sisu","prouni","fies"],
+   est:"180 questões objetivas em 2 dias (45 por área: Linguagens, Humanas, Natureza e Matemática) e redação dissertativo-argumentativa.",fonte:"https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem",
+   m:[["Matemática",45,T.mat],["Português",0,T.por],["Literatura",0,T.lit],["Inglês ou Espanhol",5,T.ing],["Redação",0,T.redEnem],["História",0,T.his],["Geografia",0,T.geo],["Filosofia",0,T.fil],["Sociologia",0,T.soc],["Física",0,T.fis],["Química",0,T.qui],["Biologia",0,T.bio]]},
+  {id:"fuvest",nome:"Fuvest (USP)",org:"Fuvest",uf:"SP",tipo:"Vestibular",al:["fuvest","usp","universidade de sao paulo"],
+   est:"1ª fase com 80 questões (a partir de 2027). 2ª fase: 10 questões de Português e redação no 1º dia; 12 questões das disciplinas da carreira no 2º dia.",fonte:"https://www.fuvest.br/wp-content/uploads/fuvest2027-guia-provas.pdf",
+   m:EM([["Filosofia",0,T.fil],["Sociologia",0,T.soc],["Redação",0,T.red]])},
+  {id:"unicamp",nome:"Unicamp",org:"Comvest",uf:"SP",tipo:"Vestibular",al:["unicamp","comvest","universidade estadual de campinas"],
+   est:"1ª fase com 72 questões: Matemática 12, Português e Literatura 12, Inglês, Biologia, Química, Física, História e Geografia 7 cada, Filosofia 3 e Sociologia 3.",fonte:"https://www.vestibulandoweb.com.br/vestibular/como-sao-as-provas-do-vestibular-unicamp-2027/amp/",
+   m:[["Matemática",12,T.mat],["Português e Literatura",12,T.por.concat(T.lit)],["Inglês",7,T.ing],["Biologia",7,T.bio],["Química",7,T.qui],["Física",7,T.fis],["História",7,T.his],["Geografia",7,T.geo],["Filosofia",3,T.fil],["Sociologia",3,T.soc],["Redação",0,T.red]]},
+  {id:"unesp",nome:"Unesp",org:"Vunesp",uf:"SP",tipo:"Vestibular",al:["unesp","vunesp vestibular","universidade estadual paulista"],
+   est:"1ª fase com 90 questões (Linguagens, Humanas, Natureza e Matemática). 2ª fase com 36 questões discursivas e redação.",fonte:"https://aprovatotal.com.br/vestibular-unesp/",
+   m:EM([["Filosofia",0,T.fil],["Sociologia",0,T.soc],["Redação",0,T.red]])},
+  {id:"uerj",nome:"UERJ",org:"UERJ",uf:"RJ",tipo:"Vestibular",al:["uerj","universidade do estado do rio de janeiro","exame de qualificacao"],
+   est:"Exame de qualificação com 60 questões (Linguagens, Matemática, Natureza e Humanas), aplicado duas vezes por ano. Exame discursivo com 2 provas específicas e redação.",fonte:"https://vestibulares.estrategia.com/portal/vestibulares/calendario-uerj/",
+   m:EM([["Espanhol (opção)",0,T.esp],["Redação",0,T.red]])},
+  ...[1,2,3].map(n=>({id:"pism"+n,nome:"PISM "+["I","II","III"][n-1]+" (UFJF)",num:n,org:"UFJF / COPESE",uf:"MG",cidade:"Juiz de Fora",tipo:"Seriado",
+   al:["pism "+n,"pism modulo "+n,"ufjf "+n,"seriado ufjf "+n,"pism juiz de fora "+n,"programa de ingresso seletivo misto "+n],
+   est:`Módulo ${["I","II","III"][n-1]} do Programa de Ingresso Seletivo Misto, para quem está na ${PISM_SERIE[n]}. ${n<3?"2 dias de prova com 8 disciplinas: 5 questões objetivas e 2 discursivas por disciplina (120 pontos).":"Questões objetivas de 8 disciplinas, iguais para todos, e discursivas conforme a área do curso (140 pontos)."}`,
+   fonte:FONTE_PISM,m:PISM[n]})),
+  ...[1,2,3].map(n=>({id:"pas"+n,nome:"PAS UnB – "+n+"ª etapa",num:n,org:"UnB / Cebraspe",uf:"DF",tipo:"Seriado",al:["pas "+n,"pas unb "+n,"unb "+n,"seriado unb "+n,"programa de avaliacao seriada "+n,"pas etapa "+n],
+   est:`Subprograma ${n} do Programa de Avaliação Seriada, ao fim da ${n}ª série do ensino médio. Itens certo/errado, questões de resposta curta e redação, com lista de obras culturais própria de cada etapa.`,fonte:"https://www.cebraspe.org.br/pas/subprogramas",
+   m:EM([["Espanhol ou Francês (opção)",0,T.esp],["Filosofia",0,T.fil],["Sociologia",0,T.soc],["Artes e obras do PAS",0,["Obras culturais indicadas para a etapa (livros, filmes, músicas e artes visuais)"]],["Redação",0,T.red]])})),
+  ...[1,2,3].map(n=>({id:"ssa"+n,nome:"SSA "+n+" (UPE)",num:n,org:"UPE",uf:"PE",tipo:"Seriado",al:["ssa "+n,"ssa upe "+n,"upe "+n,"seriado upe "+n,"sistema seriado de avaliacao "+n],
+   est:`Sistema Seriado de Avaliação da Universidade de Pernambuco, fase ${n}, com o conteúdo da ${n}ª série do ensino médio indicado no manual do candidato.`,fonte:"http://processodeingresso.upe.pe.gov.br",
+   m:EM([["Espanhol (opção)",0,T.esp],["Filosofia",0,T.fil],["Sociologia",0,T.soc]])})),
+  {id:"espcex",nome:"EsPCEx",org:"Exército Brasileiro",uf:"BR",tipo:"Militar",al:["espcex","escola preparatoria de cadetes do exercito","aman","cadete do exercito","oficial do exercito","preparatoria cadetes"],
+   est:"Português 20, Física 12, Química 12 e redação no 1º dia; Matemática 20, Geografia 12, História 12 e Inglês 12 no 2º dia.",fonte:PRESET_ESPCEX.fonteUrl,
+   m:PRESET_ESPCEX.materias},
+  {id:"esa",nome:"ESA (sargento do Exército)",org:"Exército Brasileiro",uf:"BR",tipo:"Militar",al:["esa","escola de sargentos das armas","sargento do exercito","sargento exercito"],
+   est:"50 questões (área geral): Matemática 14, Português 14, História do Brasil 6, Geografia do Brasil 6, Inglês 10, e redação.",fonte:"https://militares.estrategia.com/portal/escolas-militares/exercito/esa/concurso-esa/",
+   m:[["Matemática",14,T.mat.slice(0,13)],["Português",14,T.por],["História do Brasil",6,T.his.filter(t=>/Brasil|Independ|Ditadura|Redemocr/.test(t))],["Geografia do Brasil",6,T.geo.filter(t=>!/Geopol|Globaliz/.test(t))],["Inglês",10,T.ing],["Redação",0,T.red]]},
+  {id:"eear",nome:"EEAR (sargento da Aeronáutica)",org:"Força Aérea Brasileira",uf:"BR",tipo:"Militar",al:["eear","escola de especialistas de aeronautica","sargento aeronautica","cfs","sargento da fab"],
+   est:"96 questões: Português 24, Inglês 24, Matemática 24 e Física 24.",fonte:"https://portal.estrategia.com/militares/escolas/forca-aerea/eear/edital-eear-2026-2/amp/",
+   m:[["Português",24,T.por],["Inglês",24,T.ing],["Matemática",24,T.mat],["Física",24,T.fis]]},
+  {id:"afa",nome:"AFA (oficial da Aeronáutica)",org:"Força Aérea Brasileira",uf:"BR",tipo:"Militar",al:["afa","academia da forca aerea","cfoav","oficial aviador","oficial da aeronautica"],
+   est:"64 questões: Português, Inglês, Matemática e Física com 16 cada, e redação.",fonte:"https://portal.estrategia.com/militares/escolas/forca-aerea/afa/concurso-afa-2026-edital-divulgado-para-55-vagas/",
+   m:[["Português",16,T.por],["Inglês",16,T.ing],["Matemática",16,T.mat],["Física",16,T.fis],["Redação",0,T.red]]},
+  {id:"epcar",nome:"EPCAR (CPCAR)",org:"Força Aérea Brasileira",uf:"BR",tipo:"Militar",al:["epcar","cpcar","escola preparatoria de cadetes do ar"],
+   est:"48 questões de nível fundamental: Português 16, Matemática 16, Inglês 16, e redação.",fonte:"https://militares.estrategia.com/portal/escolas-militares/fab/epcar/o-que-cai-na-prova-da-epcar-2026/",
+   m:[["Português",16,T.porEF],["Matemática",16,T.matEF],["Inglês",16,T.ingEF],["Redação",0,T.red]]},
+  {id:"en",nome:"Escola Naval",org:"Marinha do Brasil",uf:"BR",tipo:"Militar",al:["escola naval","en marinha","oficial da marinha","aspirante marinha"],
+   est:"1º dia: Matemática 20 e Inglês 20. 2º dia: Português 18, Física 22 e redação.",fonte:"https://militares.estrategia.com/portal/escolas-militares/marinha/escola-naval/o-que-cai-na-prova-da-escola-naval/",
+   m:[["Matemática",20,T.mat],["Inglês",20,T.ing],["Português",18,T.por],["Física",22,T.fis],["Redação",0,T.red]]},
+  {id:"efomm",nome:"EFOMM",org:"Marinha do Brasil",uf:"BR",tipo:"Militar",al:["efomm","marinha mercante","oficial da marinha mercante"],
+   est:"1º dia: Português 20, Inglês 20 e redação. 2º dia: Física 20 e Matemática 20.",fonte:"https://militares.estrategia.com/portal/escolas-militares/marinha/efomm/o-que-cai-na-prova-efomm/",
+   m:[["Português",20,T.por],["Inglês",20,T.ing],["Física",20,T.fis],["Matemática",20,T.mat],["Redação",0,T.red]]},
+  {id:"cn",nome:"Colégio Naval",org:"Marinha do Brasil",uf:"BR",tipo:"Militar",al:["colegio naval","cn marinha"],
+   est:"1º dia: Matemática 20 e Inglês 20. 2º dia: Português 20, Estudos Sociais 12, Ciências 18 e redação (nível fundamental).",fonte:"https://militares.estrategia.com/portal/escolas-militares/marinha/colegio-naval/o-que-cai-na-prova-do-colegio-naval/",
+   m:[["Matemática",20,T.matEF],["Inglês",20,T.ingEF],["Português",20,T.porEF],["Estudos Sociais",12,T.socEF],["Ciências",18,T.cien],["Redação",0,T.red]]},
+  {id:"ita",nome:"ITA",org:"Instituto Tecnológico de Aeronáutica",uf:"SP",tipo:"Militar",al:["ita","instituto tecnologico de aeronautica"],
+   est:"1ª fase com 48 questões: Matemática, Física, Química e Inglês com 12 cada. 2ª fase com provas dissertativas, Português e redação.",fonte:"https://www.vestibulandoweb.com.br/vestibular/vestibular-ita-2027-veja-inscricoes-vagas-provas-e-calendario-completo/amp/",
+   m:[["Matemática",12,T.mat],["Física",12,T.fis],["Química",12,T.qui],["Inglês",12,T.ing],["Português",0,T.por],["Redação",0,T.red]]},
+  {id:"ime",nome:"IME",org:"Instituto Militar de Engenharia",uf:"RJ",tipo:"Militar",al:["ime","instituto militar de engenharia"],
+   est:"Prova objetiva e provas discursivas de Matemática, Física e Química, além de Português e Inglês. Confira a distribuição no edital do ano.",fonte:"https://www.ime.eb.mil.br",
+   m:[["Matemática",0,T.mat],["Física",0,T.fis],["Química",0,T.qui],["Português",0,T.por],["Inglês",0,T.ing]]},
+  {id:"pf",nome:"Polícia Federal – Agente",org:"Cebraspe",uf:"BR",tipo:"Concurso",al:["policia federal","pf","agente pf","agente da policia federal","pf agente","escrivao pf"],
+   est:"Prova Cebraspe com itens certo/errado em blocos (básicos, Informática e Contabilidade/Estatística) e prova discursiva.",fonte:"https://blog.grancursosonline.com.br/concurso-pf-quais-materias-mais-caem-2025/amp/",
+   m:[["Língua Portuguesa",0,T.portC],["Direito Administrativo",0,T.adm],["Direito Constitucional",0,T.const],["Direito Penal",0,T.penal],["Direito Processual Penal",0,T.ppenal],["Legislação Especial",0,T.legesp],["Informática",0,T.info],["Contabilidade",0,T.contab],["Estatística",0,T.estat],["Raciocínio Lógico",0,T.rlm]]},
+  {id:"prf",nome:"PRF – Policial Rodoviário Federal",org:"Cebraspe",uf:"BR",tipo:"Concurso",al:["prf","policia rodoviaria federal","policial rodoviario"],
+   est:"120 itens certo/errado e redação de até 30 linhas.",fonte:"https://www.novaconcursos.com.br/portal/?p=112376",
+   m:[["Língua Portuguesa",0,T.portC],["Raciocínio Lógico-Matemático",0,T.rlm],["Informática",0,T.info],["Física",0,["Cinemática","Dinâmica e leis de Newton","Energia e trabalho","Quantidade de movimento e colisões"]],["Ética e Cidadania",0,T.etica],["Geopolítica",0,["Brasil no mundo","Fronteiras e integração regional","Transportes e logística"]],["Inglês ou Espanhol",0,T.ing],["Legislação de Trânsito",0,T.trans],["Direito Administrativo",0,T.adm],["Direito Constitucional",0,T.const],["Direito Penal",0,T.penal],["Direito Processual Penal",0,T.ppenal],["Legislação Especial",0,T.legesp],["Direitos Humanos",0,T.dh]]},
+  {id:"inss",nome:"INSS – Técnico do Seguro Social",org:"Cebraspe",uf:"BR",tipo:"Concurso",al:["inss","tecnico do inss","tecnico do seguro social","previdencia social"],
+   est:"120 itens certo/errado: 50 de conhecimentos básicos e 70 de específicos (Seguridade Social).",fonte:"https://www.estrategiaconcursos.com.br/blog/o-que-cai-na-prova-do-concurso-inss/amp/",
+   m:[["Seguridade Social",70,T.segur],["Língua Portuguesa",0,T.portC],["Ética no Serviço Público",0,T.etica],["Direito Constitucional",0,T.const],["Direito Administrativo",0,T.adm],["Raciocínio Lógico",0,T.rlm],["Informática",0,T.info]]},
+  {id:"bb",nome:"Banco do Brasil – Escriturário",org:"Cesgranrio",uf:"BR",tipo:"Concurso",al:["banco do brasil","bb","escriturario","agente comercial","escriturario bb"],
+   est:"70 questões: 25 básicas (Português 10, Inglês 5, Matemática 5, Atualidades do mercado financeiro 5) e 45 específicas.",fonte:"https://www.novaconcursos.com.br/portal/artigos/concurso-banco-do-brasil-banca-cesgranrio/",
+   m:[["Língua Portuguesa",10,T.portC],["Língua Inglesa",5,T.ing],["Matemática",5,["Números e problemas de contagem","Razão, proporção, regra de três e porcentagem","Lógica proposicional e conjuntos","Funções, exponencial e logaritmo","Matrizes, determinantes e sistemas","Sequências"]],["Atualidades do Mercado Financeiro",5,T.atual],["Conhecimentos Bancários",10,T.banc],["Matemática Financeira",0,T.matfin],["Informática",0,T.info],["Vendas e Negociação",0,T.vendas]]},
+  {id:"caixa",nome:"Caixa – Técnico Bancário",org:"Cesgranrio",uf:"BR",tipo:"Concurso",al:["caixa","caixa economica federal","cef","tecnico bancario"],
+   est:"60 questões: Português 5, Inglês 5, Matemática Financeira 5, Probabilidade e Estatística 5, Ética e compliance 5, Conhecimentos Bancários 15, TI 5, Comportamentos digitais 5, Atendimento 10.",fonte:"https://www.direcaoconcursos.com.br/noticias/concurso-caixa-provas-tecnico-bancario",
+   m:[["Língua Portuguesa",5,T.portC],["Língua Inglesa",5,T.ing],["Matemática Financeira",5,T.matfin],["Probabilidade e Estatística",5,T.estat],["Ética e Compliance",5,T.etica],["Conhecimentos Bancários",15,T.banc],["Tecnologia da Informação",5,T.info],["Comportamentos Digitais",5,["Cultura digital e inovação","Segurança e privacidade","Canais digitais de atendimento"]],["Atendimento Bancário",10,T.vendas]]},
+  {id:"pmsp",nome:"PM-SP – Soldado",org:"Vunesp",uf:"SP",tipo:"Concurso",al:["pm sp","pmsp","policia militar de sao paulo","soldado pm sp","soldado sp"],
+   est:"60 questões: Português 20, Matemática 15 e as demais em História, Geografia, Atualidades, Informática e Administração Pública.",fonte:"https://www.estrategiaconcursos.com.br/blog/pm-sp/",
+   m:[["Língua Portuguesa",20,T.portC],["Matemática",15,T.matEF],["História Geral e do Brasil",0,T.his],["Geografia Geral e do Brasil",0,T.geo],["Atualidades",0,T.atual],["Informática",0,T.info],["Administração Pública",0,["Constituição Federal: direitos e garantias","Constituição do Estado de São Paulo"]]]},
+  {id:"oab",nome:"OAB – Exame de Ordem (1ª fase)",org:"FGV",uf:"BR",tipo:"Concurso",al:["oab","exame de ordem","ordem dos advogados","exame da ordem"],
+   est:"80 questões em cerca de 20 disciplinas; é preciso acertar 40. Ética Profissional tem 8 questões.",fonte:"https://oab.estrategia.com/portal/como-funciona-a-prova-da-oab-primeira-fase/",
+   m:[["Ética Profissional",8,["Estatuto da Advocacia e da OAB","Regulamento Geral","Código de Ética e Disciplina"]],["Direito Constitucional",6,T.const],["Direito Civil",6,["Parte geral","Obrigações e contratos","Responsabilidade civil","Direitos reais","Família e sucessões"]],["Direito Processual Civil",6,["Normas fundamentais","Petição inicial e resposta","Recursos","Execução e cumprimento de sentença"]],["Direito Penal",6,T.penal],["Direito Processual Penal",5,T.ppenal],["Direito Administrativo",5,T.adm],["Direito do Trabalho",5,["Contrato de trabalho","Jornada e remuneração","Rescisão"]],["Processo do Trabalho",5,["Competência","Procedimentos e recursos"]],["Direito Empresarial",4,["Empresário e sociedades","Títulos de crédito","Falência e recuperação"]],["Direito Tributário",0,["Tributos e competência","Limitações ao poder de tributar","Crédito tributário"]],["Direitos Humanos",0,T.dh],["Direito do Consumidor",0,["Relação de consumo","Responsabilidade do fornecedor","Práticas abusivas"]],["ECA",0,["Direitos fundamentais","Medidas de proteção e socioeducativas"]],["Direito Ambiental",0,["Princípios","Licenciamento","Responsabilidade ambiental"]],["Direito Internacional",0,["Tratados","Nacionalidade e estrangeiros"]],["Filosofia do Direito",0,["Jusnaturalismo e positivismo","Teorias da justiça"]]]},
+  {id:"pm",nome:"Polícia Militar – Soldado (outros estados)",org:"Banca do edital",uf:"",tipo:"Concurso",gen:true,al:["pm","policia militar","soldado","soldado pm","pmmg","pmerj","pmpr","pmba","pmgo","pmce","pmpe","pmrs","pmsc","pmdf","bombeiro","corpo de bombeiros"],
+   est:"Conteúdo comum às provas de soldado das PMs estaduais. Cada estado tem seu edital: envie o PDF para ver a lista exata.",fonte:"",
+   m:[["Língua Portuguesa",0,T.portC],["Matemática",0,T.matEF],["Raciocínio Lógico",0,T.rlm],["Informática",0,T.info],["Direito Constitucional",0,T.const],["Direitos Humanos",0,T.dh],["História e Geografia do estado",0,["Formação histórica do estado","Geografia e economia do estado"]],["Atualidades",0,T.atual],["Legislação da corporação",0,["Estatuto dos militares estaduais","Código de Ética e Disciplina"]]]},
+  {id:"pc",nome:"Polícia Civil – Escrivão/Investigador",org:"Banca do edital",uf:"",tipo:"Concurso",gen:true,al:["policia civil","pc","escrivao","investigador","agente de policia civil","delegado"],
+   est:"Conteúdo comum às Polícias Civis estaduais. Envie o edital do seu estado para a lista exata.",fonte:"",
+   m:[["Língua Portuguesa",0,T.portC],["Raciocínio Lógico",0,T.rlm],["Informática",0,T.info],["Direito Constitucional",0,T.const],["Direito Administrativo",0,T.adm],["Direito Penal",0,T.penal],["Direito Processual Penal",0,T.ppenal],["Legislação Especial",0,T.legesp],["Direitos Humanos",0,T.dh]]},
+  {id:"trib",nome:"Tribunais – Técnico Judiciário",org:"FCC, FGV, Cebraspe…",uf:"",tipo:"Concurso",gen:true,al:["tribunal","tj","trt","trf","tre","tecnico judiciario","analista judiciario","tribunais"],
+   est:"Conteúdo comum aos concursos de técnico de tribunais (TJ, TRT, TRF, TRE). O edital de cada tribunal define o regimento e as áreas específicas.",fonte:"",
+   m:[["Língua Portuguesa",0,T.portC],["Raciocínio Lógico",0,T.rlm],["Informática",0,T.info],["Direito Constitucional",0,T.const],["Direito Administrativo",0,T.adm],["Direito Processual Civil",0,["Normas processuais","Atos e prazos processuais","Procedimento comum","Recursos"]],["Regimento Interno do tribunal",0,["Organização e competência do tribunal"]],["Ética no Serviço Público",0,T.etica]]},
+  {id:"pref",nome:"Prefeitura – Nível médio",org:"Banca do edital",uf:"",tipo:"Concurso",gen:true,al:["prefeitura","concurso municipal","assistente administrativo","agente administrativo","camara municipal"],
+   est:"Conteúdo comum de concursos municipais de nível médio. Confira a legislação municipal no edital.",fonte:"",
+   m:[["Língua Portuguesa",0,T.portC],["Matemática",0,T.matEF],["Raciocínio Lógico",0,T.rlm],["Informática",0,T.info],["Conhecimentos Gerais e do município",0,T.atual],["Legislação municipal",0,["Lei Orgânica do município","Estatuto dos servidores municipais"]]]},
+  {id:"cnu",nome:"CNU – Concurso Nacional Unificado",org:"Cesgranrio",uf:"BR",tipo:"Concurso",al:["cnu","concurso nacional unificado","concursao"],
+   est:"Prova de conhecimentos gerais comum a todos e conhecimentos específicos por bloco temático, além de prova discursiva.",fonte:"https://www.gov.br/gestao/pt-br/concursonacional",
+   m:[["Língua Portuguesa",0,T.portC],["Matemática e Raciocínio",0,T.rlm],["Realidade brasileira e políticas públicas",0,["Desafios do Estado brasileiro","Políticas públicas","Diversidade e inclusão"]],["Ética e integridade",0,T.etica],["Noções de Direito Administrativo",0,T.adm]]},
+  {id:"encceja",nome:"Encceja – Ensino Médio",org:"Inep",uf:"BR",tipo:"Outro",al:["encceja","supletivo","certificacao ensino medio"],
+   est:"4 provas objetivas por área (Linguagens, Humanas, Natureza e Matemática) e redação.",fonte:"https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/encceja",
+   m:[["Linguagens e Redação",0,T.por.concat(["Redação dissertativa"])],["Matemática",0,T.mat.slice(0,12)],["Ciências Humanas",0,T.his.slice(0,8).concat(T.geo.slice(0,6))],["Ciências da Natureza",0,T.bio.slice(0,8).concat(T.fis.slice(0,4),T.qui.slice(0,4))]]}
+];
+const UFS={ac:"Acre",al:"Alagoas",ap:"Amapá",am:"Amazonas",ba:"Bahia",ce:"Ceará",df:"Distrito Federal",es:"Espírito Santo",go:"Goiás",ma:"Maranhão",mt:"Mato Grosso",ms:"Mato Grosso do Sul",mg:"Minas Gerais",pa:"Pará",pb:"Paraíba",pr:"Paraná",pe:"Pernambuco",pi:"Piauí",rj:"Rio de Janeiro",rn:"Rio Grande do Norte",rs:"Rio Grande do Sul",ro:"Rondônia",rr:"Roraima",sc:"Santa Catarina",sp:"São Paulo",se:"Sergipe",to:"Tocantins"};
+
+/* Interpretação do que a pessoa digitou: apelidos, números romanos/ordinais, erros de digitação e estado */
+const STOP=new Set("a o os as de da do das dos e em para pra pro prova provas concurso concursos vestibular exame quero vou fazer estudar estudo estou me preparando preparar no na nos nas um uma modulo etapa fase serie ano edital cargo".split(" "));
+function lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
+function tokens(s){
+  s=norm(s).replace(/[^a-z0-9 ]/g," ").replace(/\b(\d)\s*[oaº°ª]\b/g,"$1").replace(/(\D)(\d)\b/g,"$1 $2");
+  const map={i:"1",ii:"2",iii:"3",primeiro:"1",primeira:"1",segundo:"2",segunda:"2",terceiro:"3",terceira:"3",um:"1",dois:"2",tres:"3"};
+  return s.split(/\s+/).filter(Boolean).map(t=>map[t]||t).filter(t=>!STOP.has(t));
+}
+function interpretar(q){
+  const qt=tokens(q);if(!qt.length)return [];
+  const num=qt.find(t=>/^[123]$/.test(t));const words=qt.filter(t=>!/^\d+$/.test(t));
+  let uf=words.find(t=>UFS[t]&&t!=="pr"&&t!=="pe"||UFS[t]&&words.length>1);if(!uf)uf=Object.keys(UFS).find(k=>{const ws=norm(UFS[k]).split(" ").filter(w=>!STOP.has(w));return ws.length>0&&ws.every(w=>words.includes(w))});
+  if(uf){const tira=new Set([uf,...norm(UFS[uf]).split(" ")]);const w2=words.filter(w=>!tira.has(w));if(w2.length)words.splice(0,words.length,...w2)}
+  const res=[];
+  CATALOGO.forEach(e=>{
+    let best=0;
+    e.al.forEach(a=>{const at=tokens(a).filter(t=>!/^\d+$/.test(t));if(!at.length||!words.length)return;
+      let hit=0;words.forEach(w=>{if(at.includes(w))hit+=1;else if(w.length>=4&&at.some(x=>x.length>=4&&(lev(w,x)<=1||x.startsWith(w)||w.startsWith(x))))hit+=.85;else if(w.length>=3&&at.some(x=>x.startsWith(w)))hit+=.6});
+      const cobre=hit/words.length,completo=hit/at.length;best=Math.max(best,cobre*.7+completo*.3)});
+    if(e.gen&&uf&&best>=.4)best=Math.min(1,best+.2);
+    if(uf&&e.uf&&e.uf!=="BR"&&e.uf.toLowerCase()!==uf)best*=.5;
+    if(e.num){if(num)best=+num===e.num?best+.15:best*.35;}
+    if(best>=.5)res.push({e,score:best});
+  });
+  res.sort((a,b)=>b.score-a.score||((a.e.num||0)-(b.e.num||0)));
+  return res.slice(0,8).map(r=>({...r,uf:r.e.gen&&uf?uf:null,num}));
+}
+function explicar(r){const e=r.e;let s=e.nome;
+  if(e.id.startsWith("pism"))s=`PISM Módulo ${["I","II","III"][e.num-1]}, o vestibular seriado da UFJF (Juiz de Fora, MG), com o conteúdo da ${PISM_SERIE[e.num]}`;
+  else if(e.id.startsWith("pas"))s=`PAS UnB, ${e.num}ª etapa (seriado da Universidade de Brasília)`;
+  else if(e.id.startsWith("ssa"))s=`SSA ${e.num}, o seriado da Universidade de Pernambuco`;
+  else if(r.uf)s=`${e.nome.replace(" (outros estados)","")} – ${UFS[r.uf]} (conteúdo comum; confira o edital do estado)`;
+  return s}
+function editalDoCatalogo(e,uf){
+  return {nome:uf?`${e.nome.replace(" (outros estados)","")} – ${UFS[uf]}`:e.nome,banca:e.org,dataProva:"",cargo:"",fonte:"catalogo",catalogoId:e.id,estrutura:e.est,
+    referencia:e.gen?"Conteúdo comum a provas desse tipo. Envie o edital do seu estado ou órgão para ter a lista exata.":"Estrutura conferida em fontes públicas em outubro de 2026. Confira sempre o edital mais recente.",fonteUrl:e.fonte,
+    materias:e.m.map(([n,q,ts])=>({id:uid(),nome:n,questoes:q,topicos:ts.map(t=>({id:uid(),t,feito:false}))}))};
+}
+
+/* Leitura de edital sem IA: encontra o conteúdo programático e separa matérias e tópicos */
+const MATERIAS_CONHECIDAS=["língua portuguesa","português","literatura","redação","matemática","matemática financeira","raciocínio lógico","raciocínio lógico-matemático","informática","noções de informática","física","química","biologia","história","geografia","inglês","língua inglesa","espanhol","língua espanhola","filosofia","sociologia","atualidades","conhecimentos gerais","direito constitucional","direito administrativo","direito penal","direito processual penal","direito civil","direito processual civil","direito do trabalho","direito tributário","direitos humanos","legislação especial","legislação de trânsito","legislação","ética","ética no serviço público","contabilidade","contabilidade geral","estatística","administração pública","administração geral","arquivologia","conhecimentos bancários","seguridade social","ciências","estudos sociais","legislação aplicada","conhecimentos específicos"];
+function extrairLocal(texto){
+  const t=texto.replace(/\r/g,"");
+  const conta=trecho=>{const n=norm(trecho);return MATERIAS_CONHECIDAS.reduce((a,m)=>a+(n.includes(norm(m))?1:0),0)};
+  const marcas=[...t.matchAll(/CONTE[ÚU]DOS?\s+PROGRAM[ÁA]TICOS?|OBJETOS\s+DE\s+AVALIA[ÇC][ÃA]O|PROGRAMAS?\s+DAS?\s+PROVAS?|CONHECIMENTOS\s+B[ÁA]SICOS/gi)].map(m=>m.index);
+  let ini=0;if(marcas.length){let melhor=-1;marcas.forEach(i=>{const c=conta(t.slice(i,i+8000));if(c>melhor){melhor=c;ini=i}})}
+  let fim=t.length;const re=/\n\s*(ANEXO\s+[IVX]+\b|QUADRO\s+DE\s+VAGAS)/gi;re.lastIndex=ini+400;const mf=re.exec(t);if(mf)fim=mf.index;
+  const corpo=t.slice(ini,fim);
+  const linhas=corpo.split("\n");const secs=[];let atual=null;
+  const RUIDO=/ANEXO|EDITAL|CRONOGRAMA|MINIST[ÉE]RIO|UNIVERSIDADE|CONTE[ÚU]DO PROGRAM|OBJETOS DE AVALIA|P[ÁA]GINA|^HABILIDADES$|^CONHECIMENTOS$|PRESIDENTE|DIRETOR|SECRET[ÁA]RIO/i;
+  const ehTitulo=l=>{let s=l.trim().replace(/^[\dIVX]+(?:\.\d+)*\s*[.)\-–]?\s*/,"").replace(/[:.\-–]+$/,"").trim();if(s.length<4||s.length>70)return null;
+    if(/^(DA|DAS|DO|DOS|DE)\s/i.test(s)&&!/^DE\s/i.test(s))return null;
+    const n=norm(s);const conhecida=MATERIAS_CONHECIDAS.find(m=>n===norm(m)||n==="nocoes de "+norm(m)||n.startsWith(norm(m)+" ")||n.startsWith("nocoes de "+norm(m)));
+    const maiusc=s===s.toUpperCase()&&/[A-ZÁÉÍÓÚÇ]{4}/.test(s)&&!/\d/.test(s)&&s.split(" ").length<=7;
+    if(RUIDO.test(s))return null;
+    if(conhecida||maiusc)return s.charAt(0)+s.slice(1).toLowerCase();return null};
+  linhas.forEach(l=>{let resto="";const m=/^\s*([^:]{4,70}):\s*(.+)$/.exec(l);let tt=ehTitulo(l);if(!tt&&m){tt=ehTitulo(m[1]);resto=m[2]}
+    if(tt){atual={nome:tt.replace(/\b(de|da|do|e)\b/gi,x=>x.toLowerCase()),txt:resto};secs.push(atual)}else if(atual)atual.txt+=" "+l.trim()});
+  const materias=secs.map(s=>{let txt=s.txt.replace(/\s+/g," ").trim();
+    let partes=txt.split(/\s(?=\d{1,2}(?:\.\d{1,2})?\s*[.)\-–]?\s+[A-ZÁÉÍÓÚÇ])/);
+    if(partes.length<3)partes=txt.split(/;\s+|\.\s+(?=[A-ZÁÉÍÓÚÇ])/);
+    const tops=partes.map(p=>p.replace(/^\d{1,2}(?:\.\d{1,2})*\s*[.)\-–]?\s*/,"").replace(/[;.]\s*$/,"").trim()).filter(p=>p.length>=4&&p.length<=400).map(p=>p.length>200?p.slice(0,197)+"…":p);
+    const conhecida=MATERIAS_CONHECIDAS.some(m=>norm(s.nome).includes(norm(m)));
+    return {nome:s.nome.slice(0,60),questoes:0,topicos:tops.slice(0,60),ok:conhecida||tops.length>=2}}).filter(m=>m.ok&&m.topicos.length);
+  const ag={};materias.forEach(m=>{delete m.ok;const k=norm(m.nome);if(ag[k])ag[k].topicos.push(...m.topicos);else ag[k]=m});
+  return {prova:{nome:"",banca:"",dataProva:"",cargo:""},materias:Object.values(ag).slice(0,30)};
+}
+
 /* ================= Utilidades ================= */
 const $=(s,r)=>(r||document).querySelector(s);
 const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
@@ -392,7 +632,40 @@ async function gravarPub(col,data){ // documentos públicos, um por usuário
 
 /* ================= Capacidades ================= */
 const cap=n=>(window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null));
-Promise.all([cap("user"),cap("db"),cap("sample")]).then(([u,d,s])=>{S.userCap=u;S.db=d;S.sample=s;S.caps=true;if(!S.mode)renderLogin()});
+/* Fora do claude.ai (GitHub Pages), o login com Google/Apple e a nuvem usam o Firebase configurado em firebase-config.js */
+let FB=null;
+function carregarScript(src){return new Promise((ok,no)=>{const el=document.createElement("script");el.src=src;el.onload=ok;el.onerror=no;document.head.appendChild(el)})}
+async function iniciarFirebase(){
+  const cfg=window.MAPA_FIREBASE_CONFIG;if(!cfg||!cfg.apiKey)return null;
+  const b="https://www.gstatic.com/firebasejs/10.12.2/";
+  await carregarScript(b+"firebase-app-compat.js");await Promise.all([carregarScript(b+"firebase-auth-compat.js"),carregarScript(b+"firebase-firestore-compat.js")]);
+  firebase.initializeApp(cfg);const auth=firebase.auth();
+  try{await auth.getRedirectResult()}catch(e){S.erroLogin=msgErroAuth(e)}
+  return {auth,db:firebase.firestore(),cfg};
+}
+function msgErroAuth(e,qual){const c=e&&e.code||"";
+  if(c==="auth/operation-not-allowed")return qual==="apple"?"O login com Apple ainda não foi ativado neste site.":"Este tipo de login ainda não foi ativado neste site.";
+  if(c==="auth/unauthorized-domain")return "Este endereço ainda não foi autorizado no Firebase (Authentication → Settings → Authorized domains).";
+  if(c==="auth/network-request-failed")return "Sem conexão com a internet. Tente de novo.";
+  return "Não foi possível entrar ("+(c||"erro")+"). Tente de novo.";}
+async function loginProvedor(qual){
+  if(!FB)return;const prov=qual==="google"?new firebase.auth.GoogleAuthProvider():new firebase.auth.OAuthProvider("apple.com");
+  if(qual==="apple"){prov.addScope("email");prov.addScope("name")}
+  try{await FB.auth.signInWithPopup(prov)}
+  catch(e){const c=e&&e.code||"";
+    if(/popup-blocked|operation-not-supported-in-this-environment|web-storage-unsupported/.test(c)){try{await FB.auth.signInWithRedirect(prov);return}catch(e2){e=e2}}
+    if(c==="auth/popup-closed-by-user"||c==="auth/cancelled-popup-request")return;renderLogin(msgErroAuth(e,qual))}
+}
+async function iniciarCaps(){
+  if(STANDALONE){
+    try{await carregarScript("firebase-config.js")}catch(e){}
+    try{FB=await iniciarFirebase()}catch(e){FB=null}
+    if(FB){S.db=FB.db;S.userCap={id:async()=>FB.auth.currentUser?FB.auth.currentUser.uid:null,me:async()=>({name:FB.auth.currentUser&&FB.auth.currentUser.displayName||""})};
+      FB.auth.onAuthStateChanged(u=>{if(u&&!S.mode)entrar("nuvem")})}
+    S.caps=true;if(!S.mode)renderLogin(S.erroLogin);return}
+  const [u,d,sm]=await Promise.all([cap("user"),cap("db"),cap("sample")]);S.userCap=u;S.db=d;S.sample=sm;S.caps=true;if(!S.mode)renderLogin();
+}
+iniciarCaps();
 
 /* ================= Login ================= */
 function renderLogin(erro){
@@ -402,12 +675,16 @@ function renderLogin(erro){
     <section class="auth-l">
       <div class="brand"><span class="logo">${LOGO}</span>Mapa de Estudos</div>
       <div class="stack sm">
-        <h1>Organize seus estudos com ajuda da IA.</h1>
+        <h1>${STANDALONE?"Organize seus estudos do seu jeito.":"Organize seus estudos com ajuda da IA."}</h1>
         <p class="muted" style="font-size:1.02rem;max-width:48ch">Do colégio ao concurso: responda algumas perguntas e receba uma semana de estudos montada para você, com pomodoro, tópicos do edital e grupos de estudo.</p>
       </div>
       <div class="card stack" style="max-width:420px">
-        <button class="btn primary" id="btnNuvem" type="button" ${ok?"":"disabled"} style="padding:11px">${ico("user")}Entrar com minha conta</button>
-        <p class="hint">${!S.caps?'<span class="row"><span class="spinner"></span>Verificando a conexão com sua conta…</span>':ok?"Seu perfil, plano e progresso ficam salvos na nuvem e abrem em qualquer dispositivo. Grupos, chat e ranking exigem login.":STANDALONE?`Esta é a versão pública do site: seus dados ficam salvos neste navegador. Login na nuvem, IA, grupos, chat e ranking funcionam na <a href="${LINK_CLAUDE}" target="_blank" rel="noopener">versão completa no claude.ai</a>.`:"Login indisponível nesta visualização. Abra a página no claude.ai com sua conta conectada."}</p>
+        ${STANDALONE?`
+        <button class="btn" id="btnGoogle" type="button" ${FB?"":"disabled"} style="padding:11px">${G_ICON}Entrar com Google</button>
+        <button class="btn" id="btnApple" type="button" ${FB?"":"disabled"} style="padding:11px">${A_ICON}Entrar com Apple</button>
+        <p class="hint">${!S.caps?'<span class="row"><span class="spinner"></span>Preparando o login…</span>':FB?"Seu perfil, plano e progresso ficam salvos na nuvem e abrem em qualquer dispositivo. Grupos, chat e ranking exigem login.":"O login com Google e Apple ainda não foi configurado neste site. Por enquanto, use como visitante."}</p>`
+        :`<button class="btn primary" id="btnNuvem" type="button" ${ok?"":"disabled"} style="padding:11px">${ico("user")}Entrar com minha conta</button>
+        <p class="hint">${!S.caps?'<span class="row"><span class="spinner"></span>Verificando a conexão com sua conta…</span>':ok?"Seu perfil, plano e progresso ficam salvos na nuvem e abrem em qualquer dispositivo. Grupos, chat e ranking exigem login.":"Login indisponível nesta visualização. Abra a página no claude.ai com sua conta conectada."}</p>`}
         <div class="row" style="gap:8px;color:var(--muted);font-size:.78rem"><span style="flex:1;height:1px;background:var(--line)"></span>ou<span style="flex:1;height:1px;background:var(--line)"></span></div>
         <button class="btn" id="btnLocal" type="button">Continuar como visitante</button>
         <p class="hint">Como visitante, tudo fica só neste navegador e a parte de comunidade fica bloqueada.</p>
@@ -417,17 +694,20 @@ function renderLogin(erro){
     </section>
     <aside class="auth-r">
       <div class="brand"><span class="logo">${LOGO}</span></div>
-      ${[["spark","Plano semanal por IA","Distribui suas horas por matéria conforme a dificuldade, a prioridade e o tempo livre de cada dia."],
+      ${[["spark",STANDALONE?"Plano semanal automático":"Plano semanal por IA","Distribui suas horas por matéria conforme a dificuldade, a prioridade e o tempo livre de cada dia."],
          ["timer","Pomodoro integrado","Cada sessão concluída entra no seu histórico e no ranking diário."],
-         ["scan","Leitura de edital","Envie o PDF do edital ou só o nome da prova e receba os tópicos organizados por matéria."],
+         ["scan","Leitura de edital","Envie o PDF do edital ou escreva o nome da prova (ENEM, Pism 1, EsPCEx, PM MG…) e receba os tópicos por matéria."],
          ["users","Grupos e ranking","Crie grupos de estudo, converse no chat do grupo ou no chat geral e compare horas estudadas."]]
         .map(([i,t,d])=>`<div class="feat"><span>${ico(i)}</span><div><b>${t}</b><p>${d}</p></div></div>`).join("")}
     </aside>
   </div>`;
   $("#btnLocal").onclick=()=>entrar("local");
-  $("#btnNuvem").onclick=()=>entrar("nuvem");
+  if(STANDALONE){$("#btnGoogle").onclick=()=>loginProvedor("google");$("#btnApple").onclick=()=>loginProvedor("apple")}
+  else $("#btnNuvem").onclick=()=>entrar("nuvem");
   $("[data-theme-lbl]").onclick=trocarTema;
 }
+const G_ICON=`<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
+const A_ICON=`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3-1.5z"/></svg>`;
 
 async function entrar(modo){
   let nomeConta="";
@@ -446,7 +726,7 @@ async function entrar(modo){
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
   else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
 }
-function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pausarPomo();
+function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pausarPomo();if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
   Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{}}});renderLogin()}
 
 function perfilPadrao(nome){
@@ -674,7 +954,7 @@ ${txt}
 """`;
 }
 function promptPorNome(nome,extra){
-  return `Um estudante vai prestar "${nome}" e não tem o edital em mãos. ${extra?`Informações extras dele: ${extra}. `:""}Com base no edital mais recente que você conhece dessa prova, liste o conteúdo programático cobrado, disciplina por disciplina, com os tópicos na ordem do edital.
+  return `Um estudante vai prestar "${nome}" e não tem o edital em mãos. ${extra?`Informações extras dele: ${extra}. `:""}O nome pode vir abreviado, com apelido, número de módulo/etapa ou estado (ex.: "Pism 1" = Módulo I do PISM da UFJF; "PAS 2" = 2ª etapa do PAS UnB; "pm mg" = soldado da Polícia Militar de Minas Gerais). Interprete a intenção dele e use o nome oficial da prova em "prova.nome". Com base no edital mais recente que você conhece dessa prova, liste o conteúdo programático cobrado, disciplina por disciplina, com os tópicos na ordem do edital.
 
 Regras:
 - Use o seu conhecimento do edital oficial; não invente disciplinas. Se não conhecer a prova com segurança, devolva "materias": [] e explique em "observacao".
@@ -1054,7 +1334,7 @@ function renderPomodoro(){
 function renderEdital(){
   const t=S.editalTab;
   $("#main").innerHTML=`<div class="page">
-    ${pageHead("Escanear edital","A IA lê o edital inteiro e separa os tópicos cobrados por matéria. O resultado aparece em “Tópicos da prova”, separado da sua semana.")}
+    ${pageHead("Escanear edital",(S.sample?"A IA lê o edital inteiro":"O site lê o edital inteiro")+" e separa os tópicos cobrados por matéria. O resultado aparece em “Tópicos da prova”, separado da sua semana.")}
     ${S.edital?`<div class="card row" style="justify-content:space-between;margin-bottom:16px"><div><span class="eyebrow">Prova atual</span><div style="font-weight:600">${esc(S.edital.nome)}</div><div class="small muted">${S.edital.materias.length} matérias · ${S.edital.materias.reduce((a,m)=>a+m.topicos.length,0)} tópicos</div></div><button class="btn" type="button" data-link="topicos">${ico("list")}Abrir tópicos</button></div>`:""}
     <div class="tabs" role="tablist">${[["arquivo","Enviar arquivo"],["texto","Colar texto"],["nome","Não tenho o edital"]].map(([k,n])=>`<button type="button" role="tab" aria-selected="${t===k}" class="${t===k?"on":""}" data-tab="${k}">${n}</button>`).join("")}</div>
     <div class="card stack" id="ed-body">
@@ -1064,15 +1344,16 @@ function renderEdital(){
         <div id="ed-info"></div>`
       :t==="texto"?`
         <div class="field"><label for="ed-txt">Cole o texto do edital (ou só o conteúdo programático)</label><textarea id="ed-txt" style="min-height:220px" placeholder="Cole aqui…">${esc(S.editalTexto||"")}</textarea></div>
-        <div class="row"><button class="btn primary" type="button" id="ed-go-txt">${ico("spark")}Analisar com IA</button><span class="hint" id="ed-count"></span></div>`
+        <div class="row"><button class="btn primary" type="button" id="ed-go-txt">${ico("spark")}${S.sample?"Analisar com IA":"Separar os tópicos"}</button><span class="hint" id="ed-count"></span></div>`
       :`
-        <div class="grid2"><div class="field"><label for="ed-nome">Para qual prova você está se preparando?</label><input type="text" id="ed-nome" placeholder="Ex.: EsPCEx, ENEM, Fuvest, Polícia Federal" maxlength="80"></div>
-        <div class="field"><label for="ed-extra">Detalhes (opcional)</label><input type="text" id="ed-extra" placeholder="Ex.: cargo de agente, ano 2027" maxlength="120"></div></div>
-        <div class="sugs">${["EsPCEx","ENEM","Fuvest","ESA","Polícia Federal – Agente","Banco do Brasil – Escriturário"].map(s=>`<button class="sug" type="button" data-pn="${esc(s)}">${esc(s)}</button>`).join("")}</div>
-        <div class="row"><button class="btn primary" type="button" id="ed-go-nome">${ico("spark")}Buscar tópicos da prova</button></div>
-        <p class="hint">A EsPCEx usa o conteúdo do edital 2026, conferido em fonte pública. Para outras provas, a IA usa o edital mais recente que conhece e marca o grau de confiança: confira sempre com o edital oficial.</p>`}
+        <div class="field"><label for="ed-nome">Para qual prova você está se preparando?</label><input type="text" id="ed-nome" placeholder="Ex.: Pism 1, EsPCEx, ENEM, PM de Minas, Banco do Brasil" maxlength="80" autocomplete="off">
+          <span class="hint">Pode escrever do seu jeito: apelidos, siglas, número do módulo ou o estado.</span></div>
+        <div class="sugs">${["Pism 1","ENEM","EsPCEx","Fuvest","PAS UnB 1","ESA","Polícia Federal","PM MG","Banco do Brasil","OAB"].map(x=>`<button class="sug" type="button" data-pn="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+        <div id="ed-res" class="stack sm"></div>
+        <details><summary>Ver todas as provas do catálogo (${CATALOGO.length})</summary>
+          <div class="stack sm" style="margin-top:12px">${["Vestibular","Seriado","Militar","Concurso","Outro"].map(tp=>`<div><div class="eyebrow" style="margin-bottom:6px">${tp==="Outro"?"Outros":tp==="Seriado"?"Vestibulares seriados":tp==="Militar"?"Escolas militares":tp+"s"}</div><div class="sugs">${CATALOGO.filter(c=>c.tipo===tp).map(c=>`<button class="sug" type="button" data-usar="${c.id}">${esc(c.nome)}</button>`).join("")}</div></div>`).join("")}</div></details>`}
     </div>
-    ${S.sample?"":`<p class="hint" style="margin-top:12px">A IA não está disponível nesta visualização: só a busca por “EsPCEx” funciona sem ela.</p>`}
+    ${S.sample?"":`<p class="hint" style="margin-top:12px">Nesta versão, a leitura do edital é feita pelo próprio site, sem IA. Confira os tópicos depois de ler.</p>`}
   </div>`;
   $$("[data-tab]").forEach(b=>b.onclick=()=>{S.editalTab=b.dataset.tab;renderEdital()});
   $$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
@@ -1086,8 +1367,11 @@ function renderEdital(){
     const ta=$("#ed-txt"),cnt=()=>$("#ed-count").textContent=ta.value.length?ta.value.length.toLocaleString("pt-BR")+" caracteres":"";cnt();ta.oninput=cnt;
     $("#ed-go-txt").onclick=()=>{const v=ta.value.trim();if(v.length<200){toast("Cole um trecho maior do edital (pelo menos o conteúdo programático).");return}S.editalTexto=v;analisarTexto(v,"texto colado")};
   }else{
-    $$("[data-pn]").forEach(b=>b.onclick=()=>{$("#ed-nome").value=b.dataset.pn});
-    $("#ed-go-nome").onclick=()=>{const n=$("#ed-nome").value.trim();if(!n){$("#ed-nome").focus();return}buscarPorNome(n,$("#ed-extra").value.trim())};
+    const inp=$("#ed-nome");
+    $$("[data-pn]").forEach(b=>b.onclick=()=>{inp.value=b.dataset.pn;mostrarResultados(inp.value)});
+    $$("[data-usar]").forEach(b=>b.onclick=()=>usarCatalogo(b.dataset.usar));
+    inp.addEventListener("input",()=>mostrarResultados(inp.value));
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();const r=interpretar(inp.value);if(r.length&&!ambiguo(r))usarCatalogo(r[0].e.id,r[0].uf);else mostrarResultados(inp.value)}});
   }
 }
 async function lerArquivos(files){
@@ -1102,19 +1386,29 @@ async function lerArquivos(files){
       if(!window.pdfjsLib)throw new Error("O leitor de PDF não carregou. Recarregue a página ou cole o texto.");
       const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false}).promise;pags=doc.numPages;
       for(let i=1;i<=pags;i++){const pg=await doc.getPage(i);const tc=await pg.getTextContent();let last=null,line="";
-        tc.items.forEach(it=>{const y=it.transform?Math.round(it.transform[5]):0;if(last!==null&&Math.abs(y-last)>2){texto+=line+"\n";line=""}line+=it.str+(it.hasEOL?"":" ");last=y});texto+=line+"\n\n";
+        let fimX=null;tc.items.forEach(it=>{const tr=it.transform||[0,0,0,0,0,0],y=Math.round(tr[5]),x=tr[4],h=Math.abs(tr[3])||10;
+          if(last!==null&&Math.abs(y-last)>2){texto+=line+"\n";line="";fimX=null}
+          if(fimX!==null&&x-fimX>h*.18&&!/\s$/.test(line)&&!/^\s/.test(it.str))line+=" ";
+          line+=it.str;fimX=x+(it.width||0);last=y;if(it.hasEOL){texto+=line+"\n";line="";fimX=null;last=null}});texto+=line+"\n\n";
         $("#rd-p").style.width=Math.round(i/pags*100)+"%"}
     }else{texto=await f.text()}
     texto=texto.replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
     if(texto.length<200){info.innerHTML=`<p class="err">Não encontrei texto neste arquivo. Ele parece ser um PDF escaneado (imagem). ${S.sample?"Envie fotos das páginas do conteúdo programático ou":""} cole o texto na aba “Colar texto”.</p>`;return}
     S.editalTexto=texto;
-    info.innerHTML=`<div class="row" style="justify-content:space-between"><div><b>${esc(f.name)}</b><div class="small muted">${pags?pags+" páginas · ":""}${texto.length.toLocaleString("pt-BR")} caracteres lidos</div></div><button class="btn primary" type="button" id="ed-go">${ico("spark")}Analisar edital inteiro com IA</button></div>`;
+    info.innerHTML=`<div class="row" style="justify-content:space-between"><div><b>${esc(f.name)}</b><div class="small muted">${pags?pags+" páginas · ":""}${texto.length.toLocaleString("pt-BR")} caracteres lidos</div></div><button class="btn primary" type="button" id="ed-go">${ico("spark")}${S.sample?"Analisar edital inteiro com IA":"Separar os tópicos do edital"}</button></div>`;
     $("#ed-go").onclick=()=>analisarTexto(texto,f.name);
   }catch(e){info.innerHTML=`<p class="err">${esc(e.message||"Não foi possível ler o arquivo.")} Tente colar o texto na aba “Colar texto”.</p>`}
 }
 function progressoEdital(t,s,p){$("#ed-body").innerHTML=`<div class="loadbox"><div class="row"><span class="spinner"></span><b>${esc(t)}</b></div><p class="small muted" id="ed-s">${esc(s)}</p><div class="prog"><i id="ed-p" style="width:${p}%"></i></div></div>`}
+function nomeDoEdital(texto,origem){const m=/(CONCURSO P[ÚU]BLICO|PROCESSO SELETIVO|VESTIBULAR|EXAME DE ADMISS[ÃA]O)[^\n]{0,90}/i.exec(texto.slice(0,6000));
+  return (m?m[0].replace(/\s+/g," ").trim():String(origem||"Edital").replace(/\.[a-z]+$/i,"")).slice(0,90)}
+function lerSemIA(texto,origem){
+  const ed=juntarEdital([extrairLocal(texto)],{fonte:"leitura",origem});
+  if(!ed.materias.length){toast("Não consegui separar as matérias deste edital. Cole só o conteúdo programático na aba “Colar texto”.");renderEdital();return}
+  ed.nome=nomeDoEdital(texto,origem);salvarEdital(ed);
+}
 async function analisarTexto(texto,origem){
-  if(!S.sample){toast("A análise do edital precisa da IA, que não está disponível nesta visualização.");return}
+  if(!S.sample){progressoEdital("Lendo o edital","Procurando o conteúdo programático e separando as matérias…",50);setTimeout(()=>lerSemIA(texto,origem),50);return}
   const TAM=60000,SOB=800,partes=[];for(let i=0;i<texto.length;i+=TAM-SOB)partes.push(texto.slice(i,i+TAM));
   progressoEdital("Lendo o edital inteiro",`Dividi o edital em ${partes.length} ${partes.length>1?"partes":"parte"}. Analisando a parte 1…`,5);
   const res=[];let falhas=0;
@@ -1125,7 +1419,7 @@ async function analisarTexto(texto,origem){
     $("#ed-p").style.width=Math.round((i+1)/partes.length*100)+"%";
   }
   const ed=juntarEdital(res,{fonte:"edital",origem});
-  if(!ed.materias.length){toast("Não encontrei o conteúdo programático. Confira se o arquivo é o edital completo.");renderEdital();return}
+  if(!ed.materias.length){if(!res.length){lerSemIA(texto,origem);return}toast("Não encontrei o conteúdo programático. Confira se o arquivo é o edital completo.");renderEdital();return}
   if(falhas)toast(`${falhas} parte(s) do edital não puderam ser analisadas; confira os tópicos.`);
   salvarEdital(ed);
 }
@@ -1136,11 +1430,29 @@ async function analisarImagens(imgs){
     const ed=juntarEdital([r],{fonte:"edital",origem:"fotos"});if(!ed.materias.length){toast("Não encontrei tópicos nas imagens.");renderEdital();return}salvarEdital(ed)}
   catch(e){toast("A IA não conseguiu ler as imagens.");renderEdital()}
 }
+function ambiguo(r){return r.length>1&&r[1].score>=r[0].score-.01&&r[0].e.id.replace(/\d$/,"")===r[1].e.id.replace(/\d$/,"")&&!r[0].num}
+function mostrarResultados(q){
+  const box=$("#ed-res");if(!box)return;q=q.trim();if(q.length<2){box.innerHTML="";return}
+  const r=interpretar(q);
+  if(!r.length){box.innerHTML=`<div class="empty-state"><b>Não encontrei “${esc(q)}” no catálogo.</b>
+    <span>${S.sample?"Posso pedir para a IA montar os tópicos dessa prova a partir do edital mais recente que ela conhece.":"Envie o edital em PDF na aba “Enviar arquivo”: o site lê o PDF e separa os tópicos."}</span>
+    ${S.sample?`<button class="btn primary" type="button" id="ed-ia">${ico("spark")}Buscar com a IA</button>`:`<button class="btn" type="button" id="ed-ir-arq">${ico("file")}Enviar o edital</button>`}</div>`;
+    const b=$("#ed-ia");if(b)b.onclick=()=>buscarPorNome(q);const a=$("#ed-ir-arq");if(a)a.onclick=()=>{S.editalTab="arquivo";renderEdital()};return}
+  const amb=ambiguo(r);
+  box.innerHTML=`<p class="small">${amb?`<b>Qual delas?</b> “${esc(q)}” tem mais de uma opção:`:`<b>Entendi:</b> ${esc(explicar(r[0]))}.`}</p>
+    ${r.slice(0,amb?r.length:4).map((x,i)=>`<div class="card flat stack sm" style="padding:14px${i===0&&!amb?";border-color:var(--fg)":""}">
+      <div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div style="min-width:0"><b>${esc(x.uf?x.e.nome.replace(" (outros estados)","")+" – "+UFS[x.uf]:x.e.nome)}</b>
+        <div class="small muted">${esc(x.e.org)}${x.e.cidade?" · "+esc(x.e.cidade):""}${x.e.uf&&x.e.uf!=="BR"?" · "+x.e.uf:x.uf?" · "+x.uf.toUpperCase():x.e.uf==="BR"?" · Nacional":""}</div></div><span class="pill">${esc(x.e.tipo)}</span></div>
+      <p class="small">${esc(x.e.est)}</p>
+      <div class="row"><button class="btn sm ${i===0&&!amb?"primary":""}" type="button" data-usar="${x.e.id}" data-uf="${x.uf||""}">Usar esta prova</button><span class="small muted">${x.e.m.length} matérias · ${x.e.m.reduce((a,m)=>a+m[2].length,0)} tópicos</span></div>
+    </div>`).join("")}
+    ${S.sample?`<button class="btn ghost sm" type="button" id="ed-ia" style="align-self:flex-start">Não é nenhuma dessas? Buscar com a IA</button>`:""}`;
+  $$("[data-usar]",box).forEach(b=>b.onclick=()=>usarCatalogo(b.dataset.usar,b.dataset.uf||null));
+  const b=$("#ed-ia");if(b)b.onclick=()=>buscarPorNome(q);
+}
+function usarCatalogo(id,uf){const e=CATALOGO.find(c=>c.id===id);if(e)salvarEdital(editalDoCatalogo(e,uf))}
 async function buscarPorNome(nome,extra){
-  if(/esp\s*c\s*ex/i.test(nome)){
-    const pr=PRESET_ESPCEX;salvarEdital({nome:"EsPCEx",banca:pr.banca,dataProva:"",cargo:"Curso de Formação de Oficiais",fonte:"pesquisa",referencia:pr.referencia,fonteUrl:pr.fonteUrl,confianca:"alta",
-      materias:pr.materias.map(([n,q,ts])=>({id:uid(),nome:n,questoes:q,topicos:ts.map(t=>({id:uid(),t,feito:false}))}))});return}
-  if(!S.sample){toast("Sem a IA, só a EsPCEx está disponível. Envie o edital quando tiver acesso à IA.");return}
+  if(!S.sample){toast("A busca com IA não está disponível aqui. Envie o edital em PDF.");return}
   progressoEdital(`Buscando os tópicos de ${nome}`,"A IA está montando o conteúdo programático…",15);
   try{
     const r=await S.sample.json(promptPorNome(nome,extra),{modelTier:"complex",cache:false,onText:({text})=>{const p=$("#ed-p");if(p)p.style.width=Math.min(95,15+text.length/60)+"%"}});
@@ -1174,6 +1486,8 @@ function renderTopicos(){
     ${pageHead("Tópicos da prova · "+esc(ed.nome||"Prova"),[ed.banca,ed.cargo].filter(Boolean).map(esc).join(" · ")||"Conteúdo programático organizado por matéria",
       `<button class="btn primary" type="button" id="tp-tri">${ico("spark")}${ed.tri?"Refazer triagem da prova":"Fazer triagem da prova"}</button>`)}
     ${ed.fonte==="ia"?`<div class="card flat small" style="margin-bottom:16px;border-style:dashed"><b>Gerado a partir do conhecimento da IA</b> (confiança ${esc(ed.confianca||"média")}). ${ed.referencia?"Base: "+esc(ed.referencia)+". ":""}${esc(ed.observacao||"")} Confira com o edital oficial mais recente.</div>`:""}
+    ${ed.fonte==="catalogo"?`<div class="card flat small stack sm" style="margin-bottom:16px"><div><b>Estrutura:</b> ${esc(ed.estrutura||"")}</div><div class="muted">${esc(ed.referencia||"")}${ed.fonteUrl?` <a href="${esc(ed.fonteUrl)}" target="_blank" rel="noopener">Ver fonte</a>`:""}</div></div>`:""}
+    ${ed.fonte==="leitura"?`<div class="card flat small" style="margin-bottom:16px;border-style:dashed"><b>Tópicos separados automaticamente do edital, sem IA.</b> Confira se as matérias e os tópicos estão certos; você pode acrescentar tópicos em cada matéria.</div>`:""}
     ${ed.fonte==="pesquisa"?`<div class="card flat small" style="margin-bottom:16px"><b>Fonte:</b> ${esc(ed.referencia)} <a href="${esc(ed.fonteUrl)}" target="_blank" rel="noopener">Ver resumo do conteúdo programático</a></div>`:""}
     <div class="stats">
       <div class="stat"><div class="eyebrow">Progresso</div><div class="v">${tot?Math.round(feitos/tot*100):0}%</div><div class="prog" style="margin-top:8px"><i style="width:${tot?feitos/tot*100:0}%"></i></div></div>

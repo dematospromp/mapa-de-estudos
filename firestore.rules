@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Dados privados de cada pessoa: perfil de estudo, plano, edital e pomodoro
+    match /data/users/{uid}/{doc=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // Dados da comunidade: qualquer pessoa logada lê; cada uma só escreve o próprio documento
+    match /{col}/{uid} {
+      allow read: if request.auth != null && col in ['perfis', 'ranking', 'msgs', 'grupos', 'membros'];
+      allow write: if request.auth != null && request.auth.uid == uid && col in ['perfis', 'ranking', 'msgs', 'grupos', 'membros'];
+    }
+  }
+}
