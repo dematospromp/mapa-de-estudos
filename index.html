@@ -273,6 +273,86 @@ details>summary{cursor:pointer;font-weight:500}
 @media (max-width:640px){ .week{grid-template-columns:1fr} }
 @media (max-width:480px){ .stats{grid-template-columns:1fr 1fr} }
 @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+
+/* ===== Personalização: cor de destaque, estilos de interface, texto, densidade e cantos ===== */
+:root{--accent:var(--inv-bg);--accent-fg:var(--inv-fg);--accent-soft:color-mix(in srgb,var(--accent) 12%,transparent);--f-head:var(--f-body)}
+html{font-size:16px}
+:root[data-fonte="p"]{font-size:14.5px} :root[data-fonte="g"]{font-size:17.5px} :root[data-fonte="xg"]{font-size:19px}
+body{font-size:.906rem}
+h1,h2,h3,h4{font-family:var(--f-head)}
+:root[data-cantos="reto"]{--r:3px;--r-sm:2px} :root[data-cantos="arredondado"]{--r:18px;--r-sm:12px}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.pill.solid{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.prog i{background:var(--accent)}
+.ring .fgc{stroke:var(--accent)}
+.mini-pomo{background:var(--accent);color:var(--accent-fg)}
+.day.hoje{border-color:var(--accent)} .day.hoje header{background:var(--accent);color:var(--accent-fg)} .day.hoje header .muted{color:var(--accent-fg)}
+.nav a.on{background:var(--accent-soft);color:var(--fg)} .nav a.on svg{color:var(--accent)}
+.chk,input[type=range],.checks input{accent-color:var(--accent)}
+.tabs button.on{border-bottom-color:var(--accent)}
+.opt.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.steps span.on{background:var(--accent)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+/* densidade compacta */
+:root[data-densidade="compacto"] .card{padding:14px} :root[data-densidade="compacto"] .stat{padding:12px}
+:root[data-densidade="compacto"] .page{padding-block:18px 48px} :root[data-densidade="compacto"] .li{padding-block:6px}
+:root[data-densidade="compacto"] .nav a{padding-block:5px} :root[data-densidade="compacto"] .stack{gap:12px} :root[data-densidade="compacto"] .page-h{margin-bottom:16px}
+/* Suave */
+:root[data-estilo="suave"]{--f-body:"Nunito",ui-sans-serif,system-ui,sans-serif;--f-head:"Nunito",ui-sans-serif,system-ui,sans-serif;--r:18px;--r-sm:12px;--shadow:0 6px 24px rgba(0,0,0,.06)}
+:root[data-estilo="suave"] body{background:color-mix(in srgb,var(--accent) 5%,var(--bg))}
+:root[data-estilo="suave"] .card,:root[data-estilo="suave"] .stat,:root[data-estilo="suave"] .day{border-color:transparent}
+:root[data-estilo="suave"] .btn{border-radius:999px} :root[data-estilo="suave"] h1{font-weight:800}
+/* Vidro */
+:root[data-estilo="vidro"] body{background:radial-gradient(1200px 600px at 0% 0%,color-mix(in srgb,var(--accent) 28%,transparent),transparent 60%),radial-gradient(900px 500px at 100% 10%,color-mix(in srgb,#5b8def 22%,transparent),transparent 60%),radial-gradient(900px 600px at 50% 100%,color-mix(in srgb,#c06bff 16%,transparent),transparent 60%),var(--bg);background-attachment:fixed}
+:root[data-estilo="vidro"] .card,:root[data-estilo="vidro"] .stat,:root[data-estilo="vidro"] .day,:root[data-estilo="vidro"] .mat-acc,:root[data-estilo="vidro"] .side,:root[data-estilo="vidro"] .topbar-m,:root[data-estilo="vidro"] .composer{background:color-mix(in srgb,var(--surface) 58%,transparent);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);border-color:color-mix(in srgb,var(--fg) 10%,transparent)}
+:root[data-estilo="vidro"]{--r:16px;--r-sm:10px}
+/* Editorial */
+:root[data-estilo="editorial"]{--f-head:"Fraunces",Georgia,"Times New Roman",serif;--f-body:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;--r:4px;--r-sm:3px;--shadow:none}
+:root[data-estilo="editorial"] h1{font-size:2.1rem;font-weight:600;letter-spacing:-.02em} :root[data-estilo="editorial"] h2,:root[data-estilo="editorial"] h3{font-weight:600}
+:root[data-estilo="editorial"] .page-h{border-bottom:1px solid var(--fg);padding-bottom:14px}
+/* Terminal */
+:root[data-estilo="terminal"]{--f-body:"JetBrains Mono",ui-monospace,Menlo,monospace;--f-head:"JetBrains Mono",ui-monospace,Menlo,monospace;--f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--r:0px;--r-sm:0px;--shadow:none}
+:root[data-estilo="terminal"] body{font-size:.84rem} :root[data-estilo="terminal"] .page-h h1::before{content:"> ";color:var(--accent)}
+:root[data-estilo="terminal"] .card,:root[data-estilo="terminal"] .stat,:root[data-estilo="terminal"] .day,:root[data-estilo="terminal"] .btn{border-width:1.5px}
+:root[data-estilo="terminal"] h1,:root[data-estilo="terminal"] h2,:root[data-estilo="terminal"] h3{letter-spacing:0}
+/* Alto contraste */
+:root[data-estilo="contraste"]{--muted:#2b2b2b;--line:#111;--line-2:#000;--shadow:none}
+@media (prefers-color-scheme: dark){:root[data-estilo="contraste"]:not([data-theme="light"]){--muted:#e6e6e6;--line:#f5f5f5;--line-2:#fff;--bg:#000;--surface:#000;--sunken:#111}}
+:root[data-estilo="contraste"][data-theme="dark"]{--muted:#e6e6e6;--line:#f5f5f5;--line-2:#fff;--bg:#000;--surface:#000;--sunken:#111}
+:root[data-estilo="contraste"] .card,:root[data-estilo="contraste"] .stat,:root[data-estilo="contraste"] .day,:root[data-estilo="contraste"] .btn,:root[data-estilo="contraste"] input,:root[data-estilo="contraste"] select,:root[data-estilo="contraste"] textarea{border-width:2px}
+:root[data-estilo="contraste"] :focus-visible{outline:3px solid var(--accent);outline-offset:3px} :root[data-estilo="contraste"] .page a{text-decoration:underline}
+/* Página Aparência */
+.estilos{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.est{border:1.5px solid var(--line-2);border-radius:var(--r);padding:10px;background:var(--surface);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:8px}
+.est.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.est .mock{height:84px;border-radius:8px;overflow:hidden;display:grid;grid-template-columns:28% 1fr;border:1px solid rgba(127,127,127,.25)}
+.est .mock i{display:block}
+.cores{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.cor{width:34px;height:34px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1.5px var(--line-2);cursor:pointer;position:relative}
+.cor.on{box-shadow:0 0 0 2.5px var(--fg)}
+.cor.on::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;font-size:.85rem;font-weight:700;color:var(--cf,#fff)}
+/* Perfil */
+.perfil-card{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.perfil-card .capa{height:110px}
+.perfil-card .corpo{padding:0 20px 18px;margin-top:-44px;display:flex;flex-direction:column;gap:8px}
+.perfil-card .avatar.lg{border:4px solid var(--surface);width:88px;height:88px}
+.perfil-card .handle{color:var(--muted);font-size:.88rem}
+.perfil-card .meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:.84rem}
+.perfil-card .nums{display:flex;gap:20px;padding-top:6px;border-top:1px solid var(--line);margin-top:4px}
+.perfil-card .nums b{display:block;font-size:1.1rem}
+.capas{display:flex;gap:8px;flex-wrap:wrap}
+.capa-opt{width:54px;height:34px;border-radius:8px;border:2px solid transparent;cursor:pointer;box-shadow:0 0 0 1px var(--line-2)}
+.capa-opt.on{border-color:var(--fg)}
+.perfil-grid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+.perfil-grid>.sticky{position:sticky;top:20px}
+.sec-t{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:-4px}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--line)}
+.switch:first-of-type{border-top:0}
+.tg{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:999px;background:var(--line-2);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.tg:checked{background:var(--accent)} .tg:checked::after{transform:translateX(18px)}
+[data-perfil]{cursor:pointer}
+@media (max-width:860px){.perfil-grid{grid-template-columns:1fr}.perfil-grid>.sticky{position:static}}
 </style>
 
 </head><body><div id="root"></div>
@@ -578,6 +658,7 @@ function toast(msg){let box=document.querySelector(".toasts");if(!box){box=docum
 const I={
   home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
   cal:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3M16 3v3"/>',
+  palette:'<path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.8 1.6-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-4-4-7.2-9-7.2z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7" r="1.2"/><circle cx="15.5" cy="7.5" r="1.2"/>',
   chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   watch:'<circle cx="12" cy="14" r="7.5"/><path d="M12 10.5V14h2.5M10 2.5h4M12 2.5v4M18.5 7.5l1.5-1.5"/>',
   timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/>',
@@ -611,8 +692,7 @@ const S={mode:null,uid:null,db:null,userCap:null,sample:null,caps:false,
 function temaAtual(){const t=document.documentElement.getAttribute("data-theme");if(t)return t;return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}
 function aplicarTema(t){if(t)document.documentElement.setAttribute("data-theme",t);$$("[data-theme-lbl]").forEach(e=>e.innerHTML=temaBtnHtml())}
 const temaBtnHtml=()=>temaAtual()==="dark"?ico("sun")+"<span>Tema branco</span>":ico("moon")+"<span>Tema preto</span>";
-function trocarTema(){const n=temaAtual()==="dark"?"light":"dark";aplicarTema(n);try{localStorage.setItem("mapa_tema",n)}catch(e){}
-  if(S.perfil){S.perfil.tema=n;gravar("perfil",S.perfil)}}
+function trocarTema(){mudarUI("modo",temaAtual()==="dark"?"claro":"escuro")}
 try{aplicarTema(localStorage.getItem("mapa_tema"))}catch(e){}
 
 /* ================= Armazenamento ================= */
@@ -752,7 +832,7 @@ async function entrar(modo){
   try{[S.perfil,S.plano,S.edital,S.pomoLog,S.revisoes]=await Promise.all(["perfil","plano","edital","pomo","revisoes"].map(ler));if(!S.revisoes||!Array.isArray(S.revisoes.itens))S.revisoes={itens:[]}}
   catch(e){S.mode=null;renderLogin("Não foi possível ler seus dados ("+(e&&e.code||"erro")+").");return}
   S.pomoLog=garantirTotais(S.pomoLog&&S.pomoLog.dias?S.pomoLog:{dias:{},sessoes:0});carregarCrono();if(S.edital&&!Array.isArray(S.edital.materias))S.edital=null;
-  if(S.perfil&&S.perfil.tema)aplicarTema(S.perfil.tema);
+  if(S.perfil&&S.perfil.ui)aplicarUI(S.perfil.ui);else if(S.perfil&&S.perfil.tema)aplicarTema(S.perfil.tema);
   if(S.perfil&&S.perfil.pomo)Object.assign(P.dur,S.perfil.pomo);else if(S.perfil)Object.assign(P.dur,{foco:+S.perfil.bloco||50,curta:+S.perfil.pausa||10});P.restante=pomoTotal();
   if(S.mode==="nuvem"){assinarSocial();if(FBM())iniciarComunidadeFB()}
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
@@ -1228,6 +1308,7 @@ const estudandoAgora=id=>{const r=S.soc.ranking[id];const a=r&&r.agora;return a&
 const ponto=id=>estudandoAgora(id)?`<span title="Estudando agora" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-left:6px;vertical-align:middle"></span>`:"";
 function minPeriodo(id,dias){const r=S.soc.ranking[id];if(!r||!r.dias)return 0;let s=0;for(let i=0;i<dias;i++)s+=r.dias[diasAtras(i)]||0;
   const a=estudandoAgora(id);if(a)s+=Math.min(480,Math.max(0,(Date.now()-a.desde)/60000));return s}
+const visivelRanking=id=>{const p=S.soc.perfis[id];return !(p&&p.privacidade&&p.privacidade.ranking===false)};
 const minTotalR=id=>{const r=S.soc.ranking[id];const a=estudandoAgora(id);return (r&&r.total||0)+(a?Math.min(480,(Date.now()-a.desde)/60000):0)};
 
 /* ================= Revisões programadas (1, 7 e 30 dias) ================= */
@@ -1276,7 +1357,7 @@ function modalSessao(min,materia){
 /* ================= Meta diária ================= */
 function metaHoje(){const m=S.perfil&&+S.perfil.metaDia;if(m)return m;const k=DIAS[hojeIdx()].k;const pl=S.plano&&S.plano.semana&&S.plano.semana[k];const plan=(pl||[]).reduce((a,b)=>a+(b.min||0),0);return plan||Math.round((+((S.perfil&&S.perfil.horas&&S.perfil.horas[k])||0))*60)||60}
 function anelMeta(feito,meta){const p=Math.min(1,meta?feito/meta:0),L=2*Math.PI*30;
-  return `<svg viewBox="0 0 72 72" width="72" height="72" aria-hidden="true" style="transform:rotate(-90deg);flex:none"><circle cx="36" cy="36" r="30" fill="none" stroke="var(--line)" stroke-width="7"/><circle cx="36" cy="36" r="30" fill="none" stroke="var(--fg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${L}" stroke-dashoffset="${L*(1-p)}"/></svg>`}
+  return `<svg viewBox="0 0 72 72" width="72" height="72" aria-hidden="true" style="transform:rotate(-90deg);flex:none"><circle cx="36" cy="36" r="30" fill="none" stroke="var(--line)" stroke-width="7"/><circle cx="36" cy="36" r="30" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${L}" stroke-dashoffset="${L*(1-p)}"/></svg>`}
 function recordeSequencia(){const L=S.pomoLog;if(!L)return 0;const ds=Object.keys(L.dias).filter(d=>L.dias[d].min>0).sort();let best=0,cur=0,prev=null;
   ds.forEach(d=>{if(prev){const a=new Date(prev+"T12:00"),b=new Date(d+"T12:00");cur=Math.round((b-a)/864e5)===1?cur+1:1}else cur=1;best=Math.max(best,cur);prev=d});return best}
 
@@ -1291,7 +1372,7 @@ function renderEstatisticas(){
   // mapa de constância: 17 semanas, segunda a domingo
   const semanas=17,hoje=new Date(),fim=new Date(hoje);fim.setDate(fim.getDate()+(6-hojeIdx()));
   const cel=[];for(let i=semanas*7-1;i>=0;i--){const d=new Date(fim);d.setDate(fim.getDate()-i);const iso=dataISO(d);cel.push({iso,m:d>hoje?-1:minutosDia(iso)})}
-  const nivel=m=>m<0?"transparent":m===0?"var(--sunken)":m<30?"color-mix(in srgb,var(--fg) 25%,transparent)":m<60?"color-mix(in srgb,var(--fg) 45%,transparent)":m<120?"color-mix(in srgb,var(--fg) 70%,transparent)":"var(--fg)";
+  const nivel=m=>m<0?"transparent":m===0?"var(--sunken)":m<30?"color-mix(in srgb,var(--accent) 25%,transparent)":m<60?"color-mix(in srgb,var(--accent) 45%,transparent)":m<120?"color-mix(in srgb,var(--accent) 70%,transparent)":"var(--accent)";
   const pend=revisoesPendentes(),prox=revisoesProximas(14);
   $("#main").innerHTML=`<div class="page">
     ${pageHead("Estatísticas","Seu histórico de estudo: constância, tempo por matéria, desempenho em questões e revisões.")}
@@ -1398,7 +1479,7 @@ async function sairGrupoFB(gid){
     await meuDoc("social").set({grupos:{[gid]:firebase.firestore.FieldValue.delete()}},{merge:true});toast("Você saiu do grupo.")}
   catch(e){toast("Não foi possível sair do grupo.")}
 }
-function msgsHtml(lista){return lista.length?lista.map(m=>`<div class="msg ${m.autor===S.uid?"mine":""}">${avatar(m.autor)}<div style="min-width:0"><div class="h"><b>${esc(nomeDe(m.autor))}</b><time>${hora(m.em)}</time></div><div class="b">${esc(m.texto)}</div></div></div>`).join("")
+function msgsHtml(lista){return lista.length?lista.map(m=>`<div class="msg ${m.autor===S.uid?"mine":""}" data-perfil="${m.autor}">${avatar(m.autor)}<div style="min-width:0"><div class="h"><b>${esc(nomeDe(m.autor))}</b><time>${hora(m.em)}</time></div><div class="b">${esc(m.texto)}</div></div></div>`).join("")
   :`<div class="empty-state" style="margin:auto">${ico("chat")}<span>Nenhuma mensagem ainda. Diga oi!</span></div>`}
 function pintarMsgs(boxId,lista){const box=$("#"+boxId);if(!box)return;const perto=box.scrollHeight-box.scrollTop-box.clientHeight<80||box.dataset.init!=="1";box.innerHTML=msgsHtml(lista);if(perto){box.scrollTop=box.scrollHeight;box.dataset.init="1"}}
 function chatBox(id,ph){return `<div class="card chat"><div class="msgs" id="${id}" aria-live="polite"><div class="row muted small" style="margin:auto"><span class="spinner"></span>Carregando mensagens…</div></div>
@@ -1478,7 +1559,7 @@ function renderGrupoFB(){
   }else{
     corpo.innerHTML=`<div class="card"><div class="card-h"><h3>Membros · ranking de hoje</h3></div><div id="gmemb"><div class="row muted small"><span class="spinner"></span>Carregando…</div></div></div>`;
     assinar("tela:gmemb",base.collection("membros"),snap=>{const box=$("#gmemb");if(!box)return;const ids=snap.docs.map(d=>d.id).sort((a,b)=>minHoje(b)-minHoje(a));
-      box.innerHTML=`<div class="list">${ids.map((id,i)=>`<div class="li ${id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(id,"sm")}<span class="nm">${esc(nomeDe(id))}${ponto(id)}${id===g.dono?' <span class="pill">criador</span>':""}</span></div><div class="row" style="flex-wrap:nowrap;gap:8px"><span class="mono small">${fmtH(minPeriodo(id,1))}</span>${id!==S.uid?`<button class="btn sm ghost" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(nomeDe(id))}">${ico("chat")}</button>`:""}</div></div>`).join("")}</div>`;
+      box.innerHTML=`<div class="list">${ids.map((id,i)=>`<div class="li ${id===S.uid?"me-row":""}" data-perfil="${id}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(id,"sm")}<span class="nm">${esc(nomeDe(id))}${ponto(id)}${id===g.dono?' <span class="pill">criador</span>':""}</span></div><div class="row" style="flex-wrap:nowrap;gap:8px"><span class="mono small">${fmtH(minPeriodo(id,1))}</span>${id!==S.uid?`<button class="btn sm ghost" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(nomeDe(id))}">${ico("chat")}</button>`:""}</div></div>`).join("")}</div>`;
       $$("[data-dm]",box).forEach(b=>b.onclick=()=>abrirDM(b.dataset.dm))});
   }
 }
@@ -1547,8 +1628,8 @@ function renderAmigosFB(){
   const todos=Object.entries(S.soc.perfis).filter(([id,p])=>id!==S.uid&&p&&p.nome);
   const q=norm(FBC.busca);
   const achados=q?todos.filter(([,p])=>norm(p.nome).includes(q)||norm(p.objetivo).includes(q)):todos.filter(([id])=>meus.has(id));
-  const linha=([id,p])=>`<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(id)}<div style="min-width:0"><div class="nm">${esc(p.nome)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.objetivo||p.bio||"")}</div></div>
-    <div class="row" style="flex-wrap:nowrap;gap:6px"><button class="btn sm ${meus.has(id)?"":"primary"}" type="button" data-amigo="${id}">${meus.has(id)?"Amigo ✓":"Adicionar"}</button><button class="btn sm" type="button" data-dm="${id}" aria-label="Mensagem para ${esc(p.nome)}">${ico("chat")}</button></div></div>`;
+  const linha=([id,p])=>`<div class="li" data-perfil="${id}" style="grid-template-columns:auto minmax(0,1fr) auto">${avatar(id)}<div style="min-width:0"><div class="nm">${esc(p.nome)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.objetivo||p.bio||"")}</div></div>
+    <div class="row" style="flex-wrap:nowrap;gap:6px"><button class="btn sm ${meus.has(id)?"":"primary"}" type="button" data-amigo="${id}">${meus.has(id)?"Amigo ✓":"Adicionar"}</button><button class="btn sm" type="button" data-dm="${id}" ${(p.privacidade||{}).dm==="amigos"&&!(p.amigos||[]).includes(S.uid)?'disabled title="Só recebe mensagens de amigos"':""} aria-label="Mensagem para ${esc(p.nome)}">${ico("chat")}</button></div></div>`;
   const foco=document.activeElement&&document.activeElement.id==="am-busca";
   $("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Amigos","Busque estudantes pelo nome ou pelo objetivo, adicione como amigo e mande mensagem.")}
     <div class="field" style="margin-bottom:16px"><label for="am-busca">Buscar pessoas</label><input type="text" id="am-busca" placeholder="Nome ou objetivo (ex.: EsPCEx, ENEM)" value="${esc(FBC.busca)}" autocomplete="off"></div>
@@ -1583,7 +1664,7 @@ const NAV=[
   ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["estatisticas","Estatísticas","chart"],["biblioteca","Biblioteca","book"]]],
   ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
   ["Comunidade",[["grupos","Grupos de estudo","users"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
-  ["Conta",[["perfil","Meu perfil","user"],["config","Configurações","gear"]]]];
+  ["Conta",[["perfil","Meu perfil","user"],["aparencia","Aparência","palette"],["config","Configurações","gear"]]]];
 function renderShell(){
   $("#root").innerHTML=`
   <div class="shell" id="shell">
@@ -1622,7 +1703,7 @@ function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
 function renderView(){
   $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
-  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),biblioteca:renderBiblioteca,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
   f();
 }
 const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;
@@ -1638,7 +1719,7 @@ function renderInicio(){
   const ed=S.edital;const prox=ed?ed.materias.map(m=>({m:m.nome,t:m.topicos.find(t=>!t.feito)})).filter(x=>x.t).slice(0,4):[];
   const h=new Date().getHours();const saud=h<12?"Bom dia":h<18?"Boa tarde":"Boa noite";
   const nome=(S.pub&&S.pub.nome)||p.nome;
-  const rk=S.mode==="nuvem"?Object.keys(S.soc.ranking).map(id=>({id,m:minHoje(id)})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m).slice(0,5):[];
+  const rk=S.mode==="nuvem"?Object.keys(S.soc.ranking).filter(visivelRanking).map(id=>({id,m:minHoje(id)})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m).slice(0,5):[];
   $("#main").innerHTML=`<div class="page">
     ${pageHead(`${saud}${nome?", "+esc(nome):""}`,`${DIAS[hi].n}, ${new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long"})} · ${esc(descObjetivo(p))}`,`<button class="btn primary" type="button" id="ini-pomo">${ico("play")}Começar a estudar</button>`)}
     <div class="stats">
@@ -1663,7 +1744,7 @@ function renderInicio(){
         ${prox.length?`<div class="card"><div class="card-h"><h3>Próximos tópicos · ${esc(ed.nome)}</h3></div><div class="list">${prox.map(x=>`<div class="li" style="grid-template-columns:minmax(0,1fr)"><div style="min-width:0"><div class="eyebrow">${esc(x.m)}</div><div class="small">${esc(x.t.t)}</div></div></div>`).join("")}</div></div>`
           :`<div class="card stack sm"><h3>Vai fazer uma prova?</h3><p class="small muted">Envie o edital ou escreva o nome da prova para ver os tópicos cobrados, matéria por matéria.</p><button class="btn sm" type="button" data-link="edital">${ico("scan")}Escanear edital</button></div>`}
         <div class="card"><div class="card-h"><h3>Ranking de hoje</h3><a class="small muted" href="#ranking" data-link="ranking">Ver tudo</a></div>
-          ${S.mode!=="nuvem"?`<p class="small muted">Entre com sua conta para participar do ranking.</p>`:rk.length?`<div class="list">${rk.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id,"sm")}<span class="nm">${esc(nomeDe(x.id))}</span></div><span class="mono small">${fmtH(x.m)}</span></div>`).join("")}</div>`:`<p class="small muted">Ninguém registrou estudo hoje ainda. Termine um pomodoro e apareça aqui.</p>`}
+          ${S.mode!=="nuvem"?`<p class="small muted">Entre com sua conta para participar do ranking.</p>`:rk.length?`<div class="list">${rk.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}" data-perfil="${x.id}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id,"sm")}<span class="nm">${esc(nomeDe(x.id))}</span></div><span class="mono small">${fmtH(x.m)}</span></div>`).join("")}</div>`:`<p class="small muted">Ninguém registrou estudo hoje ainda. Termine um pomodoro e apareça aqui.</p>`}
         </div>
       </div>
     </div></div>`;
@@ -2069,7 +2150,7 @@ function renderRanking(){
   if(S.mode!=="nuvem"){$("#main").innerHTML=bloqueado("Ranking");ligarBloqueado();return}
   clearInterval(S.rankTimer);S.rankTimer=setInterval(()=>{if(S.view==="ranking")renderRanking();else clearInterval(S.rankTimer)},30000);
   const gruposOpc=FBM()?Object.keys(FBC.meus).filter(g=>FBC.grupos[g]).map(g=>[g,FBC.grupos[g].nome]):meusGrupos().filter(g=>todosGrupos()[g]).map(g=>[g,todosGrupos()[g].nome]);
-  let ids=Object.keys(S.soc.ranking);
+  let ids=Object.keys(S.soc.ranking).filter(visivelRanking);
   if(S.rankGrupo!=="todos"){
     if(FBM()){const m=(S.rankMembros||{})[S.rankGrupo];if(!m){S.rankMembros=S.rankMembros||{};S.db.collection("grupos").doc(S.rankGrupo).collection("membros").get().then(sn=>{S.rankMembros[S.rankGrupo]=sn.docs.map(d=>d.id);renderRanking()}).catch(()=>{S.rankGrupo="todos";renderRanking()});ids=[]}else ids=ids.filter(id=>m.includes(id))}
     else ids=ids.filter(id=>membrosDe(S.rankGrupo).includes(id))}
@@ -2084,9 +2165,9 @@ function renderRanking(){
        <select id="rk-g" style="width:auto"><option value="todos">Todos os estudantes</option>${gruposOpc.map(([g,n])=>`<option value="${g}" ${S.rankGrupo===g?"selected":""}>${esc(n)}</option>`).join("")}</select>`)}
     ${agora.length?`<div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Estudando agora · ${agora.length}</h3></div><div class="row" style="gap:14px">${agora.map(id=>{const a=estudandoAgora(id);return `<div class="row" style="flex-wrap:nowrap;gap:8px">${avatar(id,"sm")}<div><div class="small" style="font-weight:600">${esc(nomeDe(id))}${ponto(id)}</div><div class="small muted">${esc(a.materia||"estudando")} · ${fmtH((Date.now()-a.desde)/60000)}</div></div></div>`}).join("")}</div></div>`:""}
     ${lista.length?`
-    <div class="podium">${lista.slice(0,3).map((x,i)=>`<div class="card">${avatar(x.id,"lg")}<span class="eyebrow">${i+1}º lugar</span><b style="overflow-wrap:anywhere">${esc(nomeDe(x.id))}${ponto(x.id)}</b><span class="mono" style="font-size:1.3rem;font-weight:600">${fmtH(x.m)}</span></div>`).join("")}</div>
+    <div class="podium">${lista.slice(0,3).map((x,i)=>`<div class="card" data-perfil="${x.id}">${avatar(x.id,"lg")}<span class="eyebrow">${i+1}º lugar</span><b style="overflow-wrap:anywhere">${esc(nomeDe(x.id))}${ponto(x.id)}</b><span class="mono" style="font-size:1.3rem;font-weight:600">${fmtH(x.m)}</span></div>`).join("")}</div>
     <div class="card"><div class="card-h"><h3>Classificação</h3><span class="small muted">${minha>=0?`Você está em ${minha+1}º`:"Você ainda não pontuou neste período"}</span></div>
-      <div class="list">${lista.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id)}<div style="min-width:0"><div class="nm">${esc(nomeDe(x.id))}${ponto(x.id)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((S.soc.perfis[x.id]||{}).objetivo||"")}</div></div></div><span class="mono">${fmtH(x.m)}</span></div>`).join("")}</div></div>`
+      <div class="list">${lista.map((x,i)=>`<div class="li ${x.id===S.uid?"me-row":""}" data-perfil="${x.id}"><span class="pos">${i+1}</span><div class="row" style="flex-wrap:nowrap;min-width:0">${avatar(x.id)}<div style="min-width:0"><div class="nm">${esc(nomeDe(x.id))}${ponto(x.id)}</div><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((S.soc.perfis[x.id]||{}).objetivo||"")}</div></div></div><span class="mono">${fmtH(x.m)}</span></div>`).join("")}</div></div>`
     :`<div class="empty-state">${ico("trophy")}<b>Ninguém pontuou ainda neste período</b><span>Use o cronômetro ou o pomodoro: o tempo entra no ranking.</span><div class="row" style="justify-content:center"><button class="btn primary" type="button" data-link="cronometro">Abrir cronômetro</button><button class="btn" type="button" data-link="pomodoro">Abrir pomodoro</button></div></div>`}
   </div>`;
   $$("[data-rt]").forEach(b=>b.onclick=()=>{S.rankTab=b.dataset.rt;renderRanking()});
@@ -2095,52 +2176,166 @@ function renderRanking(){
 }
 
 /* ================= Perfil ================= */
-function renderPerfil(){
-  const nuvem=S.mode==="nuvem",pub=S.pub||{};
-  const total=garantirTotais(S.pomoLog).tot.min;
-  $("#main").innerHTML=`<div class="page" style="max-width:860px">
-    ${pageHead("Meu perfil",nuvem?"Nome, foto e bio aparecem para os outros estudantes no chat, nos grupos e no ranking.":"Como visitante, seu perfil fica só neste navegador.")}
-    <form class="card stack" id="pf">
-      <div class="row" style="gap:18px;align-items:center">
-        <div id="pf-av">${nuvem?avatar(S.uid,"lg"):`<span class="avatar lg">${esc(((S.perfil.nome||"V")[0]).toUpperCase())}</span>`}</div>
-        ${nuvem?`<div class="stack sm"><div class="row"><label class="btn sm" for="pf-foto">Trocar foto</label><button class="btn sm ghost" type="button" id="pf-rm" ${pub.foto?"":"hidden"}>Remover</button></div><input type="file" id="pf-foto" accept="image/*" hidden><span class="hint">A foto é reduzida para 160×160 antes de salvar.</span></div>`:""}
-      </div>
-      <div class="grid2">
-        <div class="field"><label for="pf-nome">Nome de exibição</label><input type="text" id="pf-nome" maxlength="40" value="${esc(nuvem?(pub.nome||S.perfil.nome):S.perfil.nome)}" required></div>
-        <div class="field"><label for="pf-obj">Objetivo</label><input type="text" id="pf-obj" maxlength="80" value="${esc(pub.objetivo||descObjetivo(S.perfil))}"></div>
-      </div>
-      ${nuvem?`<div class="field"><label for="pf-bio">Bio</label><textarea id="pf-bio" maxlength="160" placeholder="Ex.: 3º ano, quero passar na EsPCEx. Estudo melhor de manhã.">${esc(pub.bio||"")}</textarea></div>`:""}
-      <div class="row"><button class="btn primary" type="submit">Salvar perfil</button><span class="hint" id="pf-st"></span></div>
-    </form>
-    <div class="stats" style="margin-top:16px">
-      <div class="stat"><div class="eyebrow">Tempo total</div><div class="v">${fmtH(total)}</div></div>
-      <div class="stat"><div class="eyebrow">Sessões</div><div class="v">${S.pomoLog.sessoes||0}</div></div>
-      <div class="stat"><div class="eyebrow">Sequência</div><div class="v">${sequencia()}</div><div class="s">dias</div></div>
-      <div class="stat"><div class="eyebrow">Grupos</div><div class="v">${nuvem?meusGrupos().length:"—"}</div></div>
-    </div>
-  </div>`;
-  let foto=pub.foto||"";
-  if(nuvem){
-    $("#pf-foto").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{foto=await reduzirFoto(f);$("#pf-av").innerHTML=`<img class="avatar lg" src="${foto}" alt="">`;$("#pf-rm").hidden=false;$("#pf-st").textContent="Foto pronta. Clique em Salvar perfil."}catch(err){toast("Não consegui abrir essa imagem.")}};
-    $("#pf-rm").onclick=()=>{foto="";$("#pf-av").innerHTML=`<span class="avatar lg">${esc((($("#pf-nome").value||"?")[0]).toUpperCase())}</span>`;$("#pf-rm").hidden=true};
-  }
-  $("#pf").addEventListener("submit",async e=>{e.preventDefault();const nome=$("#pf-nome").value.trim();if(!nome){$("#pf-nome").focus();return}
-    S.perfil.nome=nome;gravar("perfil",S.perfil);
-    if(nuvem){const d={...(S.pub||{}),nome,objetivo:$("#pf-obj").value.trim(),bio:$("#pf-bio").value.trim(),foto,atualizado:Date.now()};if(!d.desde)d.desde=Date.now();
-      if(await gravarPub("perfis",d)){S.soc.perfis[S.uid]=d;S.pub=d;toast("Perfil salvo na nuvem.")}}
-    else toast("Perfil salvo neste navegador.");
-    renderSideUser();
-  });
+function reduzirFoto(file,tam){return new Promise((ok,no)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const s=tam||160,c=document.createElement("canvas");c.width=c.height=s;const x=c.getContext("2d");const m=Math.min(img.width,img.height);x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);URL.revokeObjectURL(url);ok(c.toDataURL("image/jpeg",.82))};img.onerror=no;img.src=url})}
+
+/* ================= Aparência (estilos de interface) ================= */
+const ESTILOS=[
+  {k:"moderno",n:"Moderno",d:"Limpo e neutro, com fonte Geist. O padrão do site.",mock:["#fafafa","#ffffff","#0a0a0a","#e4e4e7"]},
+  {k:"suave",n:"Suave",d:"Cantos bem arredondados, sombras leves e fonte Nunito.",mock:["#f3f4f8","#ffffff","#4f46e5","#e8e8f0"]},
+  {k:"vidro",n:"Vidro",d:"Cartões translúcidos sobre um fundo em degradê.",mock:["linear-gradient(135deg,#c9d6ff,#e2c6ff)","rgba(255,255,255,.55)","#3b5bdb","rgba(255,255,255,.6)"]},
+  {k:"editorial",n:"Editorial",d:"Títulos com serifa e linhas finas, como uma revista.",mock:["#ffffff","#ffffff","#111111","#111111"]},
+  {k:"terminal",n:"Terminal",d:"Fonte monoespaçada e cantos retos, estilo programador.",mock:["#0b0f0c","#111611","#3ddc84","#1f2a21"]},
+  {k:"contraste",n:"Alto contraste",d:"Bordas grossas e texto mais escuro, para enxergar melhor.",mock:["#ffffff","#ffffff","#000000","#000000"]}];
+const CORES=[["","Monocromático","var(--inv-bg)"],["#2563eb","Azul"],["#7c3aed","Roxo"],["#db2777","Rosa"],["#dc2626","Vermelho"],["#ea580c","Laranja"],["#16a34a","Verde"],["#0d9488","Turquesa"],["#ca8a04","Dourado"]];
+const FONTES_ESTILO={suave:"Nunito:wght@400;600;700;800",editorial:"Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700",terminal:"JetBrains+Mono:wght@400;500;600;700"};
+const UI_PADRAO={modo:"auto",estilo:"moderno",acento:"",fonte:"m",densidade:"confortavel",cantos:"padrao"};
+function uiAtual(){let u=null;try{u=JSON.parse(localStorage.getItem("mapa_ui")||"null")}catch(e){}return {...UI_PADRAO,...(u||{}),...((S.perfil&&S.perfil.ui)||{})}}
+function corTexto(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||"");if(!m)return "#fff";const n=parseInt(m[1],16),r=n>>16&255,g=n>>8&255,b=n&255;const l=(0.299*r+0.587*g+0.114*b)/255;return l>0.6?"#0a0a0a":"#ffffff"}
+function aplicarUI(u){
+  u={...UI_PADRAO,...(u||{})};const el=document.documentElement;
+  if(u.modo==="auto")el.removeAttribute("data-theme");else el.setAttribute("data-theme",u.modo==="escuro"?"dark":"light");
+  el.setAttribute("data-estilo",u.estilo);el.setAttribute("data-fonte",u.fonte);el.setAttribute("data-densidade",u.densidade);el.setAttribute("data-cantos",u.cantos);
+  if(u.acento){el.style.setProperty("--accent",u.acento);el.style.setProperty("--accent-fg",corTexto(u.acento))}else{el.style.removeProperty("--accent");el.style.removeProperty("--accent-fg")}
+  const fam=FONTES_ESTILO[u.estilo];if(fam&&!document.querySelector(`link[data-fonte-estilo="${u.estilo}"]`)){const l=document.createElement("link");l.rel="stylesheet";l.href=`https://fonts.googleapis.com/css2?family=${fam}&display=swap`;l.dataset.fonteEstilo=u.estilo;document.head.appendChild(l)}
+  $$("[data-theme-lbl]").forEach(e=>e.innerHTML=temaBtnHtml());
 }
-function reduzirFoto(file){return new Promise((ok,no)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const s=160,c=document.createElement("canvas");c.width=c.height=s;const x=c.getContext("2d");const m=Math.min(img.width,img.height);x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);URL.revokeObjectURL(url);ok(c.toDataURL("image/jpeg",.82))};img.onerror=no;img.src=url})}
+function salvarUI(u){try{localStorage.setItem("mapa_ui",JSON.stringify(u));localStorage.setItem("mapa_tema",u.modo==="auto"?"":u.modo==="escuro"?"dark":"light")}catch(e){}
+  if(S.perfil){S.perfil.ui=u;S.perfil.tema=u.modo==="auto"?"":u.modo==="escuro"?"dark":"light";gravar("perfil",S.perfil)}}
+function mudarUI(k,v){const u=uiAtual();u[k]=v;aplicarUI(u);salvarUI(u);if(S.view==="aparencia")renderAparencia()}
+function renderAparencia(){
+  const u=uiAtual();
+  const seg=(k,ops)=>`<div class="seg" role="group">${ops.map(([v,n])=>`<button type="button" data-ui="${k}" data-v="${v}" class="${u[k]===v?"on":""}" aria-pressed="${u[k]===v}">${n}</button>`).join("")}</div>`;
+  const linha=(t,sub,ctrl)=>`<div class="switch"><div><b>${t}</b><div class="small muted">${sub}</div></div>${ctrl}</div>`;
+  $("#main").innerHTML=`<div class="page" style="max-width:960px">
+    ${pageHead("Aparência","Escolha o estilo do site, a cor de destaque e o tamanho do texto. Fica salvo na sua conta e vale em todos os aparelhos.",`<button class="btn ghost" type="button" id="ap-reset">Restaurar padrão</button>`)}
+    <div class="stack">
+      <div class="card stack"><div><h3>Estilo da interface</h3><p class="small muted">Muda fontes, cantos, sombras e fundo do site inteiro.</p></div>
+        <div class="estilos">${ESTILOS.map(e=>`<button type="button" class="est ${u.estilo===e.k?"on":""}" data-ui="estilo" data-v="${e.k}" aria-pressed="${u.estilo===e.k}">
+          <div class="mock" style="background:${e.mock[0]}"><i style="background:${e.mock[1]};border-right:1px solid ${e.mock[3]}"></i><div style="padding:10px;display:flex;flex-direction:column;gap:6px"><i style="height:8px;width:60%;border-radius:3px;background:${e.mock[2]}"></i><i style="height:22px;border-radius:${e.k==="suave"?"10px":e.k==="terminal"||e.k==="editorial"?"0":"5px"};background:${e.mock[1]};border:${e.k==="contraste"?"2px":"1px"} solid ${e.mock[3]}"></i><i style="height:6px;width:40%;border-radius:3px;background:${e.mock[3]}"></i></div></div>
+          <b>${e.n}${e.k==="moderno"?' <span class="pill">padrão</span>':""}</b><span class="small muted">${e.d}</span></button>`).join("")}</div></div>
+      <div class="card stack"><div><h3>Cor de destaque</h3><p class="small muted">Usada nos botões principais, barras de progresso, menu ativo e no dia de hoje.</p></div>
+        <div class="cores">${CORES.map(([v,n,bg])=>`<button type="button" class="cor ${u.acento===v?"on":""}" data-ui="acento" data-v="${v}" title="${n}" aria-label="${n}" style="background:${bg||v};--cf:${v?corTexto(v):"var(--inv-fg)"}"></button>`).join("")}
+          <label class="row small" style="gap:6px;margin-left:6px">Outra cor <input type="color" id="ap-cor" value="${/^#/.test(u.acento)?u.acento:"#2563eb"}" style="width:40px;height:32px;border:0;background:none;padding:0;cursor:pointer"></label></div></div>
+      <div class="card"><h3 style="margin-bottom:6px">Ajustes</h3>
+        ${linha("Modo de cor","Automático segue o modo do seu aparelho.",seg("modo",[["auto","Automático"],["claro","Claro"],["escuro","Escuro"]]))}
+        ${linha("Tamanho do texto","Aumenta ou diminui todo o site.",seg("fonte",[["p","P"],["m","M"],["g","G"],["xg","GG"]]))}
+        ${linha("Densidade","Compacto mostra mais conteúdo na tela.",seg("densidade",[["confortavel","Confortável"],["compacto","Compacto"]]))}
+        ${linha("Cantos","Formato dos cartões e botões.",seg("cantos",[["reto","Retos"],["padrao","Padrão"],["arredondado","Arredondados"]]))}
+      </div>
+      <div class="card stack"><div class="card-h" style="margin:0"><h3>Prévia</h3><span class="pill solid">Hoje</span></div>
+        <div class="grid2"><div class="stat"><div class="eyebrow">Meta de hoje</div><div class="v">1h20</div><div class="prog" style="margin-top:8px"><i style="width:65%"></i></div></div>
+          <div class="stack sm"><button class="btn primary" type="button">Começar a estudar</button><button class="btn" type="button">Abrir cronômetro</button></div></div></div>
+    </div></div>`;
+  $$("[data-ui]").forEach(b=>b.onclick=()=>mudarUI(b.dataset.ui,b.dataset.v));
+  $("#ap-cor").addEventListener("change",e=>mudarUI("acento",e.target.value));
+  $("#ap-reset").onclick=()=>{aplicarUI(UI_PADRAO);salvarUI({...UI_PADRAO});renderAparencia();toast("Aparência restaurada.")};
+}
+
+/* ================= Perfil profissional ================= */
+const CAPAS={grafite:"linear-gradient(135deg,#1f2937,#4b5563)",oceano:"linear-gradient(135deg,#0ea5e9,#1e3a8a)",floresta:"linear-gradient(135deg,#065f46,#84cc16)",aurora:"linear-gradient(135deg,#7c3aed,#06b6d4)",entardecer:"linear-gradient(135deg,#f97316,#db2777)",lavanda:"linear-gradient(135deg,#c4b5fd,#f0abfc)",areia:"linear-gradient(135deg,#d6c3a3,#a8a29e)",noite:"linear-gradient(135deg,#020617,#312e81)"};
+function capaDe(p){return CAPAS[p&&p.capa]||`linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 45%,var(--bg)))`}
+function sequenciaDe(id){const r=S.soc.ranking[id];if(!r||!r.dias)return 0;let n=0;for(let i=0;i<35;i++){if((r.dias[diasAtras(i)]||0)>0)n++;else if(i>0)break}return n}
+function cartaoPerfil(id,p,opts){
+  p=p||{};const priv=p.privacidade||{};const mostrarHoras=priv.horas!==false||id===S.uid;
+  const meta=[p.objetivo,p.instituicao,p.cidade].filter(Boolean).map(esc);
+  const foto=p.foto&&/^data:image\/(jpeg|png|webp);base64,/.test(p.foto)?`<img class="avatar lg" src="${p.foto}" alt="">`:`<span class="avatar lg" aria-hidden="true">${esc(((p.nome||"?").split(/\s+/).map(w=>w[0]||"").join("").slice(0,2)).toUpperCase())}</span>`;
+  return `<div class="perfil-card"><div class="capa" style="background:${capaDe(p)}"></div><div class="corpo">${foto}
+    <div><h2 style="overflow-wrap:anywhere">${esc(p.nome||"Seu nome")}${ponto(id)}</h2>${p.usuario?`<div class="handle">@${esc(p.usuario)}</div>`:""}</div>
+    ${meta.length?`<div class="meta">${meta.map(m=>`<span>${m}</span>`).join("")}</div>`:""}
+    ${p.bio?`<p style="overflow-wrap:anywhere">${esc(p.bio)}</p>`:opts&&opts.preview?`<p class="small muted">Sua bio aparece aqui.</p>`:""}
+    ${mostrarHoras?`<div class="nums"><div><b>${fmtH(minTotalR(id))}</b><span class="small muted">no total</span></div><div><b>${fmtH(minPeriodo(id,7))}</b><span class="small muted">7 dias</span></div><div><b>${sequenciaDe(id)}</b><span class="small muted">dias seguidos</span></div></div>`:`<p class="small muted">Esta pessoa prefere não mostrar o tempo de estudo.</p>`}
+    ${opts&&opts.acoes||""}</div></div>`;
+}
+function abrirPerfil(id){
+  if(!id||S.mode!=="nuvem")return;const p=S.soc.perfis[id]||{nome:nomeDe(id)};
+  document.querySelectorAll(".modal-bg").forEach(m=>m.remove());
+  const eu=id===S.uid,amigos=new Set((S.pub&&S.pub.amigos)||[]),ehAmigo=amigos.has(id);
+  const dmPriv=(p.privacidade||{}).dm==="amigos",meAceita=!dmPriv||((p.amigos||[]).includes(S.uid));
+  const acoes=eu?`<button class="btn" type="button" data-pf="editar">Editar meu perfil</button>`
+    :FBM()?`<div class="row"><button class="btn ${ehAmigo?"":"primary"}" type="button" data-pf="amigo">${ehAmigo?"Amigo ✓":"Adicionar amigo"}</button><button class="btn" type="button" data-pf="dm" ${meAceita?"":"disabled"}>${ico("chat")}Mensagem</button></div>${meAceita?"":`<p class="small muted">Esta pessoa só recebe mensagens de amigos.</p>`}`:"";
+  const bg=document.createElement("div");bg.className="modal-bg";
+  bg.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-label="Perfil de ${esc(p.nome||"estudante")}" style="padding:0;background:transparent;box-shadow:none;position:relative">
+    <button type="button" class="btn icon" data-pf="fechar" aria-label="Fechar" style="position:absolute;top:10px;right:10px;z-index:2;border-radius:50%">✕</button>${cartaoPerfil(id,p,{acoes})}</div>`;
+  document.body.appendChild(bg);
+  bg.addEventListener("click",async e=>{const a=e.target.closest("[data-pf]");if(e.target===bg||(a&&a.dataset.pf==="fechar")){bg.remove();return}if(!a)return;
+    if(a.dataset.pf==="editar"){bg.remove();go("perfil")}
+    if(a.dataset.pf==="dm"){bg.remove();abrirDM(id)}
+    if(a.dataset.pf==="amigo"){const set=new Set((S.pub&&S.pub.amigos)||[]);set.has(id)?set.delete(id):set.add(id);const d={...(S.pub||{nome:S.perfil.nome||"Estudante"}),amigos:[...set]};if(await gravarPub("perfis",d)){S.pub=d;S.soc.perfis[S.uid]=d;toast(set.has(id)?"Amigo adicionado.":"Amigo removido.");bg.remove();abrirPerfil(id)}}});
+  bg.addEventListener("keydown",e=>{if(e.key==="Escape")bg.remove()});
+}
+document.addEventListener("click",e=>{const el=e.target.closest("[data-perfil]");if(!el||e.target.closest("button,a,input,select,label"))return;abrirPerfil(el.dataset.perfil)});
+function completude(p){const itens=[["foto","Foto"],["usuario","@usuário"],["bio","Bio"],["objetivo","Objetivo"],["instituicao","Escola ou cursinho"],["cidade","Cidade"]];const falta=itens.filter(([k])=>!p[k]);return {pct:Math.round((itens.length-falta.length)/itens.length*100),falta:falta.map(x=>x[1])}}
+function renderPerfil(){
+  const nuvem=S.mode==="nuvem";
+  if(!nuvem){$("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Meu perfil","Como visitante, seu perfil fica só neste navegador.")}
+    <form class="card stack" id="pf"><div class="field"><label for="pf-nome">Nome</label><input type="text" id="pf-nome" maxlength="40" value="${esc(S.perfil.nome||"")}"></div><div class="row"><button class="btn primary" type="submit">Salvar</button></div>
+    <p class="small muted">Entre com uma conta para ter foto, capa, @usuário e perfil público.</p></form></div>`;
+    $("#pf").addEventListener("submit",e=>{e.preventDefault();S.perfil.nome=$("#pf-nome").value.trim();gravar("perfil",S.perfil);renderSideUser();toast("Nome salvo.")});return}
+  const base={nome:S.perfil.nome||"",usuario:"",objetivo:descObjetivo(S.perfil),instituicao:"",cidade:"",bio:"",foto:"",capa:"",privacidade:{ranking:true,horas:true,dm:"todos"},...(S.pub||{})};
+  base.privacidade={ranking:true,horas:true,dm:"todos",...(base.privacidade||{})};
+  const d=S.pfRascunho=S.pfRascunho||clone(base);
+  const email=FB&&FB.auth.currentUser?FB.auth.currentUser.email:"";
+  const comp=completude(d);
+  $("#main").innerHTML=`<div class="page">
+    ${pageHead("Meu perfil","Seu cartão público aparece para outros estudantes no ranking, nos grupos, no chat e na busca de amigos.",`<span class="small muted" id="pf-st"></span><button class="btn primary" type="button" id="pf-salvar">Salvar perfil</button>`)}
+    <div class="perfil-grid">
+      <div class="sticky stack">
+        <div id="pf-prev">${cartaoPerfil(S.uid,d,{preview:true})}</div>
+        <div class="card stack sm"><div class="row" style="justify-content:space-between"><b>Perfil ${comp.pct}% completo</b><span class="small muted">${comp.falta.length?"":"tudo pronto"}</span></div>
+          <div class="prog"><i style="width:${comp.pct}%"></i></div>${comp.falta.length?`<p class="small muted">Falta: ${comp.falta.join(", ")}.</p>`:""}</div>
+      </div>
+      <div class="stack">
+        <div class="card stack"><div class="sec-t">Foto e capa</div>
+          <div class="row" style="gap:14px"><label class="btn" for="pf-foto">${ico("user")}Trocar foto</label><button class="btn ghost" type="button" id="pf-rm" ${d.foto?"":"hidden"}>Remover foto</button><input type="file" id="pf-foto" accept="image/*" hidden><span class="hint">A foto é cortada no centro e reduzida para 256×256.</span></div>
+          <div class="field"><span class="lbl">Capa</span><div class="capas"><button type="button" class="capa-opt ${!d.capa?"on":""}" data-capa="" title="Cor de destaque" aria-label="Cor de destaque" style="background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 45%,var(--bg)))"></button>${Object.entries(CAPAS).map(([k,g])=>`<button type="button" class="capa-opt ${d.capa===k?"on":""}" data-capa="${k}" title="${k}" aria-label="Capa ${k}" style="background:${g}"></button>`).join("")}</div></div>
+        </div>
+        <div class="card stack"><div class="sec-t">Informações públicas</div>
+          <div class="grid2">
+            <div class="field"><label for="pf-nome">Nome de exibição</label><input type="text" id="pf-nome" maxlength="40" value="${esc(d.nome)}" data-k="nome"></div>
+            <div class="field"><label for="pf-user">Nome de usuário</label><div class="row" style="flex-wrap:nowrap;gap:0"><span class="muted" style="padding:0 8px 0 2px">@</span><input type="text" id="pf-user" maxlength="20" value="${esc(d.usuario)}" data-k="usuario" placeholder="ex.: ana.souza" autocapitalize="off" spellcheck="false"></div><span class="hint" id="pf-user-h">Letras, números, ponto e _ (3 a 20).</span></div>
+            <div class="field"><label for="pf-obj">Objetivo</label><input type="text" id="pf-obj" maxlength="80" value="${esc(d.objetivo)}" data-k="objetivo" placeholder="Ex.: Medicina na UFJF, EsPCEx 2027"></div>
+            <div class="field"><label for="pf-inst">Escola, cursinho ou faculdade</label><input type="text" id="pf-inst" maxlength="60" value="${esc(d.instituicao)}" data-k="instituicao"></div>
+            <div class="field"><label for="pf-cid">Cidade</label><input type="text" id="pf-cid" maxlength="50" value="${esc(d.cidade)}" data-k="cidade" placeholder="Ex.: Juiz de Fora, MG"></div>
+          </div>
+          <div class="field"><label for="pf-bio">Bio</label><textarea id="pf-bio" maxlength="160" data-k="bio" placeholder="Conte o que você estuda e como gosta de estudar.">${esc(d.bio)}</textarea><span class="hint" id="pf-bio-c">${(d.bio||"").length}/160</span></div>
+        </div>
+        <div class="card"><div class="sec-t" style="margin-bottom:6px">Privacidade</div>
+          <label class="switch"><div><b>Aparecer no ranking</b><div class="small muted">Desligado, você some do ranking e do “estudando agora”.</div></div><input type="checkbox" class="tg" data-priv="ranking" ${d.privacidade.ranking?"checked":""}></label>
+          <label class="switch"><div><b>Mostrar meu tempo de estudo no perfil</b><div class="small muted">Total, últimos 7 dias e sequência.</div></div><input type="checkbox" class="tg" data-priv="horas" ${d.privacidade.horas?"checked":""}></label>
+          <div class="switch"><div><b>Quem pode me mandar mensagem</b><div class="small muted">Vale para mensagens privadas.</div></div><div class="seg"><button type="button" data-dmp="todos" class="${d.privacidade.dm!=="amigos"?"on":""}">Todos</button><button type="button" data-dmp="amigos" class="${d.privacidade.dm==="amigos"?"on":""}">Só amigos</button></div></div>
+        </div>
+        <div class="card"><div class="sec-t" style="margin-bottom:6px">Conta</div>
+          ${email?`<div class="switch"><div><b>E-mail</b><div class="small muted">${esc(email)}</div></div><button class="btn sm" type="button" id="pf-senha">Redefinir senha</button></div>`:""}
+          <div class="switch"><div><b>Aparência</b><div class="small muted">Estilo da interface, cor de destaque e tamanho do texto.</div></div><button class="btn sm" type="button" data-link="aparencia">Personalizar</button></div>
+          <div class="switch"><div><b>Sair da conta</b><div class="small muted">Seus dados continuam salvos na nuvem.</div></div><button class="btn sm ghost danger" type="button" id="pf-sair">Sair</button></div>
+        </div>
+      </div>
+    </div></div>`;
+  const prev=()=>{$("#pf-prev").innerHTML=cartaoPerfil(S.uid,d,{preview:true});$("#pf-st").textContent="Alterações não salvas"};
+  $$("[data-k]").forEach(i=>i.addEventListener("input",()=>{d[i.dataset.k]=i.value;if(i.dataset.k==="bio")$("#pf-bio-c").textContent=i.value.length+"/160";if(i.dataset.k==="usuario"){i.value=i.value.toLowerCase().replace(/[^a-z0-9._]/g,"");d.usuario=i.value}prev()}));
+  $$("[data-capa]").forEach(b=>b.onclick=()=>{d.capa=b.dataset.capa;$$("[data-capa]").forEach(x=>x.classList.toggle("on",x===b));prev()});
+  $$("[data-priv]").forEach(c=>c.onchange=()=>{d.privacidade[c.dataset.priv]=c.checked;prev()});
+  $$("[data-dmp]").forEach(b=>b.onclick=()=>{d.privacidade.dm=b.dataset.dmp;$$("[data-dmp]").forEach(x=>x.classList.toggle("on",x===b));prev()});
+  $("#pf-foto").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{d.foto=await reduzirFoto(f,256);$("#pf-rm").hidden=false;prev()}catch(err){toast("Não consegui abrir essa imagem.")}};
+  $("#pf-rm").onclick=()=>{d.foto="";$("#pf-rm").hidden=true;prev()};
+  $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
+  $("#pf-sair").onclick=sair;
+  const rs=$("#pf-senha");if(rs)rs.onclick=async()=>{try{await FB.auth.sendPasswordResetEmail(email);toast("Enviamos um link para redefinir a senha no seu e-mail.")}catch(e){toast("Não foi possível enviar o e-mail agora.")}};
+  $("#pf-salvar").onclick=async()=>{
+    if(!d.nome.trim()){$("#pf-nome").focus();toast("Digite seu nome de exibição.");return}
+    if(d.usuario){if(!/^[a-z0-9._]{3,20}$/.test(d.usuario)){$("#pf-user-h").textContent="Use de 3 a 20 letras, números, ponto ou _.";$("#pf-user-h").className="err";$("#pf-user").focus();return}
+      const dono=Object.entries(S.soc.perfis).find(([id,p])=>id!==S.uid&&p&&p.usuario===d.usuario);if(dono){$("#pf-user-h").textContent="Este nome de usuário já está em uso.";$("#pf-user-h").className="err";$("#pf-user").focus();return}}
+    const doc={...d,nome:d.nome.trim(),bio:(d.bio||"").trim(),atualizado:Date.now(),desde:d.desde||Date.now()};
+    if(await gravarPub("perfis",doc)){S.pub=doc;S.soc.perfis[S.uid]=doc;S.perfil.nome=doc.nome;gravar("perfil",S.perfil);S.pfRascunho=null;renderSideUser();publicarRanking();toast("Perfil salvo.");renderPerfil()}
+  };
+}
 
 /* ================= Configurações ================= */
 function renderConfig(){
   $("#main").innerHTML=`<div class="page" style="max-width:860px">
     ${pageHead("Configurações")}
     <div class="stack">
-      <div class="card row" style="justify-content:space-between"><div><h3>Aparência</h3><p class="small muted">Tema atual: ${temaAtual()==="dark"?"preto":"branco"}</p></div>
-        <div class="seg" role="group"><button type="button" data-tm="light" class="${temaAtual()==="light"?"on":""}">Branco</button><button type="button" data-tm="dark" class="${temaAtual()==="dark"?"on":""}">Preto</button></div></div>
+      <div class="card row" style="justify-content:space-between"><div><h3>Aparência</h3><p class="small muted">Estilo ${esc((ESTILOS.find(e=>e.k===uiAtual().estilo)||ESTILOS[0]).n)} · modo ${({auto:"automático",claro:"claro",escuro:"escuro"})[uiAtual().modo]}</p></div><button class="btn" type="button" data-link="aparencia">${ico("palette")}Personalizar</button></div>
       ${(()=>{const T=garantirTotais(S.pomoLog).tot;const mats=Object.entries(T.mat).sort((a,b)=>b[1]-a[1]);const mx=mats.length?mats[0][1]:1;
         return `<div class="card"><div class="card-h"><div><h3>Tempo estudado no app</h3><p class="small muted">Soma do cronômetro e do pomodoro${S.mode==="nuvem"?", salva na sua conta":", salva neste navegador"}.</p></div><button class="btn sm" type="button" id="cf-crono">${ico("watch")}Abrir cronômetro</button></div>
           <div class="grid3" style="gap:12px;margin-bottom:${mats.length?"16px":"0"}">
@@ -2159,12 +2354,13 @@ function renderConfig(){
       <div class="card"><details><summary>Ver o prompt que a IA recebe para montar a semana</summary><pre class="prompt">${esc(montarPrompt(S.perfil,{prova:S.plano&&S.plano.prova?provaCtx():null}))}</pre></details></div>
       <div class="card"><details><summary>Ver o prompt usado para ler editais</summary><pre class="prompt">${esc(promptEditalTrecho("[trecho do edital]",0,1))}</pre></details></div>
     </div></div>`;
-  $$("[data-tm]").forEach(b=>b.onclick=()=>{if(temaAtual()!==b.dataset.tm)trocarTema();renderConfig()});
+  $$("[data-link]").forEach(a=>a.onclick=()=>go(a.dataset.link));
   $("#cf-crono").onclick=()=>go("cronometro");
   $("#cf-meta").onchange=e=>{S.perfil.metaDia=+e.target.value;gravar("perfil",S.perfil);toast("Meta diária salva.");renderConfig()};
   $("#cf-tri").onclick=()=>{S.step=0;S.draft=migrar(clone(S.perfil));renderWizard();scrollTo(0,0)};
 }
 
+aplicarUI(uiAtual());
 renderLogin();
 })();
 </script>
