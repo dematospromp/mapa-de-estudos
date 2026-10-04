@@ -640,6 +640,9 @@ html,body{overscroll-behavior:none;background:var(--bg)}
 
 /* selo do reCAPTCHA escondido (o aviso exigido pelo Google fica na tela da mentoria) */
 .grecaptcha-badge{visibility:hidden}
+
+.faixa-teste{position:sticky;top:0;z-index:70;background:#f59e0b;color:#111;font-size:.8rem;text-align:center;padding:4px 10px;padding-top:calc(4px + env(safe-area-inset-top,0px))}
+.faixa-teste a{color:#111;font-weight:700}
 </style>
 
 </head><body><div id="root"></div>
@@ -1295,6 +1298,7 @@ function ligarWizard(){
     $$("[data-hmenos]",f).forEach(b=>b.onclick=()=>passo(b.dataset.hmenos,-.5));$$("[data-hmais]",f).forEach(b=>b.onclick=()=>passo(b.dataset.hmais,.5));
   }
 }
+function refazerTriagem(){S.editar=false;S.step=0;S.draft=migrar(clone(S.perfil));renderWizard();scrollTo(0,0)}
 function abrirEditorEstudos(){S.draft=migrar(clone(S.perfil));S.step=1;S.editar=true;renderWizard();scrollTo(0,0)}
 function lerWizard(){
   const d=S.draft,v=id=>{const e=document.getElementById(id);return e?e.value:undefined};
@@ -2636,7 +2640,7 @@ function renderSemana(){
   const off=S.diaOff,seg=new Date();seg.setDate(seg.getDate()-hi);
   $("#main").innerHTML=`<div class="page">
     ${pageHead("Minha semana",`${fmtH(tot)} planejadas · ${todos.filter(b=>b.feito).length} de ${todos.length} blocos feitos`,
-      `<div class="seg" role="group" aria-label="Visualização"><button type="button" data-smodo="dia" class="${modo==="dia"?"on":""}">Dia</button><button type="button" data-smodo="semana" class="${modo==="semana"?"on":""}">Semana</button></div><button class="btn sm" type="button" id="sem-editar">${ico("gear")}Matérias e horários</button>`)}
+      `<div class="seg" role="group" aria-label="Visualização"><button type="button" data-smodo="dia" class="${modo==="dia"?"on":""}">Dia</button><button type="button" data-smodo="semana" class="${modo==="semana"?"on":""}">Semana</button></div><button class="btn sm" type="button" id="sem-editar">${ico("gear")}Matérias e horários</button><button class="btn sm" type="button" id="sem-triagem">${ico("spark")}Refazer triagem</button>`)}
     ${modo==="dia"?`
     <div class="dias-tira" role="tablist" aria-label="Dias">${DIAS.map((x,i)=>{const o=i-hi,d=new Date(seg);d.setDate(seg.getDate()+i);const bl=pl.semana[x.k]||[];const feito=bl.length&&bl.every(b=>b.feito);const sel=((hi+off)%7+7)%7===i&&off>=-hi-7&&true;
       return `<button type="button" role="tab" class="dia-chip ${o===0?"hoje":""} ${((hi+off)%7+7)%7===i?"on":""}" data-dsel="${o}" aria-selected="${((hi+off)%7+7)%7===i}"><span>${x.n.slice(0,3)}</span><b>${d.getDate()}</b><i class="${feito?"ok":bl.length?"tem":""}"></i></button>`}).join("")}</div>
@@ -2676,7 +2680,7 @@ function renderSemana(){
   ligarBlocos();
   $$("[data-editgrade]").forEach(b=>b.onclick=()=>{try{localStorage.setItem(SEM_MODO_KEY,"dia")}catch(e){}S.diaOff=+b.dataset.editgrade-hojeIdx();abrirEditorDia(DIAS[+b.dataset.editgrade].k)});
   $$("[data-smodo]").forEach(b=>b.onclick=()=>{try{localStorage.setItem(SEM_MODO_KEY,b.dataset.smodo)}catch(e){}renderSemana()});
-  $("#sem-editar").onclick=abrirEditorEstudos;
+  $("#sem-editar").onclick=abrirEditorEstudos;$("#sem-triagem").onclick=refazerTriagem;
   if(modo==="dia"){ligarDiaSwipe();ligarEditorDia();$$("[data-editdia]").forEach(b=>b.onclick=()=>abrirEditorDia(b.dataset.editdia))}
   $("#ajuste").addEventListener("submit",e=>{e.preventDefault();const t=$("#aj-txt").value.trim();if(!t){$("#aj-txt").focus();return}gerar({pedido:t})});
   $("#refazer").onclick=()=>gerar();
@@ -3671,7 +3675,7 @@ function renderConfig(){
       <div class="card row" style="justify-content:space-between"><div><h3>Meta diária de estudo</h3><p class="small muted">Aparece no início como um anel de progresso. Hoje: ${fmtH(metaHoje())}.</p></div>
         <select id="cf-meta" style="width:auto">${[[0,"Automática (pelo plano)"],[30,"30 min"],[60,"1 hora"],[90,"1h30"],[120,"2 horas"],[180,"3 horas"],[240,"4 horas"],[300,"5 horas"],[360,"6 horas"],[480,"8 horas"]].map(([v,n])=>`<option value="${v}" ${(+S.perfil.metaDia||0)===v?"selected":""}>${n}</option>`).join("")}</select></div>
       <div class="card row" style="justify-content:space-between"><div><h3>Suas respostas</h3><p class="small muted">${esc(descObjetivo(S.perfil))} · ${S.perfil.materias.length} matérias · ${fmtH(DIAS.reduce((a,x)=>a+(+S.perfil.horas[x.k]||0),0)*60)} por semana</p></div>
-        <button class="btn" type="button" id="cf-ed">${ico("gear")}Matérias e horários</button><button class="btn" type="button" id="cf-tri">Refazer triagem</button></div>
+        <div class="row" style="gap:8px"><button class="btn" type="button" id="cf-ed">${ico("gear")}Matérias e horários</button></div></div>
       <div class="card row" style="justify-content:space-between"><div><h3>Armazenamento</h3><p class="small muted">${S.mode==="nuvem"?"Seus dados estão salvos na nuvem, ligados à sua conta.":"Modo visitante: nada é salvo e tudo some ao fechar o app. Entre com uma conta para salvar na nuvem."}</p></div>
         <span class="pill ${S.mode==="nuvem"?"solid":""}"><span class="dot"></span>${S.mode==="nuvem"?"Nuvem":"Local"}</span></div>
       <div class="card"><details><summary>Ver o prompt que a IA recebe para montar a semana</summary><pre class="prompt">${esc(montarPrompt(S.perfil,{prova:S.plano&&S.plano.prova?provaCtx():null}))}</pre></details></div>
@@ -3681,10 +3685,13 @@ function renderConfig(){
   $("#cf-crono").onclick=()=>go("cronometro");
   $("#cf-meta").onchange=e=>{S.perfil.metaDia=+e.target.value;gravar("perfil",S.perfil);toast("Meta diária salva.");renderConfig()};
   $("#cf-ed").onclick=abrirEditorEstudos;
-  $("#cf-tri").onclick=()=>{S.editar=false;S.step=0;S.draft=migrar(clone(S.perfil));renderWizard();scrollTo(0,0)};
+
 }
 
 aplicarUI(uiAtual());
+// site de testes (GitHub Pages): avisa e aponta para o site oficial no Firebase
+if(/github\.io$/.test(location.hostname)){const fx=document.createElement("div");fx.className="faixa-teste";
+  fx.innerHTML='Versão de testes · o site oficial é <a href="https://mapa-de-estudos-d6eca.web.app/">mapa-de-estudos-d6eca.web.app</a>';document.body.prepend(fx)}
 renderLogin();
 })();
 </script>

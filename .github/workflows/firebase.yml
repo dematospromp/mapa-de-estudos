@@ -1,0 +1,33 @@
+# Publica o site oficial (Firebase Hosting) e as regras do Firestore
+# sempre que o ramo "producao" recebe mudanças. O ramo "main" continua no GitHub Pages, como site de testes.
+name: Publicar no Firebase
+
+on:
+  push:
+    branches: [producao]
+  workflow_dispatch:
+
+concurrency:
+  group: firebase-producao
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Credencial do Firebase
+        env:
+          CHAVE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$CHAVE" ]; then echo "::error::Falta o segredo FIREBASE_SERVICE_ACCOUNT no repositório (Settings > Secrets and variables > Actions)."; exit 1; fi
+          printf '%s' "$CHAVE" > "$RUNNER_TEMP/chave.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/chave.json" >> "$GITHUB_ENV"
+      - name: Publicar site e regras
+        run: npx --yes firebase-tools@13 deploy --only hosting,firestore:rules --project mapa-de-estudos-d6eca --non-interactive --force
+      - name: Apagar credencial
+        if: always()
+        run: rm -f "$RUNNER_TEMP/chave.json"
