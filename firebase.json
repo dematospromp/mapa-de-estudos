@@ -1,15 +1,23 @@
 {
-  "hosting": {
-    "public": ".",
-    "ignore": ["firebase.json", ".firebaserc", "firestore.rules", "README.md", "**/.*", ".github/**", "**/node_modules/**"],
-    "headers": [
-      {"source": "/questoes/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=86400"}]},
-      {"source": "/icones/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=604800"}]},
-      {"source": "/firebase-config.js", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
-      {"source": "/index.html", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
-      {"source": "/", "headers": [{"key": "Cache-Control", "value": "no-cache"}]}
-    ]
-  },
+  "hosting": [
+    {
+      "site": "logic-academy",
+      "public": ".",
+      "ignore": ["firebase.json", ".firebaserc", "firestore.rules", "README.md", "**/.*", ".github/**", "**/node_modules/**", "redirecionar/**"],
+      "headers": [
+        {"source": "/questoes/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=86400"}]},
+        {"source": "/icones/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=604800"}]},
+        {"source": "/firebase-config.js", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
+        {"source": "/index.html", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
+        {"source": "/", "headers": [{"key": "Cache-Control", "value": "no-cache"}]}
+      ]
+    },
+    {
+      "site": "mapa-de-estudos-d6eca",
+      "public": "redirecionar",
+      "redirects": [{"source": "**", "destination": "https://logic-academy.web.app/", "type": 301}]
+    }
+  ],
   "firestore": {
     "rules": "firestore.rules"
   }
