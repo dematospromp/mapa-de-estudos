@@ -7,5 +7,7 @@ window.MAPA_FIREBASE_CONFIG = {
   storageBucket: "mapa-de-estudos-d6eca.firebasestorage.app",
   messagingSenderId: "454005758309",
   appId: "1:454005758309:web:2b477549a8d801b200e98c",
-  measurementId: "G-X9061S2G4L"
+  measurementId: "G-X9061S2G4L",
+  // chave do site do reCAPTCHA v3 usada pelo App Check (protege a mentoria com IA); não é secreta
+  appCheckSiteKey: "6LfU4d0tAAAAAGFGclhMF-twnNWXmyfu3Ezwm0n-"
 };

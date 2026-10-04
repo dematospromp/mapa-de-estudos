@@ -637,6 +637,9 @@ html,body{overscroll-behavior:none;background:var(--bg)}
 
 .aviso-visit{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;border-style:dashed;padding:12px 14px}
 .aviso-visit>span{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.88rem}.aviso-visit .i{width:18px;height:18px}
+
+/* selo do reCAPTCHA escondido (o aviso exigido pelo Google fica na tela da mentoria) */
+.grecaptcha-badge{visibility:hidden}
 </style>
 
 </head><body><div id="root"></div>
@@ -2393,9 +2396,10 @@ function iaFirebase(){
     if(chaveAC){try{const {initializeAppCheck,ReCaptchaV3Provider}=await import(b+"firebase-app-check.js");initializeAppCheck(app,{provider:new ReCaptchaV3Provider(chaveAC),isTokenAutoRefreshEnabled:true})}catch(e){console.warn("app check",e)}}
     const ai=getAI(app,{backend:new GoogleAIBackend(),useLimitedUseAppCheckTokens:false});let mi=0;
     return async(turns,opts)=>{const contents=turns.map(t=>({role:t.role==="assistant"?"model":"user",parts:[{text:t.content}]}));
-      for(;;){try{const r=await getGenerativeModel(ai,{model:IA_FB_MODELOS[mi]}).generateContentStream({contents});let text="";
+      for(;;){try{const espera=new Promise((_,no)=>setTimeout(()=>no({code:"ia_tempo",message:"tempo esgotado"}),35000));
+          const r=await Promise.race([getGenerativeModel(ai,{model:IA_FB_MODELOS[mi]}).generateContentStream({contents}),espera]);let text="";
           for await(const ch of r.stream){let d="";try{d=ch.text()}catch(e){}text+=d;if(opts&&opts.onText)opts.onText({text,delta:d})}return {text,truncated:false}}
-        catch(e){const m=String(e&&e.message||e);if(mi<IA_FB_MODELOS.length-1&&/not found|404|not supported|unknown model/i.test(m)){mi++;continue}
+        catch(e){if(e&&e.code==="ia_tempo")throw e;const m=String(e&&e.message||e);if(mi<IA_FB_MODELOS.length-1&&/not found|404|not supported|unknown model/i.test(m)){mi++;continue}
           throw {code:/429|quota|RESOURCE_EXHAUSTED/i.test(m)?"rate_limited":/App ?Check|appcheck|401/i.test(m)?"ia_appcheck":/403|PERMISSION|not been used|disabled|api-not-enabled|firebasevertexai|firebaseml/i.test(m)?"ia_desativada":"erro",message:m}}}}})();
   iaFBPromessa.catch(()=>{iaFBPromessa=null});return iaFBPromessa}
 async function iaMentoria(){return S.sample||await iaFirebase()}
@@ -2420,7 +2424,7 @@ async function renderMentoria(){
       ${m.ocupado?`<div class="mt ia" id="mt-escrevendo"><span class="spinner"></span> Pensando…</div>`:""}</div>
       <form class="composer mentor-comp" id="mt-form"><textarea id="mt-in" rows="1" maxlength="2000" placeholder="Escreva sua pergunta…" aria-label="Mensagem para a mentoria" ${m.ocupado?"disabled":""}></textarea><button class="btn primary" type="submit" ${m.ocupado?"disabled":""}>${ico("send")}<span class="sr-mob">Enviar</span></button></form>
     </div>
-    <p class="hint" style="margin-top:10px">A IA pode errar. Confira informações importantes, como datas e conteúdo do edital, nas fontes oficiais.</p></div>`;
+    <p class="hint" style="margin-top:10px">A IA pode errar. Confira informações importantes, como datas e conteúdo do edital, nas fontes oficiais.${STANDALONE&&window.MAPA_FIREBASE_CONFIG&&window.MAPA_FIREBASE_CONFIG.appCheckSiteKey?` Protegido pelo reCAPTCHA: valem a <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Política de Privacidade</a> e os <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Termos de Serviço</a> do Google.`:""}</p></div>`;
   ajustarChatMentoria();const box=$("#mt-msgs");box.scrollTop=box.scrollHeight;
   const ta=$("#mt-in");ta.oninput=()=>{ta.style.height="auto";ta.style.height=Math.min(160,ta.scrollHeight)+"px"};
   ta.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#mt-form").requestSubmit()}};
@@ -2449,7 +2453,7 @@ async function mentorEnviar(t){
     const ia=await iaMentoria();const r=await ia(hist,{modelTier:"default",cache:false,onText:({text})=>{const el=$("#mt-escrevendo");if(el){el.innerHTML=mtFormatar(text);const b=$("#mt-msgs");if(b)b.scrollTop=b.scrollHeight}}});
     m.msgs.push({r:"ia",t:(r&&r.text||"").trim()||"Não consegui responder agora. Tente de novo."});
   }catch(e){console.warn("mentoria",e&&e.code,e&&e.message);
-    m.msgs.push({r:"ia",t:e&&e.code==="rate_limited"?"Muitas perguntas seguidas. Espere um pouco e tente de novo.":e&&e.code==="not_granted"?"A IA não foi liberada nesta visualização.":e&&e.code==="ia_appcheck"?"A mentoria está bloqueada pela proteção App Check do Firebase. Quem administra o site precisa desligar a exigência do App Check para o Firebase AI Logic ou configurar a chave do reCAPTCHA no site.":e&&e.code==="ia_desativada"?"A mentoria ainda não foi ativada no Firebase deste site. Quem administra o site precisa abrir o console do Firebase em AI Logic e ativar a Gemini Developer API.":"Não consegui responder agora ("+(e&&e.code||"erro")+"). Tente de novo."+(e&&e.text?"\n\n"+e.text:"")})}
+    m.msgs.push({r:"ia",t:e&&e.code==="rate_limited"?"Muitas perguntas seguidas. Espere um pouco e tente de novo.":e&&e.code==="not_granted"?"A IA não foi liberada nesta visualização.":e&&e.code==="ia_tempo"?"A mentoria demorou demais para responder. Verifique a internet e, se usar bloqueador de anúncios, libere o reCAPTCHA do Google neste site. Depois tente de novo.":e&&e.code==="ia_appcheck"?"A mentoria está bloqueada pela proteção App Check do Firebase. Quem administra o site precisa desligar a exigência do App Check para o Firebase AI Logic ou configurar a chave do reCAPTCHA no site.":e&&e.code==="ia_desativada"?"A mentoria ainda não foi ativada no Firebase deste site. Quem administra o site precisa abrir o console do Firebase em AI Logic e ativar a Gemini Developer API.":"Não consegui responder agora ("+(e&&e.code||"erro")+"). Tente de novo."+(e&&e.text?"\n\n"+e.text:"")})}
   m.ocupado=false;m.msgs=m.msgs.slice(-40);gravar("mentoria",{msgs:m.msgs});if(S.view==="mentoria")renderMentoria();
 }
 
