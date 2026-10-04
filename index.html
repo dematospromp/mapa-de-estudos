@@ -634,6 +634,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 /* celular e app instalado: sem o efeito elástico que arrasta a tela inteira e mostra o fundo vazio */
 html,body{overscroll-behavior:none;background:var(--bg)}
 .msgs,.qb-lista,.mentor-msgs,.side,.modal{overscroll-behavior:contain}
+
+.aviso-visit{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;border-style:dashed;padding:12px 14px}
+.aviso-visit>span{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.88rem}.aviso-visit .i{width:18px;height:18px}
 </style>
 
 </head><body><div id="root"></div>
@@ -976,19 +979,24 @@ function aplicarTema(t){if(t)document.documentElement.setAttribute("data-theme",
 const temaBtnHtml=()=>temaAtual()==="dark"?ico("sun")+"<span>Tema branco</span>":ico("moon")+"<span>Tema preto</span>";
 function trocarTema(){mudarUI("modo",temaAtual()==="dark"?"claro":"escuro")}
 try{aplicarTema(localStorage.getItem("mapa_tema"))}catch(e){}
+// Visitante não deixa nada salvo no aparelho: os dados ficam só na memória enquanto o app está aberto.
+const VISITANTE_MEM={};
+// apaga o que versões antigas do site gravaram para visitantes (mantém só as preferências de aparência)
+try{const fora=["mapa_ui","mapa_tema"];Object.keys(localStorage).forEach(k=>{
+  if(k==="mapa_crono_local"||k==="la_pomo_local"||(k.startsWith("mapa_")&&!fora.includes(k)&&!k.startsWith("mapa_crono_")))localStorage.removeItem(k)})}catch(e){}
 
 /* ================= Armazenamento ================= */
 const meuDoc=k=>S.db.collection("data/users/"+S.uid).doc(k);
 async function ler(k){
   if(S.mode==="nuvem"){const s=await meuDoc(k).get();return s.exists?s.data():null}
-  try{return JSON.parse(localStorage.getItem("mapa_"+k)||"null")}catch(e){return null}
+  return VISITANTE_MEM[k]!==undefined?clone(VISITANTE_MEM[k]):null
 }
 const pend={};
 function gravar(k,v,ja){
   clearTimeout(pend[k]);
   const run=async()=>{
     if(S.mode==="nuvem"){try{await meuDoc(k).set(clone(v))}catch(e){toast("Não foi possível salvar na nuvem ("+(e&&e.code||"erro")+"). Tente de novo em instantes.")}}
-    else{try{localStorage.setItem("mapa_"+k,JSON.stringify(v))}catch(e){toast("O navegador bloqueou o salvamento local.")}}
+    else VISITANTE_MEM[k]=clone(v); // visitante: só na memória, some ao fechar o app
   };
   if(ja)return run();pend[k]=setTimeout(run,500);
 }
@@ -1101,7 +1109,7 @@ function renderLogin(erro){
         <p class="hint">${!S.caps?'<span class="row"><span class="spinner"></span>Verificando a conexão com sua conta…</span>':ok?"Seu perfil, plano e progresso ficam salvos na nuvem e abrem em qualquer dispositivo. Grupos, chat e ranking exigem login.":"Login indisponível nesta visualização. Abra a página no claude.ai com sua conta conectada."}</p>`}
         <div class="row" style="gap:8px;color:var(--muted);font-size:.78rem"><span style="flex:1;height:1px;background:var(--line)"></span>ou<span style="flex:1;height:1px;background:var(--line)"></span></div>
         <button class="btn" id="btnLocal" type="button">Continuar como visitante</button>
-        <p class="hint">Como visitante, tudo fica só neste navegador e a parte de comunidade fica bloqueada.</p>
+        <p class="hint">Como visitante, nada fica salvo: ao fechar ou recarregar o app, tudo é apagado. A comunidade fica bloqueada. Crie uma conta para guardar seu progresso.</p>
         ${erro?`<p class="err">${esc(erro)}</p>`:""}
       </div>
       <button class="btn ghost sm" type="button" data-theme-lbl style="align-self:flex-start">${temaBtnHtml()}</button>
@@ -1140,7 +1148,7 @@ async function entrar(modo){
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
   else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
 }
-function sair(){S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;Object.assign(S,{pubOk:false,srv:undefined,resg:{},resgOk:false,rankOk:false,gCache:null,dt:0});SRV.tentados={};SRV.fila=Promise.resolve();S.authTab="entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
+function sair(aba){Object.keys(VISITANTE_MEM).forEach(k=>delete VISITANTE_MEM[k]);S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;Object.assign(S,{pubOk:false,srv:undefined,resg:{},resgOk:false,rankOk:false,gCache:null,dt:0});SRV.tentados={};SRV.fila=Promise.resolve();S.authTab=typeof aba==="string"?aba:"entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
   Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{},conquistas:{}}});renderLogin()}
 
 function perfilPadrao(nome){
@@ -1507,8 +1515,8 @@ function iniciarPomo(auto){if(P.rodando)return;if(auto!==true)pararAlarme();P.ro
 function pausarPomo(){if(!P.rodando)return;cancelarAlarmeAgendado();P.restante=pomoRestante();if(P.modo==="foco")P.acumulado+=Date.now()-P.iniciadoEm;P.rodando=false;clearInterval(P.tick);tickPomo();salvarPomoLocal();publicarRanking()}
 // o pomodoro em andamento fica guardado neste aparelho, para não sumir ao fechar e reabrir o app
 const pomoChave=()=>"la_pomo_"+(S.uid||"local");
-function salvarPomoLocal(){try{localStorage.setItem(pomoChave(),JSON.stringify({modo:P.modo,rodando:P.rodando,fimEm:P.fimEm,restante:P.restante,iniciadoEm:P.iniciadoEm,acumulado:P.acumulado,materia:P.materia,bloco:P.bloco,ciclos:P.ciclos,auto:!!P.auto,foco:P.dur.foco,salvoEm:Date.now()}))}catch(e){}}
-function carregarPomo(){let d=null;try{d=JSON.parse(localStorage.getItem(pomoChave())||"null")}catch(e){}
+function salvarPomoLocal(){if(S.mode!=="nuvem")return;try{localStorage.setItem(pomoChave(),JSON.stringify({modo:P.modo,rodando:P.rodando,fimEm:P.fimEm,restante:P.restante,iniciadoEm:P.iniciadoEm,acumulado:P.acumulado,materia:P.materia,bloco:P.bloco,ciclos:P.ciclos,auto:!!P.auto,foco:P.dur.foco,salvoEm:Date.now()}))}catch(e){}}
+function carregarPomo(){if(S.mode!=="nuvem")return;let d=null;try{d=JSON.parse(localStorage.getItem(pomoChave())||"null")}catch(e){}
   if(!d||!(d.rodando||d.restante<P.dur[d.modo]*60e3||d.acumulado>0))return;
   Object.assign(P,{modo:d.modo,restante:d.restante,iniciadoEm:d.iniciadoEm,acumulado:d.acumulado||0,materia:d.materia||"",bloco:d.bloco||null,ciclos:d.ciclos||0,auto:!!d.auto});
   if(d.modo==="foco"&&d.foco)P.dur.foco=d.foco;
@@ -1617,6 +1625,7 @@ function pararAlarme(){
   document.querySelectorAll(".alarme").forEach(x=>x.remove());if(!P.rodando)document.title="Logic Academy";
 }
 function testarSom(){somPreparar();if(ALARME.tocando){pararAlarme();return}tocarSomAlarme();ALARME.tocando=true;clearTimeout(ALARME.fimAuto);ALARME.fimAuto=setTimeout(pararAlarme,3200);toast("Tocando o alarme por 3 segundos. Se não ouvir, aumente o volume de mídia.")}
+addEventListener("beforeunload",e=>{if(S.mode==="local"&&S.plano){e.preventDefault();e.returnValue=""}});
 let notifPedida=false;
 if(STANDALONE&&location.protocol==="https:"&&"serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 function pedirNotificacao(){if(notifPedida||!("Notification" in window)||Notification.permission!=="default")return;notifPedida=true;try{Notification.requestPermission().catch(()=>{})}catch(e){}}
@@ -1632,8 +1641,8 @@ function sequencia(){let n=0;for(let i=0;i<120;i++){if(minutosDia(diasAtras(i))>
 /* ================= Cronômetro livre ================= */
 const C={rodando:false,inicio:0,acum:0,materia:"",tick:null};
 function cronoMs(){return C.acum+(C.rodando?Date.now()-C.inicio:0)}
-function salvarCronoLocal(){try{localStorage.setItem("mapa_crono_"+(S.uid||"local"),JSON.stringify({rodando:C.rodando,inicio:C.inicio,acum:C.acum,materia:C.materia,confirmado:C.confirmado||0}))}catch(e){}}
-function carregarCrono(){try{const d=JSON.parse(localStorage.getItem("mapa_crono_"+(S.uid||"local"))||"null");if(d){Object.assign(C,d);if(C.rodando){clearInterval(C.tick);C.tick=setInterval(tickCrono,500)}}}catch(e){}}
+function salvarCronoLocal(){if(S.mode!=="nuvem")return;try{localStorage.setItem("mapa_crono_"+(S.uid||"local"),JSON.stringify({rodando:C.rodando,inicio:C.inicio,acum:C.acum,materia:C.materia,confirmado:C.confirmado||0}))}catch(e){}}
+function carregarCrono(){if(S.mode!=="nuvem")return;try{const d=JSON.parse(localStorage.getItem("mapa_crono_"+(S.uid||"local"))||"null");if(d){Object.assign(C,d);if(C.rodando){clearInterval(C.tick);C.tick=setInterval(tickCrono,500)}}}catch(e){}}
 function fmtRelogio(ms){const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t/60)%60,sg=t%60;return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sg).padStart(2,"0")}
 function iniciarCrono(){if(C.rodando)return;C.rodando=true;C.inicio=Date.now();C.confirmado=Date.now();clearInterval(C.tick);C.tick=setInterval(tickCrono,500);salvarCronoLocal();tickCrono();publicarRanking()}
 function pausarCrono(){if(!C.rodando)return;C.acum+=Date.now()-C.inicio;C.rodando=false;clearInterval(C.tick);salvarCronoLocal();tickCrono();publicarRanking()}
@@ -2481,7 +2490,7 @@ function renderShell(){
 function renderSideUser(){
   const el=$("#side-me");if(!el)return;
   const nm=S.mode==="nuvem"?(S.pub&&S.pub.nome)||(S.perfil&&S.perfil.nome)||"Estudante":(S.perfil&&S.perfil.nome)||"Visitante";
-  el.innerHTML=`${S.mode==="nuvem"?avatar(S.uid):`<span class="avatar" aria-hidden="true">${esc(nm[0]||"V").toUpperCase()}</span>`}<div style="min-width:0"><div class="nm">${esc(nm)}</div><div class="sub">${S.mode==="nuvem"?"Salvo na nuvem":"Visitante · este navegador"}</div></div>`;
+  el.innerHTML=`${S.mode==="nuvem"?avatar(S.uid):`<span class="avatar" aria-hidden="true">${esc(nm[0]||"V").toUpperCase()}</span>`}<div style="min-width:0"><div class="nm">${esc(nm)}</div><div class="sub">${S.mode==="nuvem"?"Salvo na nuvem":"Visitante · nada é salvo"}</div></div>`;
 }
 function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(m=>m.topicos);return all.length?Math.round(all.filter(t=>t.feito).length/all.length*100):0}
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
@@ -2505,6 +2514,7 @@ function renderInicio(){
   const nome=(S.pub&&S.pub.nome)||p.nome;
   const rk=S.mode==="nuvem"?Object.keys(S.soc.ranking).filter(visivelRanking).map(id=>({id,m:minHoje(id)})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m).slice(0,5):[];
   $("#main").innerHTML=`<div class="page">
+    ${S.mode!=="nuvem"?`<div class="card flat aviso-visit"><span>${ico("user")}<b>Modo visitante:</b> nada fica salvo. Ao fechar ou recarregar o app, seu plano e seu progresso são apagados.</span><button class="btn sm primary" type="button" id="visit-conta">Criar conta e salvar</button></div>`:""}
     ${pageHead(`${saud}${nome?", "+esc(nome):""}`,`${DIAS[hi].n}, ${new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long"})} · ${esc(descObjetivo(p))}`,`<button class="btn primary" type="button" id="ini-pomo">${ico("play")}Começar a estudar</button>`)}
     <div class="stats">
       <div class="stat stat-meta">${anelMeta(minutosDia(dataISO()),metaHoje())}<div style="min-width:0"><div class="eyebrow">Meta de hoje</div><div class="v" style="font-size:1.25rem">${fmtH(minutosDia(dataISO()))}</div><div class="s">de ${fmtH(metaHoje())}${minutosDia(dataISO())>=metaHoje()?" · batida!":""}</div></div></div>
@@ -2534,6 +2544,7 @@ function renderInicio(){
     </div></div>`;
   $("#ini-pomo").onclick=()=>{const prox=blocos.find(b=>!b.feito);if(prox)prepararPomo(hojeK,prox);go("pomodoro")};
   ligarBlocos();ligarRevisoes(renderInicio);$$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
+  const vc=$("#visit-conta");if(vc)vc.onclick=()=>sair("criar");
 }
 function acharBloco(ref){const [k,id]=ref.split("|");return (S.plano&&S.plano.semana[k]||[]).find(b=>b.id===id)}
 function marcarBloco(ref,v){const b=acharBloco(ref);if(!b)return;b.feito=v;b.feitoEm=v?Date.now():0;setTimeout(atualizarBadgeDesafios,50);gravar("plano",S.plano);if(["inicio","semana"].includes(S.view))renderView()}
@@ -2918,7 +2929,7 @@ function renderTopicos(){
     const o=Object.entries(QB_INDICE.areas).flatMap(([a,x])=>x.topicos.map(t=>[a,...t])).find(t=>t[2]===b.dataset.qtop);if(o){q.f.area=o[0];q.f.m=o[1]}q.sel=null;q.lim=QB_POR_PAGINA;go("questoes")});
   $("#tp-tri").onclick=()=>{S.triProva=null;go("triagemProva")};
   let conf=false;$("#tp-del").onclick=()=>{if(!conf){conf=true;$("#tp-del").textContent="Clique de novo para confirmar";$("#tp-del-c").textContent="Os tópicos e o progresso desta prova serão apagados.";return}
-    S.edital=null;if(S.mode==="nuvem")meuDoc("edital").delete().catch(()=>{});else try{localStorage.removeItem("mapa_edital")}catch(e){}
+    S.edital=null;if(S.mode==="nuvem")meuDoc("edital").delete().catch(()=>{});else delete VISITANTE_MEM.edital;
     if(S.plano&&S.plano.prova){delete S.plano.prova;gravar("plano",S.plano)}toast("Prova removida.");go("edital")};
 }
 function renderTopicosKeepOpen(){const abertos=$$("details.mat-acc").map(d=>d.open);const y=scrollY;renderTopicos();$$("details.mat-acc").forEach((d,i)=>d.open=!!abertos[i]);scrollTo(0,y);$$("[data-go=topicos] .badge").forEach(b=>b.textContent=progEdital()+"%")}
@@ -3164,7 +3175,7 @@ document.addEventListener("click",e=>{const el=e.target.closest("[data-perfil]")
 function completude(p){const itens=[["foto","Foto"],["usuario","@usuário"],["bio","Bio"],["objetivo","Objetivo"],["instituicao","Escola ou cursinho"],["cidade","Cidade"]];const falta=itens.filter(([k])=>!p[k]);return {pct:Math.round((itens.length-falta.length)/itens.length*100),falta:falta.map(x=>x[1])}}
 function renderPerfil(){
   const nuvem=S.mode==="nuvem";
-  if(!nuvem){$("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Meu perfil","Como visitante, seu perfil fica só neste navegador.")}
+  if(!nuvem){$("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Meu perfil","Como visitante, seu perfil não é salvo e some ao fechar o app.")}
     <form class="card stack" id="pf"><div class="field"><label for="pf-nome">Nome</label><input type="text" id="pf-nome" maxlength="40" value="${esc(S.perfil.nome||"")}"></div><div class="row"><button class="btn primary" type="submit">Salvar</button></div>
     <p class="small muted">Entre com uma conta para ter foto, capa, @usuário e perfil público.</p></form></div>`;
     $("#pf").addEventListener("submit",e=>{e.preventDefault();S.perfil.nome=$("#pf-nome").value.trim();gravar("perfil",S.perfil);renderSideUser();toast("Nome salvo.")});return}
@@ -3454,7 +3465,7 @@ function renderDesafios(){
     <div class="tabs" role="tablist">${[["diarios","Diários"],["semanais","Semanais"],["mensais","Mensais"],["conquistas","Conquistas"],["colecao","Coleção"],["limpo","Jogo limpo"]].map(([k,nm])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-dtab="${k}">${nm}${k==="diarios"&&dia.some(c=>pronto(c)&&!g.resgatados[c.id])||k==="semanais"&&sem.some(c=>pronto(c)&&!g.resgatados[c.id])||k==="mensais"&&mesD.some(c=>pronto(c)&&!g.resgatados[c.id])?' <span class="pill solid" style="padding:0 6px">!</span>':""}</button>`).join("")}</div>
     ${corpo}
     ${FBM()?`<p class="hint" style="margin-top:12px">${ib("check",13)} XP, nível e itens ficam guardados no servidor. Cada resgate é conferido pelas regras do Firebase com o tempo de estudo que o próprio servidor registrou, e o perfil público só aceita itens que você realmente ganhou.</p>`:""}
-    ${S.mode!=="nuvem"?`<p class="hint" style="margin-top:12px">Como visitante, o progresso fica só neste navegador e os itens não aparecem para outras pessoas.</p>`:""}
+    ${S.mode!=="nuvem"?`<p class="hint" style="margin-top:12px">Como visitante, o progresso não é salvo: some ao fechar o app. Entre com uma conta para guardar XP e itens.</p>`:""}
   </div>`;
   $$("[data-dtab]").forEach(b=>b.onclick=()=>{S.desTab=b.dataset.dtab;renderDesafios()});
   $$("[data-resgatar]").forEach(b=>b.onclick=()=>{const c=dia.concat(sem,mesD).find(x=>x.id===b.dataset.resgatar);if(c)resgatar(c,b)});
@@ -3638,7 +3649,7 @@ function renderConfig(){
     <div class="stack">
       <div class="card row" style="justify-content:space-between"><div><h3>Aparência</h3><p class="small muted">Estilo ${esc((ESTILOS.find(e=>e.k===uiAtual().estilo)||ESTILOS[0]).n)} · modo ${({auto:"automático",claro:"claro",escuro:"escuro"})[uiAtual().modo]}</p></div><button class="btn" type="button" data-link="aparencia">${ico("palette")}Personalizar</button></div>
       ${(()=>{const T=garantirTotais(S.pomoLog).tot;const mats=Object.entries(T.mat).sort((a,b)=>b[1]-a[1]);const mx=mats.length?mats[0][1]:1;
-        return `<div class="card"><div class="card-h"><div><h3>Tempo estudado no app</h3><p class="small muted">Soma do cronômetro e do pomodoro${S.mode==="nuvem"?", salva na sua conta":", salva neste navegador"}.</p></div><button class="btn sm" type="button" id="cf-crono">${ico("watch")}Abrir cronômetro</button></div>
+        return `<div class="card"><div class="card-h"><div><h3>Tempo estudado no app</h3><p class="small muted">Soma do cronômetro e do pomodoro${S.mode==="nuvem"?", salva na sua conta":", não salva (modo visitante)"}.</p></div><button class="btn sm" type="button" id="cf-crono">${ico("watch")}Abrir cronômetro</button></div>
           <div class="grid3" style="gap:12px;margin-bottom:${mats.length?"16px":"0"}">
             <div><div class="eyebrow">Total</div><div style="font-size:1.6rem;font-weight:600">${fmtH(T.min)}</div><div class="small muted">${(T.min/60).toLocaleString("pt-BR",{maximumFractionDigits:1})} horas</div></div>
             <div><div class="eyebrow">Cronômetro</div><div style="font-size:1.25rem;font-weight:600">${fmtH(T.fonte.cronometro||0)}</div></div>
@@ -3650,7 +3661,7 @@ function renderConfig(){
         <select id="cf-meta" style="width:auto">${[[0,"Automática (pelo plano)"],[30,"30 min"],[60,"1 hora"],[90,"1h30"],[120,"2 horas"],[180,"3 horas"],[240,"4 horas"],[300,"5 horas"],[360,"6 horas"],[480,"8 horas"]].map(([v,n])=>`<option value="${v}" ${(+S.perfil.metaDia||0)===v?"selected":""}>${n}</option>`).join("")}</select></div>
       <div class="card row" style="justify-content:space-between"><div><h3>Suas respostas</h3><p class="small muted">${esc(descObjetivo(S.perfil))} · ${S.perfil.materias.length} matérias · ${fmtH(DIAS.reduce((a,x)=>a+(+S.perfil.horas[x.k]||0),0)*60)} por semana</p></div>
         <button class="btn" type="button" id="cf-ed">${ico("gear")}Matérias e horários</button><button class="btn" type="button" id="cf-tri">Refazer triagem</button></div>
-      <div class="card row" style="justify-content:space-between"><div><h3>Armazenamento</h3><p class="small muted">${S.mode==="nuvem"?"Seus dados estão salvos na nuvem, ligados à sua conta.":"Seus dados estão só neste navegador. Entre com a conta para salvar na nuvem."}</p></div>
+      <div class="card row" style="justify-content:space-between"><div><h3>Armazenamento</h3><p class="small muted">${S.mode==="nuvem"?"Seus dados estão salvos na nuvem, ligados à sua conta.":"Modo visitante: nada é salvo e tudo some ao fechar o app. Entre com uma conta para salvar na nuvem."}</p></div>
         <span class="pill ${S.mode==="nuvem"?"solid":""}"><span class="dot"></span>${S.mode==="nuvem"?"Nuvem":"Local"}</span></div>
       <div class="card"><details><summary>Ver o prompt que a IA recebe para montar a semana</summary><pre class="prompt">${esc(montarPrompt(S.perfil,{prova:S.plano&&S.plano.prova?provaCtx():null}))}</pre></details></div>
       <div class="card"><details><summary>Ver o prompt usado para ler editais</summary><pre class="prompt">${esc(promptEditalTrecho("[trecho do edital]",0,1))}</pre></details></div>
