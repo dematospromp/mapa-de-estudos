@@ -26,8 +26,8 @@ jobs:
           if [ -z "$CHAVE" ]; then echo "::error::Falta o segredo FIREBASE_SERVICE_ACCOUNT no repositório (Settings > Secrets and variables > Actions)."; exit 1; fi
           printf '%s' "$CHAVE" > "$RUNNER_TEMP/chave.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/chave.json" >> "$GITHUB_ENV"
-      - name: Criar o site logic-academy (se ainda não existir)
-        run: npx --yes firebase-tools@13 hosting:sites:create logic-academy --project mapa-de-estudos-d6eca --non-interactive || echo "site já existe"
+      - name: Criar o site logicacademy (se ainda não existir)
+        run: npx --yes firebase-tools@13 hosting:sites:create logicacademy --project mapa-de-estudos-d6eca --non-interactive || echo "site já existe"
       - name: Autorizar o domínio no login (Google/Apple)
         run: |
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" --quiet
@@ -37,8 +37,8 @@ jobs:
           D=$(curl -sS -f "${H[@]}" "$U" | jq -c '.authorizedDomains')
           echo "domínios atuais: $D"
           if [ -z "$D" ] || [ "$D" = "null" ] || [ "$D" = "[]" ]; then echo "::warning::Não consegui ler os domínios autorizados; adicione logic-academy.web.app à mão em Authentication > Configurações."; exit 0; fi
-          if ! echo "$D" | jq -e 'index("logic-academy.web.app")' >/dev/null; then
-            N=$(echo "$D" | jq -c '. + ["logic-academy.web.app","logic-academy.firebaseapp.com"] | unique')
+          if ! echo "$D" | jq -e 'index("logicacademy.web.app") and (index("logic-academy.web.app")|not)' >/dev/null; then
+            N=$(echo "$D" | jq -c '. - ["logic-academy.web.app","logic-academy.firebaseapp.com"] + ["logicacademy.web.app","logicacademy.firebaseapp.com"] | unique')
             curl -sS -f -X PATCH "${H[@]}" "$U?updateMask=authorizedDomains" -d "{\"authorizedDomains\":$N}" | jq -c '.authorizedDomains' || echo "::warning::Não consegui autorizar o domínio; adicione à mão em Authentication > Configurações."
           fi
       - name: Publicar site e regras

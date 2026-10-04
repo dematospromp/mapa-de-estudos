@@ -1,7 +1,7 @@
 {
   "hosting": [
     {
-      "site": "logic-academy",
+      "site": "logicacademy",
       "public": ".",
       "ignore": ["firebase.json", ".firebaserc", "firestore.rules", "README.md", "**/.*", ".github/**", "**/node_modules/**", "redirecionar/**"],
       "headers": [
@@ -15,7 +15,7 @@
     {
       "site": "mapa-de-estudos-d6eca",
       "public": "redirecionar",
-      "redirects": [{"source": "**", "destination": "https://logic-academy.web.app/", "type": 301}]
+      "redirects": [{"source": "**", "destination": "https://logicacademy.web.app/", "type": 301}]
     }
   ],
   "firestore": {

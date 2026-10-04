@@ -2,7 +2,7 @@
 
 Organizador de estudos: triagem do aluno (colégio, vestibular, concurso, faculdade), plano semanal, pomodoro, banco de questões oficiais, catálogo de provas de todo o Brasil e leitura de editais em PDF.
 
-Site oficial: https://logic-academy.web.app/ (Firebase Hosting; o endereço antigo mapa-de-estudos-d6eca.web.app redireciona para ele)
+Site oficial: https://logicacademy.web.app/ (Firebase Hosting; o endereço antigo mapa-de-estudos-d6eca.web.app redireciona para ele)
 Site de testes: https://dematospromp.github.io/mapa-de-estudos/ (GitHub Pages)
 
 ## Como publicar
