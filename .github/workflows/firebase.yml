@@ -36,7 +36,7 @@ jobs:
           H=(-H "Authorization: Bearer $T" -H "x-goog-user-project: mapa-de-estudos-d6eca" -H "Content-Type: application/json")
           D=$(curl -sS -f "${H[@]}" "$U" | jq -c '.authorizedDomains')
           echo "domínios atuais: $D"
-          if [ -z "$D" ] || [ "$D" = "null" ] || [ "$D" = "[]" ]; then echo "::warning::Não consegui ler os domínios autorizados; adicione logic-academy.web.app à mão em Authentication > Configurações."; exit 0; fi
+          if [ -z "$D" ] || [ "$D" = "null" ] || [ "$D" = "[]" ]; then echo "::warning::Não consegui ler os domínios autorizados; adicione o domínio à mão em Authentication > Configurações."; exit 0; fi
           if ! echo "$D" | jq -e 'index("logicacademy.web.app") and (index("logic-academy.web.app")|not)' >/dev/null; then
             N=$(echo "$D" | jq -c '. - ["logic-academy.web.app","logic-academy.firebaseapp.com"] + ["logicacademy.web.app","logicacademy.firebaseapp.com"] | unique')
             curl -sS -f -X PATCH "${H[@]}" "$U?updateMask=authorizedDomains" -d "{\"authorizedDomains\":$N}" | jq -c '.authorizedDomains' || echo "::warning::Não consegui autorizar o domínio; adicione à mão em Authentication > Configurações."
