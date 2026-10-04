@@ -2388,12 +2388,15 @@ function iaMentoriaDisponivel(){return !!S.sample||(FBM()&&!!window.MAPA_FIREBAS
 function iaFirebase(){
   if(!iaFBPromessa)iaFBPromessa=(async()=>{const b=`https://www.gstatic.com/firebasejs/${IA_FB_VERSAO}/`;
     const {initializeApp}=await import(b+"firebase-app.js"),{getAI,getGenerativeModel,GoogleAIBackend}=await import(b+"firebase-ai.js");
-    const ai=getAI(initializeApp(window.MAPA_FIREBASE_CONFIG,"mentoria"),{backend:new GoogleAIBackend()});let mi=0;
+    const app=initializeApp(window.MAPA_FIREBASE_CONFIG,"mentoria"),chaveAC=window.MAPA_FIREBASE_CONFIG.appCheckSiteKey;
+    // App Check (opcional): com a chave do reCAPTCHA v3 em firebase-config.js, o site prova ao Firebase que o pedido vem dele
+    if(chaveAC){try{const {initializeAppCheck,ReCaptchaV3Provider}=await import(b+"firebase-app-check.js");initializeAppCheck(app,{provider:new ReCaptchaV3Provider(chaveAC),isTokenAutoRefreshEnabled:true})}catch(e){console.warn("app check",e)}}
+    const ai=getAI(app,{backend:new GoogleAIBackend(),useLimitedUseAppCheckTokens:false});let mi=0;
     return async(turns,opts)=>{const contents=turns.map(t=>({role:t.role==="assistant"?"model":"user",parts:[{text:t.content}]}));
       for(;;){try{const r=await getGenerativeModel(ai,{model:IA_FB_MODELOS[mi]}).generateContentStream({contents});let text="";
           for await(const ch of r.stream){let d="";try{d=ch.text()}catch(e){}text+=d;if(opts&&opts.onText)opts.onText({text,delta:d})}return {text,truncated:false}}
         catch(e){const m=String(e&&e.message||e);if(mi<IA_FB_MODELOS.length-1&&/not found|404|not supported|unknown model/i.test(m)){mi++;continue}
-          throw {code:/429|quota|RESOURCE_EXHAUSTED/i.test(m)?"rate_limited":/403|PERMISSION|not been used|disabled|api-not-enabled|firebasevertexai|firebaseml/i.test(m)?"ia_desativada":"erro",message:m}}}}})();
+          throw {code:/429|quota|RESOURCE_EXHAUSTED/i.test(m)?"rate_limited":/App ?Check|appcheck|401/i.test(m)?"ia_appcheck":/403|PERMISSION|not been used|disabled|api-not-enabled|firebasevertexai|firebaseml/i.test(m)?"ia_desativada":"erro",message:m}}}}})();
   iaFBPromessa.catch(()=>{iaFBPromessa=null});return iaFBPromessa}
 async function iaMentoria(){return S.sample||await iaFirebase()}
 async function renderMentoria(){
@@ -2446,7 +2449,7 @@ async function mentorEnviar(t){
     const ia=await iaMentoria();const r=await ia(hist,{modelTier:"default",cache:false,onText:({text})=>{const el=$("#mt-escrevendo");if(el){el.innerHTML=mtFormatar(text);const b=$("#mt-msgs");if(b)b.scrollTop=b.scrollHeight}}});
     m.msgs.push({r:"ia",t:(r&&r.text||"").trim()||"Não consegui responder agora. Tente de novo."});
   }catch(e){console.warn("mentoria",e&&e.code,e&&e.message);
-    m.msgs.push({r:"ia",t:e&&e.code==="rate_limited"?"Muitas perguntas seguidas. Espere um pouco e tente de novo.":e&&e.code==="not_granted"?"A IA não foi liberada nesta visualização.":e&&e.code==="ia_desativada"?"A mentoria ainda não foi ativada no Firebase deste site. Quem administra o site precisa abrir o console do Firebase em AI Logic e ativar a Gemini Developer API.":"Não consegui responder agora ("+(e&&e.code||"erro")+"). Tente de novo."+(e&&e.text?"\n\n"+e.text:"")})}
+    m.msgs.push({r:"ia",t:e&&e.code==="rate_limited"?"Muitas perguntas seguidas. Espere um pouco e tente de novo.":e&&e.code==="not_granted"?"A IA não foi liberada nesta visualização.":e&&e.code==="ia_appcheck"?"A mentoria está bloqueada pela proteção App Check do Firebase. Quem administra o site precisa desligar a exigência do App Check para o Firebase AI Logic ou configurar a chave do reCAPTCHA no site.":e&&e.code==="ia_desativada"?"A mentoria ainda não foi ativada no Firebase deste site. Quem administra o site precisa abrir o console do Firebase em AI Logic e ativar a Gemini Developer API.":"Não consegui responder agora ("+(e&&e.code||"erro")+"). Tente de novo."+(e&&e.text?"\n\n"+e.text:"")})}
   m.ocupado=false;m.msgs=m.msgs.slice(-40);gravar("mentoria",{msgs:m.msgs});if(S.view==="mentoria")renderMentoria();
 }
 
