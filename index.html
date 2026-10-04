@@ -2974,21 +2974,17 @@ function vozPrevia(canal){V.prev=V.prev||{};if(V.canal===canal)return;
   assinar("tela:vozprev:"+canal,vozDoc(canal).collection("participantes"),snap=>{V.prev[canal]=snap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>Date.now()-(d.visto||0)<60000);
     const el=document.querySelector(`[data-voz-painel="${canal}"]`);if(el&&V.canal!==canal)el.outerHTML=vozPainelHtml(canal,el.querySelector("h3").textContent,V.prev[canal])})}
 function renderVoz(){
-  if(!FBM()){$("#main").innerHTML=bloqueado("Canais de voz");ligarBloqueado();return}
-  const gs=Object.keys(FBC.meus).filter(g=>FBC.grupos[g]).map(g=>FBC.grupos[g]);
-  $("#main").innerHTML=`<div class="page" style="max-width:900px">${pageHead("Canais de voz","Converse por voz enquanto estuda. Entre num canal e continue usando o pomodoro, o cronômetro ou o banco de questões.")}
+  if(!FBM()){$("#main").innerHTML=bloqueado("Voz global");ligarBloqueado();return}
+  $("#main").innerHTML=`<div class="page" style="max-width:900px">${pageHead("Voz global","Converse por voz com estudantes de todo o site enquanto estuda. Entre e continue usando o pomodoro, o cronômetro ou o banco de questões.")}
     <div class="stack">${vozPainelHtml("global","Canal global",V.prev&&V.prev.global)}
-    <div class="card"><div class="card-h"><h3>Canais das suas comunidades</h3><a class="small muted" href="#grupos" data-link="grupos">Meus grupos</a></div>
-      ${gs.length?`<div class="list">${gs.map(g=>{const c=vozCanalGrupo(g.id),aqui=V.canal===c;return `<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${gAvatar(g)}<div style="min-width:0"><div class="nm">${esc(g.nome)}</div><div class="small muted">${aqui?"você está neste canal":"canal de voz do grupo"}</div></div>
-        ${aqui?`<button class="btn sm danger" type="button" data-voz="sair">${ico("phoneoff")}Sair</button>`:`<button class="btn sm" type="button" data-voz="entrar" data-canal="${c}" data-titulo="${esc(g.nome)}">${ico("mic")}Entrar</button>`}</div>`}).join("")}</div>`
-        :`<p class="small muted">Entre em um grupo de estudo para ter um canal de voz só da sua turma.</p>`}</div></div></div>`;
+    <p class="hint">${ico("users")} Cada comunidade tem o próprio canal de voz, que fica dentro do grupo, na aba <b>Voz</b>. <a href="#grupos" data-link="grupos">Abrir meus grupos</a></p></div></div>`;
   $$("[data-link]").forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.link)});vozPrevia("global");
 }
 /* ================= Shell com barra lateral ================= */
 const NAV=[
   ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["questoes","Banco de questões","qbank"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["desafios","Desafios","trophy"],["estatisticas","Estatísticas","chart"],["mentoria","Mentoria com IA","mentor"]]],
   ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
-  ["Comunidade",[["grupos","Meus grupos","users"],...(STANDALONE?[["buscarGrupos","Buscar grupos","search"]]:[]),["voz","Canais de voz","mic"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
+  ["Comunidade",[["grupos","Meus grupos","users"],...(STANDALONE?[["buscarGrupos","Buscar grupos","search"]]:[]),["voz","Voz global","mic"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
   ["Conta",[["perfil","Meu perfil","user"],["aparencia","Aparência","palette"],["config","Configurações","gear"]]]];
 function renderShell(){
   $("#root").innerHTML=`
