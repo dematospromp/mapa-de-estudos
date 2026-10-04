@@ -1,0 +1,30 @@
+# Publica só as regras do Firestore (sem mexer no site oficial). Rodar à mão em Actions > "Publicar só as regras".
+name: Publicar só as regras
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: firebase-producao
+  cancel-in-progress: false
+
+jobs:
+  regras:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Credencial do Firebase
+        env:
+          CHAVE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$CHAVE" ]; then echo "::error::Falta o segredo FIREBASE_SERVICE_ACCOUNT."; exit 1; fi
+          printf '%s' "$CHAVE" > "$RUNNER_TEMP/chave.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/chave.json" >> "$GITHUB_ENV"
+      - name: Publicar regras
+        run: npx --yes firebase-tools@13 deploy --only firestore:rules --project mapa-de-estudos-d6eca --non-interactive --force
+      - name: Apagar credencial
+        if: always()
+        run: rm -f "$RUNNER_TEMP/chave.json"

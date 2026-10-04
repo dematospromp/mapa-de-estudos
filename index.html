@@ -887,6 +887,37 @@ button.hoje-prox{cursor:pointer}
 .qb-corr .i{color:var(--c-errada);flex:none;margin-top:2px}
 .qb-corr.ok{border-color:color-mix(in srgb,var(--ok) 45%,var(--line));background:color-mix(in srgb,var(--ok) 9%,var(--surface))}
 .qb-corr.ok .i{color:var(--ok)}
+
+/* ===== Canais de voz ===== */
+.voz-painel{display:flex;flex-direction:column;gap:14px}
+.voz-painel.ativo{border-color:color-mix(in srgb,var(--ok) 50%,var(--line));box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 14%,transparent)}
+.voz-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.voz-top h3{margin:0}
+.voz-ic{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 16%,var(--sunken));color:var(--accent)}
+.voz-painel.ativo .voz-ic{background:var(--ok);color:#fff}
+.voz-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.voz-p{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--sunken);min-width:0;cursor:pointer}
+.voz-p .nm{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.voz-p .small{display:flex;align-items:center;gap:4px}.voz-p .small .i{width:13px;height:13px}
+.voz-av{border-radius:50%;flex:none;transition:box-shadow .12s}
+.voz-av .avatar{width:40px;height:40px}
+.voz-p.falando .voz-av{box-shadow:0 0 0 3px var(--ok),0 0 14px var(--ok)}
+.mini-voz{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;border-radius:var(--r-sm);background:color-mix(in srgb,var(--ok) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--ok) 45%,var(--line));cursor:pointer;font-size:.84rem;min-width:0}
+.mini-voz .mv-ic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--ok);color:#fff}
+.mini-voz .mv-ic .i{width:15px;height:15px}
+.mini-voz .mv-ic.falando{box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 40%,transparent)}
+.mv-t{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.2}
+.mv-t b,.mv-t small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mv-t small{color:var(--muted)}
+.mv-b{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface);color:var(--fg);display:grid;place-items:center;cursor:pointer;padding:0}
+.mv-b .i{width:15px;height:15px}
+.mv-b.sai{background:var(--danger);border-color:var(--danger);color:#fff}
+.voz-flut{display:none}
+@media (max-width:860px){
+  .voz-flut:not([hidden]){display:flex;position:fixed;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));z-index:24;box-shadow:0 8px 24px rgba(0,0,0,.18);background:color-mix(in srgb,var(--ok) 12%,var(--surface))}
+  #main:has(~ .voz-flut:not([hidden])),.shell:has(.voz-flut:not([hidden])) #main{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
+}
+@media (min-width:861px){.shell.rec .mini-voz .mv-t,.shell.rec .mini-voz .mv-b{display:none}.shell.rec .mini-voz{justify-content:center;padding:8px 0}}
 </style>
 
 </head><body><div id="root"></div>
@@ -1398,7 +1429,7 @@ async function entrar(modo){
   if(S.perfil&&S.plano){S.view="inicio";renderShell()}
   else{S.step=0;S.draft=S.perfil?migrar(clone(S.perfil)):perfilPadrao(nomeConta);renderWizard()}
 }
-function sair(aba){Object.keys(VISITANTE_MEM).forEach(k=>delete VISITANTE_MEM[k]);S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;Object.assign(S,{pubOk:false,srv:undefined,resg:{},resgOk:false,rankOk:false,gCache:null,dt:0});SRV.tentados={};SRV.fila=Promise.resolve();S.authTab=typeof aba==="string"?aba:"entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
+function sair(aba){if(V.canal)vozSair(true);Object.keys(VISITANTE_MEM).forEach(k=>delete VISITANTE_MEM[k]);S.unsub.forEach(f=>{try{f()}catch(e){}});S.unsub=[];pararComunidadeFB();pausarPomo();clearInterval(C.tick);Object.assign(C,{rodando:false,inicio:0,acum:0,materia:""});S.conq=null;Object.assign(S,{pubOk:false,srv:undefined,resg:{},resgOk:false,rankOk:false,gCache:null,dt:0});SRV.tentados={};SRV.fila=Promise.resolve();S.authTab=typeof aba==="string"?aba:"entrar";if(FB&&S.mode==="nuvem")FB.auth.signOut().catch(()=>{});
   Object.assign(S,{mode:null,uid:null,perfil:null,plano:null,edital:null,pomoLog:null,pub:null,soc:{perfis:{},ranking:{},msgs:{},grupos:{},membros:{},conquistas:{}}});renderLogin()}
 
 function perfilPadrao(nome){
@@ -2275,7 +2306,7 @@ function renderGrupoFB(){
           ${g.desc?`<p style="margin-top:6px">${esc(g.desc)}</p>`:""}</div>
         <div class="row g-acoes">${sou?(dono?"":`<button class="btn" type="button" id="g-sair">Sair do grupo</button>`):`<button class="btn primary" type="button" id="g-entrar">${g.temSenha?ico("lock"):""}Entrar no grupo</button>`}</div></div>
       ${g.bio?`<details class="g-bio" ${sou?"":"open"}><summary>Sobre o grupo</summary><p>${esc(g.bio)}</p></details>`:""}</div>
-    ${sou?`<div class="tabs" role="tablist">${[["chat","Chat"],["ranking","Ranking"],["arquivos","Arquivos"],["membros","Membros"]].concat(gestor?[["config","Configurações"]]:[]).map(([k,n])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-gtab="${k}">${n}</button>`).join("")}</div>
+    ${sou?`<div class="tabs" role="tablist">${[["chat","Chat"],["voz","Voz"],["ranking","Ranking"],["arquivos","Arquivos"],["membros","Membros"]].concat(gestor?[["config","Configurações"]]:[]).map(([k,n])=>`<button type="button" role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-gtab="${k}">${n}</button>`).join("")}</div>
       <div id="g-corpo"></div>`
     :`<div class="empty-state">${ico(g.temSenha?"lock":"users")}<b>Entre no grupo para ver o chat, os arquivos e os membros.</b>${g.temSenha?`<span>Este grupo tem senha. Peça a senha a um administrador.</span>`:""}</div>`}
   </div>`;
@@ -2312,6 +2343,8 @@ function renderGrupoFB(){
       $$("[data-baixar]",box).forEach(b=>b.onclick=()=>baixarArquivoFB(base,arr.find(x=>x.id===b.dataset.baixar),b));
       $$("[data-apagar]",box).forEach(b=>{let c=false;b.onclick=async()=>{if(!c){c=true;b.textContent="Apagar?";return}await apagarArquivoFB(base,b.dataset.apagar)}});
     });
+  }else if(tab==="voz"){
+    const c=vozCanalGrupo(g.id);corpo.innerHTML=vozPainelHtml(c,g.nome,V.prev&&V.prev[c]);vozPrevia(c);
   }else if(tab==="ranking"){
     corpo.innerHTML=`<div id="grank"><div class="row muted small"><span class="spinner"></span>Carregando ranking…</div></div>`;
     let ids=[];const desenhar=()=>{const box=$("#grank");if(!box)return;box.innerHTML=rankingGrupoHtml(g,ids);
@@ -2526,6 +2559,7 @@ function renderAmigosFB(){
 
 /* ================= Banco de questões (provas oficiais) ================= */
 Object.assign(I,{
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>',micoff:'<path d="M15 9.3V6a3 3 0 0 0-5.7-1.3"/><path d="M9 9v2a3 3 0 0 0 5.1 2.1"/><path d="M5 11a7 7 0 0 0 11.5 5.4M19 11a7 7 0 0 1-.6 2.8"/><path d="M12 18v3"/><path d="m3 3 18 18"/>',phoneoff:'<path d="M4.5 15.5c4.4-4.6 10.6-4.6 15 0l-2 2.2-3-1.4v-2.6a10 10 0 0 0-5 0v2.6l-3 1.4z"/>',
   flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1.1-3.7 2.3-4.8.2 1.6 1 2.8 2.2 3.3C11 9 11.5 6 12 3z"/>',repeat:'<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',check:'<path d="m5 12 5 5L20 7"/>',
   panel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="m15 10-2 2 2 2"/>',upload:'<path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/>',zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
   lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',shield:'<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>',
@@ -2833,11 +2867,128 @@ async function mentorEnviar(t){
 }
 
 
+
+/* ================= Canais de voz (WebRTC, sinalização pelo Firestore) ================= */
+// Cada canal: voz/{canal}/participantes/{uid} (quem está conectado) e voz/{canal}/sinais (oferta, resposta e ICE).
+// A voz vai direto de navegador para navegador (malha): bom até ~8 pessoas por canal.
+const VOZ_MAX=8,VOZ_ICE=[{urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302","stun:stun.cloudflare.com:3478"]}];
+const V={canal:null,titulo:"",sessao:"",stream:null,pcs:{},parts:{},mudo:false,subs:[],hb:null,ctx:null,an:{},falando:{},laco:null,entrando:false};
+const vozDoc=c=>S.db.collection("voz").doc(c);
+const vozCanalGrupo=gid=>"g_"+gid;
+function vozNome(){return ((S.pub&&S.pub.nome)||(S.perfil&&S.perfil.nome)||"Estudante").slice(0,60)}
+async function vozEntrar(canal,titulo){
+  if(!FBM()){toast("Entre com sua conta para usar os canais de voz.");return}
+  if(V.entrando)return;if(V.canal===canal)return;if(V.canal)await vozSair(true);
+  if(!navigator.mediaDevices||!window.RTCPeerConnection){toast("Este navegador não permite chamadas de voz.");return}
+  V.entrando=true;vozUI();
+  try{
+    const atuais=await vozDoc(canal).collection("participantes").get();const vivos=atuais.docs.filter(d=>d.id!==S.uid&&Date.now()-(d.data().visto||0)<60000);
+    if(vivos.length>=VOZ_MAX){toast(`O canal está cheio (${VOZ_MAX} pessoas). Tente daqui a pouco.`);V.entrando=false;vozUI();return}
+    V.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
+  }catch(e){V.entrando=false;vozUI();
+    toast(e&&e.name==="NotAllowedError"?"Libere o microfone para o site (no cadeado ao lado do endereço) e tente de novo.":e&&e.name==="NotFoundError"?"Nenhum microfone encontrado.":"Não foi possível entrar no canal ("+(e&&(e.code||e.name)||"erro")+").");return}
+  Object.assign(V,{canal,titulo,sessao:Math.random().toString(36).slice(2,12),pcs:{},parts:{},falando:{},mudo:false});
+  V.stream.getAudioTracks().forEach(t=>t.enabled=true);
+  try{await vozDoc(canal).collection("participantes").doc(S.uid).set({nome:vozNome(),sessao:V.sessao,visto:Date.now(),mudo:false,entrou:Date.now()})}
+  catch(e){V.stream.getTracks().forEach(t=>t.stop());V.stream=null;V.canal=null;V.entrando=false;vozUI();toast("Sem permissão para entrar neste canal ("+(e&&e.code||"erro")+").");return}
+  V.entrando=false;vozAnalisar(S.uid,V.stream);
+  V.subs.push(vozDoc(canal).collection("participantes").onSnapshot(vozParticipantes,err=>console.warn("voz part",err&&err.code)));
+  V.subs.push(vozDoc(canal).collection("sinais").where("para","==",S.uid).onSnapshot(vozSinais,err=>console.warn("voz sinais",err&&err.code)));
+  V.hb=setInterval(()=>{if(!V.canal)return;vozDoc(V.canal).collection("participantes").doc(S.uid).update({visto:Date.now(),mudo:V.mudo}).catch(()=>{});vozParticipantes(null)},20000);
+  toast(`Você entrou no canal de voz ${titulo}.`);vozUI();
+}
+async function vozSair(silencioso){
+  if(!V.canal)return;const canal=V.canal;
+  V.subs.forEach(u=>{try{u()}catch(e){}});V.subs=[];clearInterval(V.hb);
+  Object.keys(V.pcs).forEach(vozFecharPar);
+  if(V.stream)V.stream.getTracks().forEach(t=>t.stop());
+  Object.keys(V.an).forEach(k=>delete V.an[k]);clearInterval(V.laco);V.laco=null;
+  Object.assign(V,{canal:null,titulo:"",stream:null,parts:{},falando:{},sessao:""});
+  try{await vozDoc(canal).collection("participantes").doc(S.uid).delete()}catch(e){}
+  if(!silencioso)toast("Você saiu do canal de voz.");vozUI();
+}
+function vozMudo(){if(!V.stream)return;V.mudo=!V.mudo;V.stream.getAudioTracks().forEach(t=>t.enabled=!V.mudo);
+  vozDoc(V.canal).collection("participantes").doc(S.uid).update({mudo:V.mudo,visto:Date.now()}).catch(()=>{});vozUI()}
+function vozEnviar(para,spara,tipo,dados){if(!V.canal)return;vozDoc(V.canal).collection("sinais").add({de:S.uid,para,sde:V.sessao,spara,tipo,dados:dados||"",em:Date.now()}).catch(e=>console.warn("voz sinal",e&&e.code))}
+function vozFecharPar(uid){const p=V.pcs[uid];if(!p)return;try{p.pc.close()}catch(e){}if(p.audio){p.audio.srcObject=null;p.audio.remove()}delete V.pcs[uid];delete V.an[uid];delete V.falando[uid]}
+function vozPar(uid,sess){
+  let p=V.pcs[uid];if(p&&p.sessao===sess)return p;if(p)vozFecharPar(uid);
+  const pc=new RTCPeerConnection({iceServers:VOZ_ICE});V.stream.getTracks().forEach(t=>pc.addTrack(t,V.stream));
+  p=V.pcs[uid]={pc,sessao:sess,fila:[],audio:null,estado:"conectando",criado:Date.now()};
+  pc.onicecandidate=e=>{if(e.candidate)vozEnviar(uid,sess,"ice",JSON.stringify(e.candidate))};
+  pc.ontrack=e=>{const st=e.streams[0]||new MediaStream([e.track]);if(!p.audio){p.audio=document.createElement("audio");p.audio.autoplay=true;p.audio.setAttribute("playsinline","");p.audio.hidden=true;document.body.appendChild(p.audio)}
+    p.audio.srcObject=st;p.audio.play().catch(()=>{});vozAnalisar(uid,st)};
+  pc.onconnectionstatechange=()=>{p.estado=pc.connectionState;vozUI();
+    if(pc.connectionState==="failed"&&V.pcs[uid]===p&&S.uid<uid){setTimeout(()=>{if(V.pcs[uid]===p&&V.parts[uid]){vozFecharPar(uid);vozOferecer(uid,V.parts[uid].sessao)}},1500)}};
+  return p}
+async function vozOferecer(uid,sess){const p=vozPar(uid,sess);try{const o=await p.pc.createOffer();await p.pc.setLocalDescription(o);vozEnviar(uid,sess,"offer",JSON.stringify(p.pc.localDescription))}catch(e){console.warn("voz oferta",e)}}
+function vozParticipantes(snap){
+  if(!V.canal)return;if(snap)V.ultimo=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const vivos={};(V.ultimo||[]).forEach(d=>{if(d.id!==S.uid&&Date.now()-(d.visto||0)<60000)vivos[d.id]=d});V.parts=vivos;
+  // (a oferta pode chegar antes da lista atualizar: só fecha conexões novas se a sessão mudou)
+  Object.keys(V.pcs).forEach(uid=>{const p=V.pcs[uid];if(vivos[uid]?vivos[uid].sessao!==p.sessao:Date.now()-p.criado>15000)vozFecharPar(uid)});
+  // quem tem o id menor começa a conexão
+  Object.values(vivos).forEach(d=>{if(!V.pcs[d.id]&&S.uid<d.id)vozOferecer(d.id,d.sessao)});
+  vozUI()}
+async function vozSinais(snap){
+  for(const ch of snap.docChanges()){if(ch.type!=="added")continue;const d=ch.doc.data(),ref=ch.doc.ref;ref.delete().catch(()=>{});
+    if(!V.canal||d.spara!==V.sessao)continue;
+    try{
+      if(d.tipo==="offer"){const p=vozPar(d.de,d.sde);await p.pc.setRemoteDescription(JSON.parse(d.dados));for(const c of p.fila.splice(0))await p.pc.addIceCandidate(c).catch(()=>{});
+        const a=await p.pc.createAnswer();await p.pc.setLocalDescription(a);vozEnviar(d.de,d.sde,"answer",JSON.stringify(p.pc.localDescription))}
+      else if(d.tipo==="answer"){const p=V.pcs[d.de];if(p&&p.sessao===d.sde&&p.pc.signalingState==="have-local-offer"){await p.pc.setRemoteDescription(JSON.parse(d.dados));for(const c of p.fila.splice(0))await p.pc.addIceCandidate(c).catch(()=>{})}}
+      else if(d.tipo==="ice"){const p=V.pcs[d.de];if(p&&p.sessao===d.sde){const c=JSON.parse(d.dados);if(p.pc.remoteDescription)await p.pc.addIceCandidate(c).catch(()=>{});else p.fila.push(c)}}
+    }catch(e){console.warn("voz sinal",d.tipo,e)}}}
+// indicador de quem está falando
+function vozAnalisar(uid,stream){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;V.ctx=V.ctx||new AC();if(V.ctx.state==="suspended")V.ctx.resume().catch(()=>{});
+  const src=V.ctx.createMediaStreamSource(stream),an=V.ctx.createAnalyser();an.fftSize=512;src.connect(an);V.an[uid]={an,buf:new Uint8Array(an.fftSize)};
+  if(!V.laco)V.laco=setInterval(()=>{let mudou=false;Object.entries(V.an).forEach(([id,x])=>{x.an.getByteTimeDomainData(x.buf);let s=0;for(const v of x.buf){const d=(v-128)/128;s+=d*d}
+    const f=Math.sqrt(s/x.buf.length)>.04&&!(id===S.uid&&V.mudo);if(!!V.falando[id]!==f){V.falando[id]=f;mudou=true}});
+    if(mudou)$$("[data-voz-uid]").forEach(el=>el.classList.toggle("falando",!!V.falando[el.dataset.vozUid]))},150)}catch(e){}}
+addEventListener("pagehide",()=>{if(V.canal&&S.db)try{vozDoc(V.canal).collection("participantes").doc(S.uid).delete()}catch(e){}});
+// ---- interface ----
+function vozPessoaHtml(id,d,eu){const p=eu?null:V.pcs[id],mudo=eu?V.mudo:d&&d.mudo,est=eu?"":p?p.estado:"conectando";
+  return `<div class="voz-p ${V.falando[id]?"falando":""}" data-voz-uid="${id}" data-perfil="${id}"><span class="voz-av">${avatar(id)}</span><div style="min-width:0"><div class="nm">${esc(eu?vozNome()+" (você)":(d&&d.nome)||nomeDe(id))}</div>
+    <div class="small muted">${mudo?`${ico("micoff")} mudo`:est==="connected"||eu?"no canal":est==="failed"?"sem conexão de áudio":"conectando…"}</div></div></div>`}
+function vozPainelHtml(canal,titulo,prev){
+  const aqui=V.canal===canal,outro=V.canal&&!aqui;
+  const lista=aqui?[[S.uid,null,true]].concat(Object.values(V.parts).map(d=>[d.id,d,false])):(prev||[]).map(d=>[d.id,d,false]);
+  return `<div class="card voz-painel ${aqui?"ativo":""}" data-voz-painel="${canal}">
+    <div class="voz-top"><span class="voz-ic">${ico("mic")}</span><div style="min-width:0;flex:1"><h3>${esc(titulo)}</h3><p class="small muted">${aqui?`Conectado · ${lista.length} ${lista.length===1?"pessoa":"pessoas"}`:lista.length?`${lista.length} ${lista.length===1?"pessoa":"pessoas"} conversando agora`:"Ninguém no canal agora. Entre e chame o pessoal!"}</p></div>
+      <div class="row" style="gap:6px">${aqui?`<button class="btn ${V.mudo?"primary":""}" type="button" data-voz="mudo" aria-pressed="${V.mudo}">${ico(V.mudo?"micoff":"mic")}${V.mudo?"Ativar microfone":"Silenciar"}</button><button class="btn danger" type="button" data-voz="sair">${ico("phoneoff")}Sair</button>`
+        :`<button class="btn primary" type="button" data-voz="entrar" data-canal="${canal}" data-titulo="${esc(titulo)}" ${V.entrando?"disabled":""}>${ico("mic")}${V.entrando?"Conectando…":outro?"Trocar para este canal":"Entrar no canal de voz"}</button>`}</div></div>
+    ${lista.length?`<div class="voz-lista">${lista.map(([id,d,eu])=>vozPessoaHtml(id,d,eu)).join("")}</div>`:""}
+    <p class="hint">${aqui?"Pode navegar pelo site (pomodoro, questões…) que a conversa continua. Use fone de ouvido para não dar eco.":`Até ${VOZ_MAX} pessoas por canal. O áudio vai direto entre os participantes e não é gravado.`}${outro?` Você está em <b>${esc(V.titulo)}</b>.`:""}</p></div>`}
+function vozUI(){
+  // painéis abertos na tela
+  $$("[data-voz-painel]").forEach(el=>{const c=el.dataset.vozPainel;const t=el.querySelector("h3").textContent;const prev=V.prev&&V.prev[c];el.outerHTML=vozPainelHtml(c,t,prev)});
+  // barrinha fixa enquanto estiver no canal
+  let mb=$("#mini-voz");if(!mb)return;
+  if(!V.canal){mb.hidden=true;const fl=$("#voz-flut");if(fl)fl.hidden=true;return}
+  const n=Object.keys(V.parts).length+1,html=`<span class="mv-ic ${V.falando[S.uid]?"falando":""}">${ico(V.mudo?"micoff":"mic")}</span><span class="mv-t"><b>${esc(V.titulo)}</b><small>${n} ${n===1?"pessoa":"pessoas"} na voz</small></span>
+    <button type="button" class="mv-b" data-voz="mudo" aria-label="${V.mudo?"Ativar microfone":"Silenciar"}" title="${V.mudo?"Ativar microfone":"Silenciar"}">${ico(V.mudo?"micoff":"mic")}</button><button type="button" class="mv-b sai" data-voz="sair" aria-label="Sair do canal de voz" title="Sair do canal de voz">${ico("phoneoff")}</button>`;
+  mb.hidden=false;mb.innerHTML=html;let fl=$("#voz-flut");if(fl){fl.hidden=false;fl.innerHTML=html}}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-voz]");if(!b)return;e.stopPropagation();const a=b.dataset.voz;
+  if(a==="entrar")vozEntrar(b.dataset.canal,b.dataset.titulo);else if(a==="sair")vozSair();else if(a==="mudo")vozMudo();else if(a==="abrir"&&V.canal){if(V.canal==="global")go("voz");else{S.grupoAberto=V.canal.slice(2);FBC.grupoTab="voz";go("grupos")}}},true);
+function vozPrevia(canal){V.prev=V.prev||{};if(V.canal===canal)return;
+  assinar("tela:vozprev:"+canal,vozDoc(canal).collection("participantes"),snap=>{V.prev[canal]=snap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>Date.now()-(d.visto||0)<60000);
+    const el=document.querySelector(`[data-voz-painel="${canal}"]`);if(el&&V.canal!==canal)el.outerHTML=vozPainelHtml(canal,el.querySelector("h3").textContent,V.prev[canal])})}
+function renderVoz(){
+  if(!FBM()){$("#main").innerHTML=bloqueado("Canais de voz");ligarBloqueado();return}
+  const gs=Object.keys(FBC.meus).filter(g=>FBC.grupos[g]).map(g=>FBC.grupos[g]);
+  $("#main").innerHTML=`<div class="page" style="max-width:900px">${pageHead("Canais de voz","Converse por voz enquanto estuda. Entre num canal e continue usando o pomodoro, o cronômetro ou o banco de questões.")}
+    <div class="stack">${vozPainelHtml("global","Canal global",V.prev&&V.prev.global)}
+    <div class="card"><div class="card-h"><h3>Canais das suas comunidades</h3><a class="small muted" href="#grupos" data-link="grupos">Meus grupos</a></div>
+      ${gs.length?`<div class="list">${gs.map(g=>{const c=vozCanalGrupo(g.id),aqui=V.canal===c;return `<div class="li" style="grid-template-columns:auto minmax(0,1fr) auto">${gAvatar(g)}<div style="min-width:0"><div class="nm">${esc(g.nome)}</div><div class="small muted">${aqui?"você está neste canal":"canal de voz do grupo"}</div></div>
+        ${aqui?`<button class="btn sm danger" type="button" data-voz="sair">${ico("phoneoff")}Sair</button>`:`<button class="btn sm" type="button" data-voz="entrar" data-canal="${c}" data-titulo="${esc(g.nome)}">${ico("mic")}Entrar</button>`}</div>`}).join("")}</div>`
+        :`<p class="small muted">Entre em um grupo de estudo para ter um canal de voz só da sua turma.</p>`}</div></div></div>`;
+  $$("[data-link]").forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.link)});vozPrevia("global");
+}
 /* ================= Shell com barra lateral ================= */
 const NAV=[
   ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["questoes","Banco de questões","qbank"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["desafios","Desafios","trophy"],["estatisticas","Estatísticas","chart"],["mentoria","Mentoria com IA","mentor"]]],
   ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
-  ["Comunidade",[["grupos","Meus grupos","users"],...(STANDALONE?[["buscarGrupos","Buscar grupos","search"]]:[]),["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
+  ["Comunidade",[["grupos","Meus grupos","users"],...(STANDALONE?[["buscarGrupos","Buscar grupos","search"]]:[]),["voz","Canais de voz","mic"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
   ["Conta",[["perfil","Meu perfil","user"],["aparencia","Aparência","palette"],["config","Configurações","gear"]]]];
 function renderShell(){
   $("#root").innerHTML=`
@@ -2847,6 +2998,7 @@ function renderShell(){
       <div class="brand"><span><span class="logo">${LOGO}</span><span class="brand-nm">Logic Academy</span></span><button class="btn icon ghost side-toggle" type="button" id="side-toggle" aria-label="Recolher menu" title="Recolher menu">${ico("panel")}</button></div>
       <div id="mini-pomo" class="mini-pomo" hidden role="button" tabindex="0"></div>
       <div id="mini-crono" class="mini-pomo" hidden role="button" tabindex="0"></div>
+      <div id="mini-voz" class="mini-voz" hidden data-voz="abrir" role="button" tabindex="0" aria-label="Abrir canal de voz"></div>
       <nav class="nav" id="nav">${NAV.map(([sec,items])=>{const f=lateral().fech.includes(sec);return `<button type="button" class="nav-sec" data-sec="${sec}" aria-expanded="${!f}">${sec}${ico("next")}</button><div class="nav-grp ${f?"fech":""}"><div>`+items.map(([k,n,i])=>`<a data-go="${k}" ${k==="topicos"&&!S.edital?"hidden":""} href="#${k}" title="${n}" ${f?'tabindex="-1"':""}>${ico(i)}<span>${n}</span>${k==="topicos"&&S.edital?`<span class="badge">${progEdital()}%</span>`:""}</a>`).join("")+`</div></div>`}).join("")}</nav>
       <div class="side-foot">
         <button class="btn ghost sm" type="button" data-theme-lbl style="justify-content:flex-start">${temaBtnHtml()}</button>
@@ -2858,6 +3010,7 @@ function renderShell(){
       <div class="topbar-m"><button class="btn icon ghost" id="menu-btn" type="button" aria-label="Abrir menu">${ico("menu")}</button><div class="brand"><span class="logo">${LOGO}</span>Logic Academy</div></div>
       <main id="main"></main>
     </div>
+    <div id="voz-flut" class="voz-flut mini-voz" hidden data-voz="abrir" role="button" tabindex="0" aria-label="Abrir canal de voz"></div>
     <nav class="tabbar" aria-label="Navegação rápida">${[["inicio","Início","home"],["semana","Semana","cal"],["questoes","Questões","qbank"],["desafios","Desafios","trophy"]].map(([k,n,i])=>`<a data-go="${k}" href="#${k}">${ico(i)}<span>${n}</span></a>`).join("")}<button type="button" id="tab-mais">${ico("menu")}<span>Mais</span></button></nav>
   </div>`;
   $$("[data-go]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.go)}));
@@ -2867,7 +3020,7 @@ function renderShell(){
   $("#mini-pomo").onclick=()=>go("pomodoro");$("#mini-crono").onclick=()=>go("cronometro");tickCrono();
   $("#menu-btn").onclick=abrirMenu;$("#tab-mais").onclick=abrirMenu;
   $("#ovl").onclick=fecharMenu;ligarLateral();
-  renderSideUser();renderView();tickPomo();atualizarBadgeDesafios();
+  renderSideUser();renderView();tickPomo();atualizarBadgeDesafios();vozUI();
 }
 // ---- barra lateral: recolher no computador, gaveta no celular, seções que abrem e fecham ----
 function lateral(){let l=null;try{l=JSON.parse(localStorage.getItem("la_lateral")||"null")}catch(e){}l=l||{};return {rec:!!l.rec,fech:Array.isArray(l.fech)?l.fech:[]}}
@@ -2906,7 +3059,7 @@ function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}fecharMenu();renderView();scrollTo(0,0)}
 function renderView(){
   $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go===S.view){const g=a.closest(".nav-grp.fech");if(g){g.classList.remove("fech");g.querySelectorAll("a").forEach(x=>x.removeAttribute("tabindex"));const b=g.previousElementSibling;if(b)b.setAttribute("aria-expanded","true")}}if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
-  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),buscarGrupos:()=>FBM()?renderBuscarGruposFB():(($("#main").innerHTML=bloqueado("Buscar grupos")),ligarBloqueado()),questoes:renderQuestoes,mentoria:renderMentoria,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),voz:renderVoz,buscarGrupos:()=>FBM()?renderBuscarGruposFB():(($("#main").innerHTML=bloqueado("Buscar grupos")),ligarBloqueado()),questoes:renderQuestoes,mentoria:renderMentoria,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
   f();
 }
 const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;

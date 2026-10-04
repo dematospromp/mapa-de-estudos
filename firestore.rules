@@ -267,6 +267,33 @@ service cloud.firestore {
       }
     }
 
+    // Canais de voz: "global" ou "g_<id do grupo>" (só membros). A voz vai direto entre os navegadores (WebRTC);
+    // aqui ficam só a lista de quem está no canal e os sinais para conectar as pessoas.
+    match /voz/{canal} {
+      function podeCanal() {
+        return logado() && (canal == 'global'
+          || (canal.matches('^g_[A-Za-z0-9]+$')
+              && exists(/databases/$(database)/documents/grupos/$(canal.split('_')[1])/membros/$(request.auth.uid))));
+      }
+      match /participantes/{uid} {
+        allow read: if podeCanal();
+        allow create, update: if eu(uid) && podeCanal()
+          && request.resource.data.keys().hasOnly(['nome', 'sessao', 'visto', 'mudo', 'entrou'])
+          && request.resource.data.nome is string && request.resource.data.nome.size() <= 60
+          && request.resource.data.sessao is string && request.resource.data.sessao.size() <= 40
+          && request.resource.data.visto is number && request.resource.data.mudo is bool;
+        allow delete: if eu(uid);
+      }
+      match /sinais/{sid} {
+        allow read: if logado() && resource.data.para == request.auth.uid;
+        allow create: if podeCanal() && request.resource.data.de == request.auth.uid
+          && request.resource.data.keys().hasOnly(['de', 'para', 'sde', 'spara', 'tipo', 'dados', 'em'])
+          && request.resource.data.tipo in ['offer', 'answer', 'ice', 'bye']
+          && request.resource.data.dados is string && request.resource.data.dados.size() <= 20000;
+        allow delete: if logado() && (resource.data.para == request.auth.uid || resource.data.de == request.auth.uid);
+      }
+    }
+
     // Mensagens privadas entre duas pessoas
     match /conversas/{cid} {
       function participa() { return request.auth.uid in get(/databases/$(database)/documents/conversas/$(cid)).data.participantes; }
