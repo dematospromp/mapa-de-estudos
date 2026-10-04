@@ -3,7 +3,7 @@
     {
       "site": "logicacademy",
       "public": ".",
-      "ignore": ["firebase.json", ".firebaserc", "firestore.rules", "README.md", "**/.*", ".github/**", "**/node_modules/**", "redirecionar/**"],
+      "ignore": ["firebase.json", ".firebaserc", "firestore.rules", "README.md", "**/.*", ".github/**", "**/node_modules/**", "redirecionar/**", "icones-oficial/**"],
       "headers": [
         {"source": "/questoes/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=86400"}]},
         {"source": "/icones/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=604800"}]},

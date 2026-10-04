@@ -26,6 +26,10 @@ jobs:
           if [ -z "$CHAVE" ]; then echo "::error::Falta o segredo FIREBASE_SERVICE_ACCOUNT no repositório (Settings > Secrets and variables > Actions)."; exit 1; fi
           printf '%s' "$CHAVE" > "$RUNNER_TEMP/chave.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/chave.json" >> "$GITHUB_ENV"
+      - name: Ícone oficial preto (o laranja fica só no site de testes)
+        run: |
+          cp icones-oficial/*.png icones/
+          sed -i 's/"theme_color": "#f97316"/"theme_color": "#0a0a0a"/' manifest.webmanifest
       - name: Criar o site logicacademy (se ainda não existir)
         run: npx --yes firebase-tools@13 hosting:sites:create logicacademy --project mapa-de-estudos-d6eca --non-interactive || echo "site já existe"
       - name: Autorizar o domínio no login (Google/Apple)
