@@ -2393,7 +2393,9 @@ function iaFirebase(){
     const {initializeApp}=await import(b+"firebase-app.js"),{getAI,getGenerativeModel,GoogleAIBackend}=await import(b+"firebase-ai.js");
     const app=initializeApp(window.MAPA_FIREBASE_CONFIG,"mentoria"),chaveAC=window.MAPA_FIREBASE_CONFIG.appCheckSiteKey;
     // App Check (opcional): com a chave do reCAPTCHA v3 em firebase-config.js, o site prova ao Firebase que o pedido vem dele
-    if(chaveAC){try{const {initializeAppCheck,ReCaptchaV3Provider}=await import(b+"firebase-app-check.js");initializeAppCheck(app,{provider:new ReCaptchaV3Provider(chaveAC),isTokenAutoRefreshEnabled:true})}catch(e){console.warn("app check",e)}}
+    // appCheckEnterprise: true usa o reCAPTCHA Enterprise (Google Cloud Fraud Defense) em vez do reCAPTCHA v3 clássico
+    if(chaveAC){try{const ac=await import(b+"firebase-app-check.js"),Prov=window.MAPA_FIREBASE_CONFIG.appCheckEnterprise?ac.ReCaptchaEnterpriseProvider:ac.ReCaptchaV3Provider;
+      ac.initializeAppCheck(app,{provider:new Prov(chaveAC),isTokenAutoRefreshEnabled:true})}catch(e){console.warn("app check",e)}}
     const ai=getAI(app,{backend:new GoogleAIBackend(),useLimitedUseAppCheckTokens:false});let mi=0;
     return async(turns,opts)=>{const contents=turns.map(t=>({role:t.role==="assistant"?"model":"user",parts:[{text:t.content}]}));
       for(;;){try{const espera=new Promise((_,no)=>setTimeout(()=>no({code:"ia_tempo",message:"tempo esgotado"}),35000));
