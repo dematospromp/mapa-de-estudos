@@ -273,12 +273,14 @@ service cloud.firestore {
       function podeCanal() {
         return logado() && (canal == 'global'
           || (canal.matches('^g_[A-Za-z0-9]+$')
-              && exists(/databases/$(database)/documents/grupos/$(canal.split('_')[1])/membros/$(request.auth.uid))));
+              && exists(/databases/$(database)/documents/grupos/$(canal.split('_')[1])/membros/$(request.auth.uid)))
+          || (canal.matches('^dm_[A-Za-z0-9]+_[A-Za-z0-9]+$')
+              && (canal.split('_')[1] == request.auth.uid || canal.split('_')[2] == request.auth.uid)));
       }
       match /participantes/{uid} {
         allow read: if podeCanal();
         allow create, update: if eu(uid) && podeCanal()
-          && request.resource.data.keys().hasOnly(['nome', 'sessao', 'visto', 'mudo', 'entrou'])
+          && request.resource.data.keys().hasOnly(['nome', 'sessao', 'visto', 'mudo', 'entrou', 'cam', 'tela'])
           && request.resource.data.nome is string && request.resource.data.nome.size() <= 60
           && request.resource.data.sessao is string && request.resource.data.sessao.size() <= 40
           && request.resource.data.visto is number && request.resource.data.mudo is bool;
@@ -292,6 +294,30 @@ service cloud.firestore {
           && request.resource.data.dados is string && request.resource.data.dados.size() <= 20000;
         allow delete: if logado() && (resource.data.para == request.auth.uid || resource.data.de == request.auth.uid);
       }
+    }
+
+    // Quem está online: cada pessoa só escreve a própria presença
+    match /presenca/{uid} {
+      allow read: if logado();
+      allow write: if eu(uid) && request.resource.data.keys().hasOnly(['visto', 'ativo'])
+        && request.resource.data.visto is number && request.resource.data.ativo is bool;
+    }
+
+    // Chamada de vídeo entre duas pessoas: quem liga cria o aviso no documento de quem recebe
+    match /chamadas/{para} {
+      function perfilDe(u) { return get(/databases/$(database)/documents/perfis/$(u)).data; }
+      function podeLigar() {
+        return !exists(/databases/$(database)/documents/perfis/$(para))
+          || perfilDe(para).get('privacidade', {}).get('dm', 'todos') != 'amigos'
+          || request.auth.uid in perfilDe(para).get('amigos', []);
+      }
+      allow read: if logado() && (eu(para) || resource.data.de == request.auth.uid);
+      allow create, update: if logado() && para != request.auth.uid && podeLigar()
+        && request.resource.data.de == request.auth.uid
+        && request.resource.data.keys().hasOnly(['de', 'nome', 'canal', 'em', 'video'])
+        && request.resource.data.nome is string && request.resource.data.nome.size() <= 60
+        && request.resource.data.canal in ['dm_' + request.auth.uid + '_' + para, 'dm_' + para + '_' + request.auth.uid];
+      allow delete: if logado() && (eu(para) || resource.data.de == request.auth.uid);
     }
 
     // Mensagens privadas entre duas pessoas
