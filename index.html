@@ -827,6 +827,66 @@ button.hoje-prox{cursor:pointer}
 .soltar-ov b{font-size:1.2rem}
 @keyframes soltar{50%{transform:translateY(-6px)}}
 .composer label.btn{flex:none}
+
+/* ===== Mini gráficos do Início ===== */
+:root{--c-certa:#2563eb;--c-errada:#ea580c}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c-certa:#3b82f6}}
+:root[data-theme="dark"]{--c-certa:#3b82f6}
+.mini-g{display:flex;flex-direction:column}
+.mini-g .v{font-size:1.35rem}
+.mg-barras{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;height:64px;margin-top:10px}
+.mg-col{display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:4px;outline-offset:1px;min-width:0}
+.mg-area{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;min-height:0}
+.mg-area>i{display:block;width:100%;max-width:18px;background:color-mix(in srgb,var(--accent) 45%,var(--sunken));border-radius:4px 4px 0 0}
+.mg-area>i.hoje{background:var(--accent)}
+.mg-col:hover .mg-area>*,.mg-col:focus .mg-area>*{filter:brightness(1.15)}
+.mg-col>span{font-size:.62rem;color:var(--muted);line-height:1}
+.mg-pilha{width:100%;max-width:18px;display:flex;flex-direction:column;gap:2px}
+.mg-pilha b{display:block;min-height:3px}
+.mg-pilha b:first-child{border-radius:4px 4px 0 0}
+.mg-pilha .ok,.mg-leg i.ok{background:var(--c-certa)}
+.mg-pilha .er,.mg-leg i.er{background:var(--c-errada) repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.35) 3px 4.5px)}
+.mg-leg{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--muted);margin-top:8px}
+.mg-leg span{display:inline-flex;align-items:center;gap:4px}
+.mg-leg i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.mg-leg a{margin-left:auto;color:var(--fg);font-weight:600;text-decoration:none;display:inline-flex;align-items:center}
+.mg-leg a .i{width:13px;height:13px}
+.mg-qv{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}
+.mg-qv .mg-c,.mg-qv .mg-e{font-variant-numeric:tabular-nums}
+.mg-qv .mg-e{margin-left:6px}
+.mg-pct{font-size:.72rem;font-weight:600;color:var(--fg);white-space:nowrap}
+.tip-flut{position:fixed;z-index:120;background:var(--inv-bg);color:var(--inv-fg);font-size:.76rem;padding:5px 9px;border-radius:6px;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+/* ===== Mentoria em destaque no Início ===== */
+.mentor-home{display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;position:relative;overflow:hidden;
+  background:radial-gradient(520px 200px at 100% 0%,color-mix(in srgb,var(--neon2,var(--accent)) 18%,transparent),transparent 70%),radial-gradient(420px 180px at 0% 100%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%),var(--surface);
+  border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.mh-ic{flex:none;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--neon2,color-mix(in srgb,var(--accent) 60%,#7c3aed)));color:var(--accent-fg);box-shadow:0 0 22px -4px var(--accent)}
+.mh-ic .i{width:26px;height:26px}
+.mh-corpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.mh-corpo h2{margin:0}
+.mh-form{display:flex;gap:8px}
+.mh-form input{flex:1;padding:11px 14px;border-radius:999px}
+.mh-form .btn{border-radius:999px;padding-inline:16px}
+.mh-sugs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.mh-sugs::-webkit-scrollbar{display:none}
+@media (max-width:560px){.mentor-home{flex-direction:column;align-items:stretch}.mh-ic{width:44px;height:44px}.mh-form .btn{padding-inline:12px}}
+@media (max-width:480px){.stats .mini-g{grid-column:1/-1;order:2}.mg-barras{height:72px}}
+.mh-corpo>*{min-width:0}
+/* ===== Caderno de erros ===== */
+.qb-caderno{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;border-color:color-mix(in srgb,var(--c-errada) 40%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--c-errada) 8%,var(--surface)),var(--surface) 60%)}
+.qb-caderno.zerado{border-color:color-mix(in srgb,var(--ok) 40%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--ok) 8%,var(--surface)),var(--surface) 60%)}
+.qb-cad-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.qb-cad-top h3{margin:0 0 2px}
+.qb-cad-ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--c-errada);color:#fff}
+.qb-caderno.zerado .qb-cad-ic{background:var(--ok)}
+.qb-cad-barra{height:8px;border-radius:999px;background:color-mix(in srgb,var(--c-errada) 22%,var(--sunken));overflow:hidden}
+.qb-cad-barra i{display:block;height:100%;background:var(--ok);border-radius:999px;transition:width .6s}
+.qb-cad-mats{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.qb-cad-mats b{color:var(--fg)}
+.qb-corr{display:flex;gap:8px;align-items:flex-start;border-radius:var(--r-sm);padding:9px 12px;border:1px solid color-mix(in srgb,var(--c-errada) 45%,var(--line));background:color-mix(in srgb,var(--c-errada) 8%,var(--surface))}
+.qb-corr .i{color:var(--c-errada);flex:none;margin-top:2px}
+.qb-corr.ok{border-color:color-mix(in srgb,var(--ok) 45%,var(--line));background:color-mix(in srgb,var(--ok) 9%,var(--surface))}
+.qb-corr.ok .i{color:var(--ok)}
 </style>
 
 </head><body><div id="root"></div>
@@ -2489,7 +2549,11 @@ function qbEstado(){
   if(!S.qb)S.qb={dados:{},carregando:{},f:{area:"",m:"",t:"",ano:"",sit:"",busca:"",edital:false,nivel:0},sel:null,lim:QB_POR_PAGINA,esc:{},corte:{},doc:null};
   return S.qb}
 async function qbDoc(){const q=qbEstado();if(q.doc)return q.doc;let d=null;try{d=await ler("questoes")}catch(e){}
-  q.doc=d&&typeof d==="object"?{r:d.r||{},s:d.s||{}}:{r:{},s:{}};return q.doc}
+  q.doc=d&&typeof d==="object"?{r:d.r||{},s:d.s||{},e:d.e||{}}:{r:{},s:{},e:{}};
+  // caderno de erros: questões erradas antes desta versão entram como "para corrigir"
+  Object.entries(q.doc.r).forEach(([id,r])=>{if(!r[1]&&!q.doc.e[id])q.doc.e[id]={n:1,em:r[2]||Date.now(),c:0,m:r[0]}});return q.doc}
+const qbPendente=(doc,id)=>!!(doc&&doc.e&&doc.e[id]&&!doc.e[id].c);
+const qbCorrigida=(doc,id)=>!!(doc&&doc.e&&doc.e[id]&&doc.e[id].c);
 function qbSalvar(){gravar("questoes",qbEstado().doc)}
 async function qbCarregar(area){const q=qbEstado();if(q.dados[area])return q.dados[area];
   if(!q.carregando[area])q.carregando[area]=fetch("questoes/enem-"+area+".json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
@@ -2506,11 +2570,11 @@ function qbMd(s){
   return h.split(/\n{2,}/).map(p=>p.trim()?`<p>${p.replace(/ {2,}\n|\n/g,"<br>")}</p>`:"").join("")}
 function qbTopicosEdital(){if(!S.edital)return null;const set=new Set();S.edital.materias.forEach(m=>m.topicos.forEach(t=>set.add(qbNorm(t.t))));return set}
 function qbLista(){
-  const q=qbEstado(),f=q.f,doc=q.doc||{r:{},s:{}};
+  const q=qbEstado(),f=q.f,doc=q.doc||{r:{},s:{},e:{}};
   const areas=f.area?[f.area]:QB_AREAS.map(a=>a[0]);let l=[];areas.forEach(a=>{if(q.dados[a])l=l.concat(q.dados[a])});
   const ed=f.edital?qbTopicosEdital():null,b=qbNorm(f.busca).trim();
   return l.filter(x=>(!f.nivel||x.d===f.nivel)&&(!f.m||x.m===f.m)&&(!f.t||x.t===f.t)&&(!f.ano||x.ano===+f.ano)&&(!ed||ed.has(qbNorm(x.t)))
-    &&(!f.sit||(f.sit==="nao"&&!doc.r[x.id])||(f.sit==="erradas"&&doc.r[x.id]&&!doc.r[x.id][1])||(f.sit==="certas"&&doc.r[x.id]&&doc.r[x.id][1])||(f.sit==="salvas"&&doc.s[x.id]))
+    &&(!f.sit||x.id===q.sel||(f.sit==="nao"&&!doc.r[x.id])||(f.sit==="erradas"&&qbPendente(doc,x.id))||(f.sit==="corrigidas"&&qbCorrigida(doc,x.id))||(f.sit==="certas"&&doc.r[x.id]&&doc.r[x.id][1])||(f.sit==="salvas"&&doc.s[x.id]))
     &&(!b||qbNorm(x.c+" "+x.i+" "+x.a.map(a=>a[0]).join(" ")+" "+x.t).includes(b)||String(x.ano)===b))}
 const qbRotulo=x=>`ENEM ${x.ano}`;
 const qbDia=x=>`${x.dia}º dia`;
@@ -2543,6 +2607,7 @@ function qbTela(){
       <div class="stat"><div class="eyebrow">Salvas</div><div class="v">${salvas}</div></div>
       <div class="stat"><div class="eyebrow">Neste filtro</div><div class="v">${lista.length}</div></div>
     </div>
+    ${qbCadernoHtml()}
     <div class="card qb-filtros">
       <div class="qb-busca">${ico("search")}<input id="qb-busca" type="search" placeholder="Buscar por palavra, assunto ou ano" value="${esc(f.busca)}" aria-label="Buscar questões"></div>
       <div class="qb-chips" role="tablist" aria-label="Área">${[["","Todas"]].concat(QB_AREAS).map(([k,n])=>`<button type="button" class="qb-chip ${f.area===k?"on":""}" data-qarea="${k}">${n}</button>`).join("")}</div>
@@ -2552,7 +2617,7 @@ function qbTela(){
         <label><span>Matéria</span><select id="qb-m"><option value="">Todas</option>${mats.map(m=>`<option value="${m}" ${f.m===m?"selected":""}>${QB_MAT[m]}</option>`).join("")}</select></label>
         <label class="qb-sel-t"><span>Tópico</span><select id="qb-t"><option value="">Todos os tópicos</option>${tops.map(([m,t,n])=>`<option value="${esc(t)}" ${f.t===t?"selected":""}>${f.m?"":QB_MAT[m]+" · "}${esc(t)} (${n})</option>`).join("")}</select></label>
         <label><span>Ano</span><select id="qb-ano"><option value="">Todos</option>${anos.map(a=>`<option ${+f.ano===a?"selected":""}>${a}</option>`).join("")}</select></label>
-        <label><span>Situação</span><select id="qb-sit">${[["","Todas"],["nao","Não resolvidas"],["erradas","Que errei"],["certas","Que acertei"],["salvas","Salvas"]].map(([k,n])=>`<option value="${k}" ${f.sit===k?"selected":""}>${n}</option>`).join("")}</select></label>
+        <label><span>Situação</span><select id="qb-sit">${[["","Todas"],["nao","Não resolvidas"],["erradas","Para corrigir (erros)"],["corrigidas","Corrigidas"],["certas","Que acertei"],["salvas","Salvas"]].map(([k,n])=>`<option value="${k}" ${f.sit===k?"selected":""}>${n}</option>`).join("")}</select></label>
       </div>
       <div class="row" style="justify-content:space-between;gap:10px">
         ${S.edital?`<label class="row small" style="gap:8px;cursor:pointer"><input type="checkbox" class="tg" id="qb-ed" ${f.edital?"checked":""}><span>Só tópicos da minha prova (${esc(S.edital.nome||"edital")})</span></label>`:`<span class="small muted">Escaneie um edital para filtrar pelos tópicos da sua prova.</span>`}
@@ -2584,23 +2649,32 @@ function qbDetalhe(x,lista){
       <button class="btn sm ${doc.s[x.id]?"primary":"ghost"}" type="button" id="qb-salvar" aria-pressed="${!!doc.s[x.id]}" title="Salvar questão">${ico("bookmark")}${doc.s[x.id]?"Salva":"Salvar"}</button></div>
     <div class="small muted">${QB_MAT[x.m]} · ${esc(x.t)}</div>
     ${x.x?`<div class="qb-resultado no small"><b>Esta questão não contou na nota.</b> O INEP a retirou do cálculo da nota (TRI). Você pode resolvê-la como treino; por isso ela não tem nível.</div>`:""}
+    ${qbPendente(doc,x.id)&&!resp?`<div class="qb-corr small">${ico("repeat")}<span><b>Correção:</b> você já errou esta questão${doc.e[x.id].n>1?` ${doc.e[x.id].n} vezes`:""}${doc.e[x.id].m!=null?` (marcou ${"ABCDE"[doc.e[x.id].m]})`:""}. Resolva de novo para tirá-la do caderno de erros.</span></div>`:""}
+    ${q.corrigiu===x.id&&resp&&sel===x.r?`<div class="qb-corr ok small">${ico("check")}<span><b>Corrigida!</b> Você acertou uma questão que tinha errado antes.</span></div>`:""}
     <div class="qb-texto">${qbMd(x.c)}</div>
     ${x.i?`<div class="qb-enun">${qbMd(x.i)}</div>`:""}
     <div class="qb-alts" role="radiogroup" aria-label="Alternativas">${x.a.map(([t,img],k)=>{const L="ABCDE"[k];
       const cls=[sel===k?"on":"",resp&&k===x.r?"certa":"",resp&&sel===k&&k!==x.r?"errada":"",corte[k]?"cortada":""].join(" ");
       return `<div class="qb-alt ${cls}"><button type="button" class="qb-alt-b" role="radio" aria-checked="${sel===k}" data-qalt="${k}" ${resp?"disabled":""}><span class="qb-l">${L}</span><span class="qb-at">${img?`<img src="${esc(img)}" alt="Alternativa ${L}" loading="lazy">`:""}${t?qbMd(t):""}</span></button>
         ${resp?"":`<button type="button" class="btn icon ghost sm qb-cut" data-qcut="${k}" title="Riscar alternativa ${L}" aria-label="Riscar alternativa ${L}">${ico("cut")}</button>`}</div>`}).join("")}</div>
-    ${resp?`<div class="qb-resultado ${sel===x.r?"ok":"no"}">${sel===x.r?"<b>Você acertou!</b>":`<b>Resposta correta: ${"ABCDE"[x.r]}</b>${sel!=null?` · você marcou ${"ABCDE"[sel]}`:""}`} <span class="small">Gabarito oficial do INEP.</span></div>`:""}
+    ${resp?`<div class="qb-resultado ${sel===x.r?"ok":"no"}">${sel===x.r?"<b>Você acertou!</b>":`<b>Resposta correta: ${"ABCDE"[x.r]}</b>${sel!=null?` · você marcou ${"ABCDE"[sel]}`:""}`} <span class="small">Gabarito oficial do INEP.</span>
+      <div class="row" style="gap:8px;margin-top:8px"><button class="btn sm" type="button" id="qb-ia">${ico("mentor")}${sel===x.r?"Pedir explicação à mentora":"Entender meu erro com a mentora"}</button>${sel!==x.r?`<button class="btn sm primary" type="button" id="qb-corrigir">${ico("repeat")}Tentar de novo</button>`:""}</div></div>`:""}
     <div class="row qb-acoes">
       <button class="btn sm ghost" type="button" id="qb-ant" ${i<=0?"disabled":""}>${ico("back")}Anterior</button>
       <div class="row" style="gap:8px;margin-left:auto">${resp?`<button class="btn sm" type="button" id="qb-refazer">Refazer</button>`:`<button class="btn primary" type="button" id="qb-resp" ${sel==null?"disabled":""}>Responder</button>`}
       <button class="btn sm ${resp?"primary":"ghost"}" type="button" id="qb-prox" ${i<0||i>=lista.length-1?"disabled":""}>Próxima${ico("next")}</button></div>
     </div>
   </article>`}
-function qbAbrir(id){const q=qbEstado();q.sel=id;q.mostrar=null;qbTela();
+function qbAbrir(id){const q=qbEstado();q.sel=id;q.mostrar=null;q.corrigiu=null;
+  if(q.f.sit==="erradas"&&qbPendente(q.doc,id)&&q.doc.r[id]&&!q.doc.r[id][1]){delete q.doc.r[id];delete q.esc[id]}
+  qbTela();
   if(matchMedia("(max-width:860px)").matches)scrollTo(0,0);else{const d=$("#qb-det");if(d&&d.getBoundingClientRect().top<0)d.scrollIntoView({block:"start"})}}
 function qbResponder(x){const q=qbEstado(),k=q.esc[x.id];if(k==null)return;const ok=k===x.r;
-  q.doc.r[x.id]=[k,ok?1:0,Date.now()];delete q.esc[x.id];q.mostrar=x.id;qbSalvar();
+  q.doc.r[x.id]=[k,ok?1:0,Date.now()];delete q.esc[x.id];q.mostrar=x.id;q.doc.e=q.doc.e||{};
+  const er=q.doc.e[x.id];
+  if(!ok)q.doc.e[x.id]={n:((er&&er.n)||0)+1,em:(er&&!er.c&&er.em)||Date.now(),c:0,m:k};
+  else if(er&&!er.c){er.c=Date.now();q.corrigiu=x.id;setTimeout(()=>{toast("Questão corrigida! Ela saiu do caderno de erros.");const pend=Object.keys(q.doc.e).filter(id=>qbPendente(q.doc,id)).length;if(!pend)toast("Caderno de erros zerado. Mandou bem!")},60)}
+  qbSalvar();
   // conta nas questões do dia, nos desafios e nas estatísticas
   if(S.pomoLog){const L=garantirTotais(S.pomoLog),nm=QB_MAT[x.m],h=L.dias[dataISO()]=L.dias[dataISO()]||{min:0,mat:{}};
     L.q=L.q||{};L.q[nm]=L.q[nm]||{feitas:0,acertos:0};L.q[nm].feitas++;if(ok)L.q[nm].acertos++;h.q=(h.q||0)+1;if(ok)h.acertos=(h.acertos||0)+1;
@@ -2613,6 +2687,8 @@ function qbLigar(lista){
   $("#qb-m").onchange=e=>{f.m=e.target.value;f.t="";q.lim=QB_POR_PAGINA;if(f.m&&!f.area){const a=Object.keys(QB_AREA_MAT).find(k=>QB_AREA_MAT[k].includes(f.m));f.area=a}renderQuestoes()};
   $("#qb-t").onchange=e=>{f.t=e.target.value;if(f.t&&!f.m){const o=Object.entries(QB_INDICE.areas).flatMap(([a,x])=>x.topicos.map(t=>[a,...t])).find(t=>t[2]===f.t);if(o&&o[2]!=="Outros temas"){f.m=o[1];f.area=o[0]}}q.lim=QB_POR_PAGINA;renderQuestoes()};
   $("#qb-ano").onchange=e=>{f.ano=e.target.value;q.lim=QB_POR_PAGINA;qbTela()};
+  const ci=$("#qb-cad-ir");if(ci)ci.onclick=abrirCadernoErros;
+  const cc=$("#qb-cad-corr");if(cc)cc.onclick=()=>{Object.assign(f,{sit:"corrigidas"});q.sel=null;q.lim=QB_POR_PAGINA;renderQuestoes()};
   $("#qb-sit").onchange=e=>{f.sit=e.target.value;q.lim=QB_POR_PAGINA;qbTela()};
   const ed=$("#qb-ed");if(ed)ed.onchange=()=>{f.edital=ed.checked;q.lim=QB_POR_PAGINA;qbTela()};
   const lp=$("#qb-limpar");if(lp)lp.onclick=()=>{Object.assign(f,{area:"",m:"",t:"",ano:"",sit:"",busca:"",edital:false,nivel:0});q.lim=QB_POR_PAGINA;renderQuestoes()};
@@ -2623,6 +2699,8 @@ function qbLigar(lista){
   $$("[data-qalt]").forEach(b=>b.onclick=()=>{q.esc[x.id]=+b.dataset.qalt;q.mostrar=null;const y=scrollY;qbTela();scrollTo(0,y)});
   $$("[data-qcut]").forEach(b=>b.onclick=()=>{const c=q.corte[x.id]=q.corte[x.id]||{};c[b.dataset.qcut]=!c[b.dataset.qcut];const y=scrollY;qbTela();scrollTo(0,y)});
   const rb=$("#qb-resp");if(rb)rb.onclick=()=>{const y=scrollY;qbResponder(x);scrollTo(0,y)};
+  const ia=$("#qb-ia");if(ia)ia.onclick=()=>qbExplicarIA(x,(q.doc.r[x.id]||[])[0]);
+  const co=$("#qb-corrigir");if(co)co.onclick=()=>{delete q.doc.r[x.id];delete q.esc[x.id];q.mostrar=null;q.corrigiu=null;qbSalvar();const y=scrollY;qbTela();scrollTo(0,y)};
   const rf=$("#qb-refazer");if(rf)rf.onclick=()=>{delete q.doc.r[x.id];q.esc[x.id]=null;delete q.esc[x.id];q.mostrar=null;qbSalvar();qbTela()};
   $("#qb-salvar").onclick=()=>{if(q.doc.s[x.id])delete q.doc.s[x.id];else q.doc.s[x.id]=Date.now();qbSalvar();const y=scrollY;qbTela();scrollTo(0,y)};
   $("#qb-voltar").onclick=()=>{q.sel=null;qbTela();const it=$(`[data-qsel="${x.id}"]`);if(it)it.scrollIntoView({block:"center"})};
@@ -2637,6 +2715,29 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="ArrowRight"){const b=$("#qb-prox");if(b&&!b.disabled){e.preventDefault();b.click()}}
   else if(e.key==="ArrowLeft"){const b=$("#qb-ant");if(b&&!b.disabled){e.preventDefault();b.click()}}
 });
+
+// ---- caderno de erros ----
+function qbCadernoHtml(){
+  const q=qbEstado(),doc=q.doc;if(!doc)return "";const e=doc.e||{};
+  const pend=Object.keys(e).filter(id=>!e[id].c),corr=Object.keys(e).filter(id=>e[id].c);
+  if(!pend.length&&!corr.length)return "";
+  const porMat={};pend.forEach(id=>{let x=null;for(const a in q.dados){x=q.dados[a].find(y=>y.id===id);if(x)break}const k=x?QB_MAT[x.m]:"Outras";porMat[k]=(porMat[k]||0)+1});
+  const mats=Object.entries(porMat).sort((a,b)=>b[1]-a[1]),tot=pend.length+corr.length;
+  return `<div class="card qb-caderno ${pend.length?"":"zerado"}">
+    <div class="qb-cad-top"><span class="qb-cad-ic">${ico(pend.length?"repeat":"check")}</span><div style="min-width:0;flex:1"><h3>Caderno de erros</h3>
+      <p class="small muted">${pend.length?`<b style="color:var(--fg)">${pend.length}</b> ${pend.length===1?"questão para corrigir":"questões para corrigir"} · ${corr.length} ${corr.length===1?"corrigida":"corrigidas"}. Refaça as questões que errou até acertar.`:`Tudo corrigido! ${corr.length===1?"A questão que você errou já foi acertada depois.":`As ${corr.length} questões que você errou já foram acertadas depois.`}`}</p></div>
+      <div class="row" style="gap:6px">${pend.length?`<button class="btn primary" type="button" id="qb-cad-ir">${ico("play")}Corrigir agora</button>`:""}${corr.length?`<button class="btn sm ghost" type="button" id="qb-cad-corr">Ver corrigidas</button>`:""}</div></div>
+    <div class="qb-cad-barra" role="img" aria-label="${corr.length} de ${tot} erros corrigidos"><i style="width:${Math.round(corr.length/tot*100)}%"></i></div>
+    ${mats.length?`<div class="qb-cad-mats">${mats.slice(0,8).map(([m,n])=>`<span class="pill">${esc(m)} <b>${n}</b></span>`).join("")}${q.f.area?`<span class="small muted">· contagem das áreas já carregadas</span>`:""}</div>`:""}</div>`}
+async function abrirCadernoErros(){const q=qbEstado();Object.assign(q.f,{area:"",m:"",t:"",ano:"",sit:"erradas",busca:"",edital:false,nivel:0});q.sel=null;q.lim=QB_POR_PAGINA;
+  go("questoes");await qbDoc();await Promise.all(QB_AREAS.map(([a])=>qbCarregar(a).catch(()=>{})));if(S.view!=="questoes")return;
+  const l=qbLista();if(l.length)qbAbrir(l[0].id);else qbTela()}
+function qbExplicarIA(x,marcada){
+  const limpa=t=>String(t||"").replace(/!\[[^\]]*\]\([^)]*\)/g,"[figura]").replace(/[*_#>]/g,"").replace(/\s+/g," ").trim();
+  const enun=limpa(x.c).slice(0,1400),cmd=limpa(x.i).slice(0,400);
+  const alts=x.a.map(([t,img],k)=>`${"ABCDE"[k]}) ${limpa(t).slice(0,220)||(img?"[alternativa em figura]":"")}`).join("\n");
+  const errou=marcada!=null&&marcada!==x.r;
+  perguntarMentoria(`${errou?"Errei":"Quero entender"} esta questão do ENEM ${x.ano} (${QB_MAT[x.m]} · ${x.t}).\n\nTexto: ${enun}\n${cmd?`Comando: ${cmd}\n`:""}\nAlternativas:\n${alts}\n\nGabarito oficial: ${"ABCDE"[x.r]}.${errou?` Eu marquei ${"ABCDE"[marcada]}.`:""}\n${errou?"Explique passo a passo por que a resposta certa é essa, onde está o erro da alternativa que marquei e que conteúdo devo revisar para não errar de novo.":"Explique passo a passo a resolução e que conteúdo revisar."}`)}
 
 /* ================= Mentoria com IA ================= */
 function contextoMentoria(){
@@ -2677,7 +2778,7 @@ function iaFirebase(){
   iaFBPromessa.catch(()=>{iaFBPromessa=null});return iaFBPromessa}
 async function iaMentoria(){return S.sample||await iaFirebase()}
 async function renderMentoria(){
-  if(!iaMentoriaDisponivel()){
+  if(!iaMentoriaDisponivel()){S.mentorPendente=null;
     $("#main").innerHTML=`<div class="page" style="max-width:860px">${pageHead("Mentoria com IA")}
       <div class="card stack" style="align-items:center;text-align:center;padding:40px 24px">
         <span class="logo" style="width:56px;height:56px;border-radius:14px">${ico("mentor")}</span>
@@ -2704,6 +2805,7 @@ async function renderMentoria(){
   $("#mt-form").onsubmit=e=>{e.preventDefault();const t=ta.value.trim();if(t)mentorEnviar(t)};
   $$("[data-sug-mt]").forEach(b=>b.onclick=()=>mentorEnviar(b.dataset.sugMt));
   const lb=$("#mt-limpar");if(lb)lb.onclick=()=>{m.msgs=[];gravar("mentoria",{msgs:[]});renderMentoria()};
+  if(S.mentorPendente&&!m.ocupado){const t=S.mentorPendente;S.mentorPendente=null;mentorEnviar(t);return}
   if(!m.ocupado)ta.focus({preventScroll:true});
 }
 // o chat ocupa a altura que sobra na tela (acima da barra inferior no celular)
@@ -2812,6 +2914,46 @@ function bloqueado(t){return `<div class="page">${pageHead(t)}<div class="card l
 function ligarBloqueado(){const b=$("#relogar");if(b)b.onclick=sair}
 
 /* ================= Início ================= */
+
+// ---- mini gráficos do Início ----
+const DIA_CURTO=["D","S","T","Q","Q","S","S"];
+function ultimos7(){const out=[];for(let i=6;i>=0;i--){const iso=diasAtras(i),d=new Date(iso+"T12:00"),x=(S.pomoLog&&S.pomoLog.dias&&S.pomoLog.dias[iso])||{};out.push({iso,d,hoje:i===0,min:minutosDia(iso),q:x.q||0,a:Math.min(x.acertos||0,x.q||0)})}return out}
+const diaRotulo=d=>d.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"}).replace(".","");
+function tileEstudo7(){
+  const ds=ultimos7(),tot=ds.reduce((a,x)=>a+x.min,0),mx=Math.max(30,...ds.map(x=>x.min)),ant=(()=>{let s=0;for(let i=7;i<14;i++)s+=minutosDia(diasAtras(i));return s})();
+  const dif=tot-ant,dTxt=ant||tot?(dif>=0?`▲ ${fmtH(dif)}`:`▼ ${fmtH(-dif)}`)+" vs. 7 dias antes":"comece hoje";
+  return `<div class="stat mini-g"><div class="eyebrow">Estudo · 7 dias</div><div class="v">${fmtH(tot)}</div><div class="s">${dTxt}</div>
+    <div class="mg-barras" role="img" aria-label="Minutos estudados por dia nos últimos 7 dias: ${ds.map(x=>`${diaRotulo(x.d)} ${fmtH(x.min)}`).join(", ")}">
+      ${ds.map(x=>`<div class="mg-col" data-tip="${esc(diaRotulo(x.d))}: ${fmtH(x.min)}" tabindex="0"><div class="mg-area"><i class="${x.hoje?"hoje":""}" style="height:${x.min?Math.max(6,Math.round(x.min/mx*100)):0}%"></i></div><span>${x.hoje?"hoje":DIA_CURTO[x.d.getDay()]}</span></div>`).join("")}</div></div>`}
+function tileQuestoes7(){
+  const ds=ultimos7(),q=ds.reduce((a,x)=>a+x.q,0),c=ds.reduce((a,x)=>a+x.a,0),e=q-c,mx=Math.max(5,...ds.map(x=>x.q));
+  return `<div class="stat mini-g"><div class="row" style="justify-content:space-between;gap:6px"><div class="eyebrow">Questões · 7 dias</div>${q?`<span class="mg-pct">${Math.round(c/q*100)}% de acerto</span>`:""}</div>
+    <div class="v mg-qv"><span class="mg-c">${c}</span><span class="small muted">certas</span><span class="mg-e">${e}</span><span class="small muted">erradas</span></div>
+    ${q?`<div class="mg-barras" role="img" aria-label="Questões certas e erradas por dia: ${ds.map(x=>`${diaRotulo(x.d)} ${x.a} certas e ${x.q-x.a} erradas`).join("; ")}">
+      ${ds.map(x=>`<div class="mg-col" data-tip="${esc(diaRotulo(x.d))}: ${x.a} certas · ${x.q-x.a} erradas" tabindex="0"><div class="mg-area"><div class="mg-pilha" style="height:${x.q?Math.max(8,Math.round(x.q/mx*100)):0}%">${x.q-x.a?`<b class="er" style="flex:${x.q-x.a}"></b>`:""}${x.a?`<b class="ok" style="flex:${x.a}"></b>`:""}</div></div><span>${x.hoje?"hoje":DIA_CURTO[x.d.getDay()]}</span></div>`).join("")}</div>
+      <div class="mg-leg"><span><i class="ok"></i>certas</span><span><i class="er"></i>erradas</span>${e?`<a href="#questoes" data-erros>Corrigir erros ${ico("next")}</a>`:""}</div>`
+      :`<div class="s">Resolva questões no banco para ver seus acertos aqui.</div><button class="btn sm" type="button" data-link="questoes" style="margin-top:8px;align-self:flex-start">${ico("qbank")}Fazer questões</button>`}</div>`}
+// ---- destaque da mentoria com IA no Início ----
+function cartaoMentoriaInicio(){
+  const doc=S.qb&&S.qb.doc,err=doc?Object.entries(doc.r).filter(([,r])=>!r[1]).length:0;
+  const sug=[err?`Por que estou errando questões? Tenho ${err} erradas no banco.`:"O que devo revisar hoje?","Monte um plano para os próximos 7 dias","Como foi minha semana de estudos?"];
+  return `<section class="card mentor-home" aria-label="Mentoria com IA">
+    <div class="mh-ic">${ico("mentor")}</div>
+    <div class="mh-corpo"><div class="row" style="gap:8px"><h2>Mentoria com IA</h2><span class="pill solid">Nova</span></div>
+      <p class="small muted">Sua mentora conhece seu plano, suas horas e seus erros no banco de questões. Pergunte o que estudar, como melhorar ou peça a explicação de uma questão.</p>
+      <form class="mh-form" id="mh-form"><input type="text" id="mh-in" maxlength="500" placeholder="Pergunte à mentora… ex.: o que revisar hoje?" aria-label="Pergunta para a mentoria"><button class="btn primary" type="submit">${ico("send")}<span class="sr-mob">Perguntar</span></button></form>
+      <div class="mh-sugs">${sug.map(t=>`<button type="button" class="hoje-chip" data-mh="${esc(t)}">${ico("spark")}${esc(t.length>48?t.slice(0,46)+"…":t)}</button>`).join("")}</div></div></section>`}
+function perguntarMentoria(t){S.mentorPendente=t;go("mentoria")}
+function ligarMentoriaInicio(){const f=$("#mh-form");if(f)f.onsubmit=e=>{e.preventDefault();const t=$("#mh-in").value.trim();perguntarMentoria(t||"O que devo revisar hoje?")};
+  $$("[data-mh]").forEach(b=>b.onclick=()=>perguntarMentoria(b.dataset.mh));
+  $$("[data-erros]").forEach(a=>a.onclick=e=>{e.preventDefault();abrirCadernoErros()})}
+// dica flutuante dos mini gráficos (mouse, teclado e toque)
+(function(){let tip=null;const mostrar=el=>{if(!tip){tip=document.createElement("div");tip.className="tip-flut";tip.setAttribute("role","tooltip");document.body.appendChild(tip)}
+  tip.textContent=el.dataset.tip;tip.hidden=false;const r=el.getBoundingClientRect(),w=tip.offsetWidth;tip.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+"px";tip.style.top=Math.max(8,r.top-tip.offsetHeight-8)+"px"};
+  const esconder=()=>{if(tip)tip.hidden=true};
+  document.addEventListener("pointerover",e=>{const el=e.target.closest&&e.target.closest("[data-tip]");if(el)mostrar(el);else esconder()});
+  document.addEventListener("focusin",e=>{const el=e.target.closest&&e.target.closest("[data-tip]");if(el)mostrar(el);else esconder()});
+  addEventListener("scroll",esconder,{passive:true})})();
 // Cartão "Hoje": convida a começar o próximo bloco, mostra o progresso do dia e atalhos rápidos
 function fraseHoje(feitos,total,minF,meta){const h=new Date().getHours();
   if(total&&feitos>=total)return ["Dia concluído! Mandou muito bem.","Todos os blocos de hoje estão feitos. Se ainda tiver energia, faça umas questões ou revise algo leve."];
@@ -2857,6 +2999,8 @@ function ligarHoje(blocos,hojeK){
   const rel=$("#hoje-relogio");if(rel){clearInterval(S.hojeTick);S.hojeTick=setInterval(()=>{if(!rel.isConnected||!P.rodando){clearInterval(S.hojeTick);return}rel.textContent=fmtMin(pomoRestante())},500)}
 }
 function renderInicio(){
+  // carrega o caderno do banco de questões uma vez (para sugerir perguntas à mentoria)
+  if(!S.qb||!S.qb.doc){qbEstado();qbDoc().then(()=>{const a=document.activeElement;if(S.view==="inicio"&&!(a&&a.id==="mh-in"))renderInicio()}).catch(()=>{})}
   const p=S.perfil,pl=S.plano,hi=hojeIdx(),hojeK=DIAS[hi].k;
   const blocos=(pl&&pl.semana[hojeK])||[],todos=pl?DIAS.flatMap(x=>pl.semana[x.k]||[]):[];
   const feitos=todos.filter(b=>b.feito).length,pct=todos.length?Math.round(feitos/todos.length*100):0;
@@ -2870,10 +3014,12 @@ function renderInicio(){
     ${pageHead(`${saud}${nome?", "+esc(nome):""}`,`${DIAS[hi].n}, ${new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"long"})} · ${esc(descObjetivo(p))}`,`<button class="btn primary" type="button" id="ini-pomo">${ico("play")}Começar a estudar</button>`)}
     <div class="stats">
       <div class="stat stat-meta">${anelMeta(minutosDia(dataISO()),metaHoje())}<div style="min-width:0"><div class="eyebrow">Meta de hoje</div><div class="v" style="font-size:1.25rem">${fmtH(minutosDia(dataISO()))}</div><div class="s">de ${fmtH(metaHoje())}${minutosDia(dataISO())>=metaHoje()?" · batida!":""}</div></div></div>
-      <div class="stat"><div class="eyebrow">Sequência</div><div class="v">${sequencia()} ${sequencia()===1?"dia":"dias"}</div><div class="s">dias seguidos estudando</div></div>
-      <div class="stat"><div class="eyebrow">Semana</div><div class="v">${feitos}/${todos.length}</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>
-      <div class="stat"><div class="eyebrow">${dp!=null?esc(p.nomeProva||"Prova"):"Matérias"}</div><div class="v">${dp!=null?(dp>=0?dp+" dias":"já passou"):p.materias.length}</div><div class="s">${dp!=null?"até a prova":"no seu plano"}</div></div>
+      ${tileEstudo7()}
+      ${tileQuestoes7()}
+      ${dp!=null?`<div class="stat"><div class="eyebrow">${esc(p.nomeProva||"Prova")}</div><div class="v">${dp>=0?dp+" dias":"já passou"}</div><div class="s">até a prova · semana ${feitos}/${todos.length}</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>`
+        :`<div class="stat"><div class="eyebrow">Semana</div><div class="v">${feitos}/${todos.length}</div><div class="s">blocos do plano feitos</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>`}
     </div>
+    ${cartaoMentoriaInicio()}
     <div class="cols">
       ${cartaoHoje(blocos,hojeK)}
       <div class="stack">
@@ -2887,7 +3033,7 @@ function renderInicio(){
       </div>
     </div></div>`;
   $("#ini-pomo").onclick=()=>{const prox=blocos.find(b=>!b.feito);if(prox)prepararPomo(hojeK,prox);go("pomodoro")};
-  ligarHoje(blocos,hojeK);ligarBlocos();ligarRevisoes(renderInicio);$$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
+  ligarHoje(blocos,hojeK);ligarBlocos();ligarMentoriaInicio();ligarRevisoes(renderInicio);$$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
   const vc=$("#visit-conta");if(vc)vc.onclick=()=>sair("criar");
 }
 function acharBloco(ref){const [k,id]=ref.split("|");return (S.plano&&S.plano.semana[k]||[]).find(b=>b.id===id)}
