@@ -193,6 +193,20 @@ service cloud.firestore {
       allow delete: if logado() && resource.data.autor == request.auth.uid;
     }
 
+    // Arquivos, fotos e áudios do chat global (até 20 MB, em partes): todos leem; só quem enviou apaga
+    match /salas/{sala}/arquivos/{fid} {
+      function autorArquivoSala() { return get(/databases/$(database)/documents/salas/$(sala)/arquivos/$(fid)).data.autor == request.auth.uid; }
+      allow read: if logado() && sala == 'global';
+      allow create: if logado() && sala == 'global' && request.resource.data.autor == request.auth.uid
+        && request.resource.data.tamanho is int && request.resource.data.tamanho <= 20971520;
+      allow update: if logado() && resource.data.autor == request.auth.uid;
+      allow delete: if logado() && resource.data.autor == request.auth.uid;
+      match /partes/{pid} {
+        allow read: if logado() && sala == 'global';
+        allow create, delete: if logado() && autorArquivoSala();
+      }
+    }
+
     // Grupos de estudo: criador (dono), administradores, senha opcional, foto e papel de parede
     match /grupos/{gid} {
       function grupo() { return get(/databases/$(database)/documents/grupos/$(gid)).data; }
@@ -332,6 +346,17 @@ service cloud.firestore {
         allow read: if logado() && participa();
         allow create: if logado() && participa() && request.resource.data.autor == request.auth.uid
                       && request.resource.data.texto is string && request.resource.data.texto.size() <= 1000;
+      }
+      // fotos, documentos e áudios da conversa (em partes): só os dois participantes
+      match /arquivos/{fid} {
+        function autorArquivoDm() { return get(/databases/$(database)/documents/conversas/$(cid)/arquivos/$(fid)).data.autor == request.auth.uid; }
+        allow read: if logado() && participa();
+        allow create: if logado() && participa() && request.resource.data.autor == request.auth.uid;
+        allow update, delete: if logado() && resource.data.autor == request.auth.uid;
+        match /partes/{pid} {
+          allow read: if logado() && participa();
+          allow create, delete: if logado() && participa() && autorArquivoDm();
+        }
       }
     }
   }

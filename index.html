@@ -928,6 +928,42 @@ button.hoje-prox{cursor:pointer}
 .qb-alts-letras .qb-at,.qb-alts-letras .qb-cut{display:none}
 .qb-alts-letras .qb-l{width:34px;height:34px;font-size:1rem}
 .qb-alts-ce{flex-direction:row;gap:10px}
+.composer.gravando>:not(.rec-barra){display:none}
+.fc-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.fc-bar{display:flex;flex-direction:column;gap:10px}
+.fc-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--neon,var(--accent)) 18%,transparent);flex:none}
+.fc-ic.grande{width:56px;height:56px;margin:0 auto}
+.fc-hoje{gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.fc-form{margin-bottom:14px}.fc-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fc-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;align-items:start}
+.fc-item{display:flex;gap:8px;align-items:flex-start;padding:10px 4px;border-bottom:1px solid var(--line)}
+.fc-item .nm{font-weight:600;overflow-wrap:anywhere}.fc-item .muted{overflow-wrap:anywhere}.fc-meta{margin-top:4px;font-size:.75rem}
+.fc-edit{padding:10px 0;border-bottom:1px solid var(--line)}
+.fc-sug{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.fc-sug-i{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:10px;background:var(--sunken);cursor:pointer}
+.fc-sug-i>span{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
+.fc-estudo{max-width:620px;margin:10px auto 0}
+.fc-carta{position:relative;display:block;width:100%;min-height:260px;border:0;padding:0;background:none;cursor:pointer;perspective:1200px;color:inherit;font:inherit}
+.fc-face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;border-radius:18px;
+  background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px #0002;backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.fc-verso{transform:rotateY(180deg);border-color:var(--neon,var(--accent))}
+.fc-carta.virada .fc-frente{transform:rotateY(-180deg)}.fc-carta.virada .fc-verso{transform:rotateY(0)}
+.fc-txt{font-size:1.25rem;font-weight:600;line-height:1.4;overflow-wrap:anywhere;max-height:180px;overflow:auto}
+.fc-notas{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.fc-notas .btn{flex-direction:column;gap:2px;padding:10px 6px;height:auto}
+.fc-fim{text-align:center;align-items:center;max-width:520px;margin:20px auto}
+@media (max-width:860px){.fc-cols{grid-template-columns:1fr}.fc-2{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.fc-face{transition:none}}
+.vp-aviso{display:flex;flex-direction:column;gap:6px;padding:10px 12px;margin:6px 8px;border-radius:12px;background:var(--surface);color:var(--fg);border:2px solid var(--neon,#f59e0b)}
+.pip-corpo{margin:0;background:#0b1020;min-height:100vh}
+.pip-corpo .voz-palco{position:static;inset:auto;width:100%;max-width:none;height:100vh;border-radius:0;display:flex;flex-direction:column}
+.pip-corpo .voz-palco .vp-grade{flex:1;min-height:0}
+.rec-barra{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.rec-barra .rec-dica{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-ponto{width:10px;height:10px;border-radius:50%;background:#dc2626;animation:recPisca 1s ease-in-out infinite}
+@keyframes recPisca{50%{opacity:.25}}
+.arq-audio{align-items:center}.arq-audio audio{width:100%;max-width:280px;height:40px;display:block}
+@media (prefers-reduced-motion:reduce){.rec-ponto{animation:none}}
 .qb-alts-ce .qb-alt{flex:1 1 0}
 .qb-alts-ce .qb-alt-b{justify-content:center;padding:12px 8px;font-weight:600}
 .qb-alts-ce .qb-l{width:30px;height:30px}
@@ -2245,7 +2281,7 @@ async function sairGrupoFB(gid){
     await meuDoc("social").set({grupos:{[gid]:firebase.firestore.FieldValue.delete()}},{merge:true});toast("Você saiu do grupo.")}
   catch(e){toast("Não foi possível sair do grupo.")}
 }
-function msgsHtml(lista){return lista.length?lista.map(m=>`<div class="msg ${m.autor===S.uid?"mine":""}" data-perfil="${m.autor}">${avatar(m.autor)}<div style="min-width:0"><div class="h"><b>${esc(nomeDe(m.autor))}</b><time>${hora(m.em)}</time></div>${m.texto?`<div class="b">${esc(m.texto)}</div>`:""}${m.arq&&m.arq.id?arqMsgHtml(m,m._gid):""}</div></div>`).join("")
+function msgsHtml(lista){return lista.length?lista.map(m=>`<div class="msg ${m.autor===S.uid?"mine":""}" data-perfil="${m.autor}">${avatar(m.autor)}<div style="min-width:0"><div class="h"><b>${esc(nomeDe(m.autor))}</b><time>${hora(m.em)}</time></div>${m.texto?`<div class="b">${esc(m.texto)}</div>`:""}${m.arq&&m.arq.id?arqMsgHtml(m,m._base||m._gid):""}</div></div>`).join("")
   :`<div class="empty-state" style="margin:auto">${ico("chat")}<span>Nenhuma mensagem ainda. Diga oi!</span></div>`}
 function pintarMsgs(boxId,lista){const box=$("#"+boxId);if(!box)return;const perto=box.scrollHeight-box.scrollTop-box.clientHeight<80||box.dataset.init!=="1";box.innerHTML=msgsHtml(lista);if(perto){box.scrollTop=box.scrollHeight;box.dataset.init="1"}}
 function chatBox(id,ph){return `<div class="card chat"><div class="msgs" id="${id}" aria-live="polite"><div class="row muted small" style="margin:auto"><span class="spinner"></span>Carregando mensagens…</div></div>
@@ -2253,11 +2289,51 @@ function chatBox(id,ph){return `<div class="card chat"><div class="msgs" id="${i
 function ligarComposer(id,enviar){const f=$(`[data-composer="${id}"]`);if(!f)return;f.addEventListener("submit",async e=>{e.preventDefault();const i=f.querySelector("input[type=text]");const t=i.value.trim().slice(0,1000);if(!t)return;i.value="";i.focus();
   try{await enviar(t)}catch(err){toast("Mensagem não enviada ("+(err&&err.code||"erro")+").");i.value=t}})}
 
+/* ---- Anexos e áudio nos chats (global, grupos e conversas privadas) ----
+   base: documento onde ficam os arquivos; postar(info): cria a mensagem; antes(): prepara a conversa (privadas) */
+function equiparChat(id,op){
+  const f=$(`[data-composer="${id}"]`);if(!f)return;const max=op.max||MAX_ARQ;
+  f.insertAdjacentHTML("beforebegin",`<div class="gchat-up" id="${id}-up"></div>`);
+  f.insertAdjacentHTML("afterbegin",`<label class="btn icon ghost" for="${id}-file" title="Enviar foto ou documento (até ${tamanhoTxt(max)})" aria-label="Enviar foto ou documento">${ico("anexo")}</label><input type="file" id="${id}-file" multiple hidden>`);
+  const enviar=fs=>enviarArquivosChat(op.base,fs,{box:$("#"+id+"-up"),postar:op.postar,antes:op.antes,max});
+  $("#"+id+"-file").onchange=e=>{const fs=[...e.target.files];e.target.value="";enviar(fs)};
+  const inp=f.querySelector("input[type=text]");
+  inp.addEventListener("paste",e=>{const fs=[...(e.clipboardData&&e.clipboardData.files||[])];if(fs.length){e.preventDefault();enviar(fs)}});
+  if(window.MediaRecorder&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    const mic=document.createElement("button");mic.type="button";mic.className="btn icon ghost chat-mic";mic.title="Gravar áudio";mic.setAttribute("aria-label","Gravar áudio");mic.innerHTML=ico("mic");
+    f.insertBefore(mic,f.querySelector("button[type=submit]"));mic.onclick=()=>gravarAudio(f,fs=>enviar(fs))}
+  ligarSoltarArquivos(f.closest(".page")||f.parentElement,enviar,op.soltar);
+}
+// gravação de áudio: até 5 minutos; aparece uma barra no lugar da caixa de texto
+const AUD={rec:null};
+async function gravarAudio(f,enviar){
+  if(AUD.rec)return;let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}
+  catch(e){toast("Permita o uso do microfone para gravar áudio.");return}
+  const tipo=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||"";
+  let rec;try{rec=new MediaRecorder(stream,tipo?{mimeType:tipo,audioBitsPerSecond:48000}:{})}catch(e){stream.getTracks().forEach(t=>t.stop());toast("Seu navegador não grava áudio.");return}
+  const partes=[],t0=Date.now();let cancelado=false;AUD.rec=rec;
+  const barra=document.createElement("div");barra.className="rec-barra";barra.setAttribute("role","status");
+  barra.innerHTML=`<button type="button" class="btn icon ghost" data-rec="x" title="Cancelar" aria-label="Cancelar gravação">${ico("lixo")}</button><span class="rec-ponto" aria-hidden="true"></span><span class="mono" data-rec-t>0:00</span><span class="small muted rec-dica">Gravando… máximo 5 min</span><button type="button" class="btn primary sm" data-rec="ok">${ico("send")}Enviar</button>`;
+  f.classList.add("gravando");f.appendChild(barra);
+  const tick=setInterval(()=>{const s=(Date.now()-t0)/1000;barra.querySelector("[data-rec-t]").textContent=durTxt(s);if(s>=300)fim(false)},250);
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)partes.push(e.data)};
+  rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());clearInterval(tick);barra.remove();f.classList.remove("gravando");AUD.rec=null;
+    const dur=Math.round((Date.now()-t0)/1000);if(cancelado||!partes.length)return;if(dur<1){toast("Áudio curto demais.");return}
+    const mime=(rec.mimeType||tipo||"audio/webm").split(";")[0],ext=mime.includes("mp4")?"m4a":mime.includes("ogg")?"ogg":"webm";
+    const d=new Date(),file=new File(partes,`Áudio ${String(d.getHours()).padStart(2,"0")}h${String(d.getMinutes()).padStart(2,"0")}.${ext}`,{type:mime});file._audio=dur;enviar([file])};
+  function fim(cancelar){cancelado=cancelar;if(rec.state!=="inactive")rec.stop()}
+  barra.querySelector('[data-rec="x"]').onclick=()=>fim(true);barra.querySelector('[data-rec="ok"]').onclick=()=>fim(false);
+  rec.start(1000);
+}
+
 /* ---- Chat global ---- */
 function renderChatFB(){
   $("#main").innerHTML=`<div class="page">${pageHead("Chat global","Converse com todos os estudantes do site. Seja gentil.")}${chatBox("chatg","Escreva uma mensagem para todos")}</div>`;
-  assinar("tela:chatg",S.db.collection("chat").orderBy("em","desc").limit(150),snap=>pintarMsgs("chatg",snap.docs.map(d=>d.data()).reverse()));
+  assinar("tela:chatg",S.db.collection("chat").orderBy("em","desc").limit(150),snap=>{pintarMsgs("chatg",snap.docs.map(d=>({...d.data(),_base:"salas/global"})).reverse());carregarPrevias($("#chatg"))});
   ligarComposer("chatg",t=>S.db.collection("chat").add({autor:S.uid,texto:t,em:Date.now()}));
+  equiparChat("chatg",{base:S.db.collection("salas").doc("global"),max:MAX_ARQ_GLOBAL,postar:info=>S.db.collection("chat").add({autor:S.uid,texto:"",em:Date.now(),arq:info}),
+    soltar:["Solte para enviar no chat global",`Até ${tamanhoTxt(MAX_ARQ_GLOBAL)} por arquivo. Todos os estudantes poderão ver.`]});
 }
 
 /* ---- Grupos ---- */
@@ -2376,10 +2452,7 @@ function renderGrupoFB(){
   if(tab==="chat"){
     corpo.innerHTML=chatBox("gchat","Mensagem para o grupo");
     const chat=corpo.querySelector(".chat");fundoGrupoCss(g).then(css=>{if(css&&chat.isConnected){chat.classList.add("com-fundo");chat.style.setProperty("--g-fundo",css)}});
-    const comp=corpo.querySelector("[data-composer]");comp.insertAdjacentHTML("beforebegin",`<div class="gchat-up" id="gchat-up"></div>`);comp.insertAdjacentHTML("afterbegin",`<label class="btn icon ghost" for="gchat-file" title="Enviar arquivo (até ${MAX_ARQ_TXT})" aria-label="Enviar arquivo">${ico("upload")}</label><input type="file" id="gchat-file" multiple hidden>`);
-    $("#gchat-file").onchange=e=>{const fs=[...e.target.files];e.target.value="";enviarArquivosChat(base,fs)};
-    comp.querySelector("input[type=text]").addEventListener("paste",e=>{const fs=[...(e.clipboardData&&e.clipboardData.files||[])];if(fs.length){e.preventDefault();enviarArquivosChat(base,fs)}});
-    ligarSoltarArquivos($("#main .page"),fs=>enviarArquivosChat(base,fs));
+    equiparChat("gchat",{base});
     assinar("tela:gchat",base.collection("mensagens").orderBy("em","desc").limit(150),snap=>{const lista=snap.docs.map(d=>({...d.data(),_id:d.id,_gid:g.id})).reverse();pintarMsgs("gchat",lista);carregarPrevias($("#gchat"));
       $$("#gchat .msg").forEach((el,i)=>{const m=lista[i];if(!m||!(gestor||m.autor===S.uid))return;const bt=document.createElement("button");bt.type="button";bt.className="msg-del";bt.title="Apagar mensagem";bt.setAttribute("aria-label","Apagar mensagem");bt.textContent="✕";
         let c=false;bt.onclick=async ev=>{ev.stopPropagation();if(!c){c=true;bt.textContent="Apagar?";bt.classList.add("conf");return}try{await base.collection("mensagens").doc(m._id).delete()}catch(e){toast("Não foi possível apagar.")}};el.appendChild(bt)})});
@@ -2488,7 +2561,7 @@ function rankingGrupoHtml(g,ids){
     <p class="hint">Conta o tempo do cronômetro e do pomodoro registrado no servidor. Quem escondeu as horas no perfil não aparece.</p>
   </div>`}
 const tamanhoTxt=n=>n>=1048576?(n/1048576).toLocaleString("pt-BR",{maximumFractionDigits:1})+" MB":Math.max(1,Math.round(n/1024))+" KB";
-const PARTE=640*1024,MAX_ARQ=50*1024*1024,MAX_ARQ_TXT="50 MB";
+const PARTE=640*1024,MAX_ARQ=50*1024*1024,MAX_ARQ_TXT="50 MB",MAX_ARQ_GLOBAL=20*1024*1024;
 function blobB64(b){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(",")[1]||"");r.onerror=no;r.readAsDataURL(b)})}
 // envia o arquivo em partes (4 ao mesmo tempo) para grupos/{id}/arquivos; devolve os dados do arquivo ou null
 async function enviarArquivoFB(base,file,prog){
@@ -2504,39 +2577,53 @@ async function enviarArquivoFB(base,file,prog){
   catch(e){if(!prog&&box)box.innerHTML="";toast("Falha ao enviar o arquivo ("+(e&&e.code||"erro")+").");try{await apagarArquivoFB(base,ref.id,true)}catch(_){}return null}
 }
 // envia arquivos pelo chat: aparecem como mensagem e também na aba Arquivos
-async function enviarArquivosChat(base,files){
-  files=[...files].filter(Boolean);if(!files.length)return;
-  const box=$("#gchat-up");
+async function enviarArquivosChat(base,files,op){
+  op=op||{};files=[...files].filter(Boolean);if(!files.length)return;
+  const box=op.box||$("#gchat-up");
+  if(op.max)files=files.filter(f=>{if(f.size>op.max){toast(`“${f.name}” passa de ${tamanhoTxt(op.max)} (limite deste chat).`);return false}return true});
+  if(files.length&&op.antes){try{await op.antes(files)}catch(e){toast("Não foi possível enviar ("+(e&&e.code||"erro")+").");return}}
   for(const f of files){
     const el=document.createElement("div");el.className="msg mine arq-enviando";el.innerHTML=`${avatar(S.uid)}<div style="min-width:0"><div class="h"><b>Você</b><time>enviando…</time></div><div class="arq-msg"><span class="arq-ic">${ico("upload")}</span><div style="min-width:0;flex:1"><div class="nm">${esc(f.name)}</div><div class="small muted">${tamanhoTxt(f.size)} · <span data-p>0%</span></div><div class="prog" style="margin-top:6px"><i style="width:0%"></i></div></div></div></div>`;
     if(box)box.appendChild(el);
     const info=await enviarArquivoFB(base,f,p=>{const a=el.querySelector("[data-p]"),b=el.querySelector(".prog i");if(a)a.textContent=p+"%";if(b)b.style.width=p+"%"});
     el.remove();
-    if(info){try{await base.collection("mensagens").add({autor:S.uid,texto:"",em:Date.now(),arq:info})}catch(e){toast("O arquivo foi salvo na aba Arquivos, mas a mensagem não foi enviada.")}}
+    if(info){if(f._audio)info.audio=f._audio;try{if(op.postar)await op.postar(info);else await base.collection("mensagens").add({autor:S.uid,texto:"",em:Date.now(),arq:info})}catch(e){toast("O arquivo foi salvo, mas a mensagem não foi enviada.")}}
   }
 }
 // cache de prévias de imagem enviadas no chat
 const PREVIAS={};
-async function blobArquivo(gid,id,tipo){const base=S.db.collection("grupos").doc(gid);const snap=await base.collection("arquivos").doc(id).collection("partes").orderBy("i").get();
+// onde ficam os arquivos de cada conversa: "grupos/<id>", "conversas/<id>" ou "salas/global"
+const baseArq=p=>S.db.doc(p.includes("/")?p:"grupos/"+p);
+async function blobArquivo(p,id,tipo){const base=baseArq(p);const snap=await base.collection("arquivos").doc(id).collection("partes").orderBy("i").get();
   if(snap.empty)throw {code:"apagado"};
   return new Blob(snap.docs.map(d=>{const bin=atob(d.data().d);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u}),{type:tipo||"application/octet-stream"})}
+const ehAudio=a=>/^audio\//i.test(a.tipo||"")||!!a.audio;
+const durTxt=s=>`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,"0")}`;
 function arqMsgHtml(m,gid){const a=m.arq||{};const img=/^image\/(png|jpe?g|gif|webp)$/i.test(a.tipo||"")&&a.tamanho<=4*1024*1024;
+  if(ehAudio(a)&&a.tamanho<=8*1024*1024)return `<div class="arq-msg arq-audio" data-arq="${esc(a.id||"")}" data-arq-g="${esc(gid||"")}" data-arq-tipo="${esc(a.tipo||"")}" data-arq-nome="${esc(a.nome||"audio")}">
+    <span class="arq-ic">${ico("mic")}</span><div class="arq-player" style="min-width:0;flex:1">${PREVIAS[a.id]?`<audio controls preload="metadata" src="${PREVIAS[a.id]}" onloadedmetadata="if(this.duration===Infinity){this.ontimeupdate=()=>{this.ontimeupdate=null;this.currentTime=0};this.currentTime=1e101}"></audio>`:`<div class="row small muted" style="gap:6px"><span class="spinner"></span>Áudio${a.audio>0?" · "+durTxt(a.audio):""}</div>`}</div></div>`;
   return `<div class="arq-msg" data-arq="${esc(a.id||"")}" data-arq-g="${esc(gid||"")}" data-arq-tipo="${esc(a.tipo||"")}" data-arq-nome="${esc(a.nome||"arquivo")}">
     ${img?`<button type="button" class="arq-img" data-arq-ver aria-label="Abrir ${esc(a.nome||"imagem")}">${PREVIAS[a.id]?`<img src="${PREVIAS[a.id]}" alt="">`:`<span class="spinner"></span>`}</button>`:`<span class="arq-ic">${ico("file")}</span>`}
     <div style="min-width:0;flex:1"><div class="nm">${esc(a.nome||"arquivo")}</div><div class="small muted">${tamanhoTxt(+a.tamanho||0)}</div></div>
     <button class="btn sm" type="button" data-arq-baixar>Baixar</button></div>`}
-function carregarPrevias(box){if(!box)return;$$(".arq-img",box).forEach(async b=>{const w=b.closest("[data-arq]");const id=w.dataset.arq;if(!id||b.querySelector("img")||b.dataset.carregando)return;b.dataset.carregando="1";
+// áudio gravado no navegador (webm) vem sem duração: força o cálculo para a barra do player funcionar
+function audioDuracao(au){if(!au)return;au.addEventListener("loadedmetadata",()=>{if(au.duration!==Infinity)return;const volta=()=>{au.removeEventListener("timeupdate",volta);au.currentTime=0};au.addEventListener("timeupdate",volta);au.currentTime=1e101},{once:true})}
+function carregarPrevias(box){if(!box)return;
+  $$(".arq-audio",box).forEach(async w=>{const id=w.dataset.arq,pl=w.querySelector(".arq-player");if(!id||!pl||pl.querySelector("audio")||w.dataset.carregando)return;w.dataset.carregando="1";
+    try{if(!PREVIAS[id])PREVIAS[id]=URL.createObjectURL(await blobArquivo(w.dataset.arqG,id,w.dataset.arqTipo));if(pl.isConnected){pl.innerHTML=`<audio controls preload="metadata" src="${PREVIAS[id]}"></audio>`;audioDuracao(pl.querySelector("audio"))}}
+    catch(e){if(pl.isConnected)pl.innerHTML=`<span class="small muted">Áudio indisponível.</span>`}});
+  $$(".arq-img",box).forEach(async b=>{const w=b.closest("[data-arq]");const id=w.dataset.arq;if(!id||b.querySelector("img")||b.dataset.carregando)return;b.dataset.carregando="1";
   try{if(!PREVIAS[id])PREVIAS[id]=URL.createObjectURL(await blobArquivo(w.dataset.arqG,id,w.dataset.arqTipo));if(b.isConnected)b.innerHTML=`<img src="${PREVIAS[id]}" alt="">`}
   catch(e){if(b.isConnected){b.replaceWith(Object.assign(document.createElement("span"),{className:"arq-ic",innerHTML:ico("file")}))}}})}
 document.addEventListener("click",async e=>{const bt=e.target.closest("[data-arq-baixar],[data-arq-ver]");if(!bt)return;const w=bt.closest("[data-arq]");if(!w||!w.dataset.arq||!S.db)return;e.stopPropagation();
   if(bt.hasAttribute("data-arq-ver")&&PREVIAS[w.dataset.arq]){window.open(PREVIAS[w.dataset.arq],"_blank","noopener");return}
   const txt=bt.textContent;bt.disabled=true;if(bt.matches("[data-arq-baixar]"))bt.textContent="Baixando…";
   try{const blob=await blobArquivo(w.dataset.arqG,w.dataset.arq,w.dataset.arqTipo);const url=URL.createObjectURL(blob);const l=document.createElement("a");l.href=url;l.download=w.dataset.arqNome;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
-  catch(err){toast(err&&err.code==="apagado"?"Este arquivo foi apagado do grupo.":"Não foi possível baixar ("+(err&&err.code||"erro")+").")}
+  catch(err){toast(err&&err.code==="apagado"?"Este arquivo foi apagado.":"Não foi possível baixar ("+(err&&err.code||"erro")+").")}
   bt.disabled=false;if(bt.matches("[data-arq-baixar]"))bt.textContent=txt},true);
 // arrastar e soltar arquivos em qualquer lugar da página do grupo
-function ligarSoltarArquivos(area,enviar){
-  if(!area)return;let n=0;const ov=document.createElement("div");ov.className="soltar-ov";ov.hidden=true;ov.innerHTML=`<div>${ico("upload")}<b>Solte para enviar ao grupo</b><span>Até ${MAX_ARQ_TXT} por arquivo. Fica salvo na conversa e na aba Arquivos.</span></div>`;area.appendChild(ov);
+function ligarSoltarArquivos(area,enviar,txt){
+  if(!area)return;let n=0;const ov=document.createElement("div");ov.className="soltar-ov";ov.hidden=true;ov.innerHTML=`<div>${ico("upload")}<b>${txt?txt[0]:"Solte para enviar ao grupo"}</b><span>${txt?txt[1]:`Até ${MAX_ARQ_TXT} por arquivo. Fica salvo na conversa e na aba Arquivos.`}</span></div>`;area.appendChild(ov);
   const temArq=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes("Files");
   area.addEventListener("dragenter",e=>{if(!temArq(e))return;e.preventDefault();n++;ov.hidden=false});
   area.addEventListener("dragover",e=>{if(!temArq(e))return;e.preventDefault();e.dataTransfer.dropEffect="copy"});
@@ -2605,12 +2692,15 @@ function abrirConversa(){
   area.innerHTML=`<div class="row" style="margin-bottom:10px;flex-wrap:nowrap"><span class="av-on">${avatar(o)}${pontoOnline(o)}</span><div style="min-width:0;flex:1"><b>${esc(nomeDe(o))}</b><div class="small ${st.k==="on"?"txt-on":"muted"}">${esc(st.t)}</div></div><button class="btn sm ${st.k==="on"?"primary":""}" type="button" id="dm-video">${ico("video")}<span class="sr-mob">Chamada de vídeo</span></button></div>${chatBox("dm","Mensagem privada")}`;
   $("#dm-video").onclick=()=>chamadaLigar(o);
   const ref=S.db.collection("conversas").doc(cid);
-  if(existe){assinar("tela:dm",ref.collection("mensagens").orderBy("em","desc").limit(150),snap=>pintarMsgs("dm",snap.docs.map(d=>d.data()).reverse()));meuDoc("social").set({vistos:{[cid]:Date.now()}},{merge:true}).catch(()=>{})}
+  const ouvir=()=>assinar("tela:dm",ref.collection("mensagens").orderBy("em","desc").limit(150),snap=>{pintarMsgs("dm",snap.docs.map(d=>({...d.data(),_base:"conversas/"+cid})).reverse());carregarPrevias($("#dm"))});
+  if(existe){ouvir();meuDoc("social").set({vistos:{[cid]:Date.now()}},{merge:true}).catch(()=>{})}
   else pintarMsgs("dm",[]);
-  ligarComposer("dm",async t=>{await ref.set({participantes:[S.uid,o].sort(),atualizado:Date.now(),ultima:t.slice(0,90),ultimaDe:S.uid},{merge:true});
-    await ref.collection("mensagens").add({autor:S.uid,texto:t,em:Date.now()});
-    meuDoc("social").set({vistos:{[cid]:Date.now()}},{merge:true}).catch(()=>{});
-    if(!SUBS["tela:dm"])assinar("tela:dm",ref.collection("mensagens").orderBy("em","desc").limit(150),snap=>pintarMsgs("dm",snap.docs.map(d=>d.data()).reverse()))});
+  const resumo=t=>ref.set({participantes:[S.uid,o].sort(),atualizado:Date.now(),ultima:t.slice(0,90),ultimaDe:S.uid},{merge:true});
+  const depois=()=>{meuDoc("social").set({vistos:{[cid]:Date.now()}},{merge:true}).catch(()=>{});if(!SUBS["tela:dm"])ouvir()};
+  ligarComposer("dm",async t=>{await resumo(t);await ref.collection("mensagens").add({autor:S.uid,texto:t,em:Date.now()});depois()});
+  equiparChat("dm",{base:ref,antes:()=>FBC.convs[cid]?null:resumo("Nova conversa"),
+    postar:async info=>{await resumo(ehAudio(info)?"🎤 Áudio":"📎 "+info.nome);await ref.collection("mensagens").add({autor:S.uid,texto:"",em:Date.now(),arq:info});depois()},
+    soltar:["Solte para enviar nesta conversa",`Até ${MAX_ARQ_TXT} por arquivo. Só você e ${nomeDe(o)} veem.`]});
 }
 
 /* ---- Amigos ---- */
@@ -2644,6 +2734,9 @@ function renderAmigosFB(){
 
 /* ================= Banco de questões (provas oficiais) ================= */
 Object.assign(I,{
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',anexo:'<path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>',parar:'<rect x="6" y="6" width="12" height="12" rx="2"/>',lixo:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  cartas:'<rect x="3" y="6" width="13" height="15" rx="2"/><path d="M8 6V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-4"/>',brilho:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+  pip:'<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="12" width="7" height="5" rx="1"/>',
   video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/>',videooff:'<path d="M16 13v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2m4 0h3a2 2 0 0 1 2 2v1l5-3v10"/><path d="m3 3 18 18"/>',tela:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="m9 10 3-3 3 3M12 7v6"/>',
   mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>',micoff:'<path d="M15 9.3V6a3 3 0 0 0-5.7-1.3"/><path d="M9 9v2a3 3 0 0 0 5.1 2.1"/><path d="M5 11a7 7 0 0 0 11.5 5.4M19 11a7 7 0 0 1-.6 2.8"/><path d="M12 18v3"/><path d="m3 3 18 18"/>',phoneoff:'<path d="M4.5 15.5c4.4-4.6 10.6-4.6 15 0l-2 2.2-3-1.4v-2.6a10 10 0 0 0-5 0v2.6l-3 1.4z"/>',
   flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1.1-3.7 2.3-4.8.2 1.6 1 2.8 2.2 3.3C11 9 11.5 6 12 3z"/>',repeat:'<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',check:'<path d="m5 12 5 5L20 7"/>',
@@ -2992,6 +3085,8 @@ async function mentorEnviar(t){
 const VOZ_MAX=8,VOZ_ICE=[{urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302","stun:stun.cloudflare.com:3478"]}];
 const V={canal:null,titulo:"",sessao:"",stream:null,pcs:{},parts:{},mudo:false,subs:[],hb:null,ctx:null,an:{},falando:{},laco:null,entrando:false,video:null,vtipo:null,max:8};
 const vozDoc=c=>S.db.collection("voz").doc(c);
+const VOZ_VIVO=180000;
+document.addEventListener("visibilitychange",()=>{if(V.canal&&S.db)vozDoc(V.canal).collection("participantes").doc(S.uid).update({visto:Date.now(),mudo:V.mudo}).catch(()=>{})});
 const vozCanalGrupo=gid=>"g_"+gid;
 function vozNome(){return ((S.pub&&S.pub.nome)||(S.perfil&&S.perfil.nome)||"Estudante").slice(0,60)}
 async function vozEntrar(canal,titulo,opts){opts=opts||{};
@@ -3013,8 +3108,9 @@ async function vozEntrar(canal,titulo,opts){opts=opts||{};
   V.entrando=false;vozAnalisar(S.uid,V.stream);
   V.subs.push(vozDoc(canal).collection("participantes").onSnapshot(vozParticipantes,err=>console.warn("voz part",err&&err.code)));
   V.subs.push(vozDoc(canal).collection("sinais").where("para","==",S.uid).onSnapshot(vozSinais,err=>console.warn("voz sinais",err&&err.code)));
-  V.hb=setInterval(()=>{if(!V.canal)return;vozDoc(V.canal).collection("participantes").doc(S.uid).update({visto:Date.now(),mudo:V.mudo}).catch(()=>{});vozParticipantes(null)},20000);
-  if(!opts.quieto)toast(`Você entrou no canal de voz ${titulo}.`);vozUI();
+  V.hb=setInterval(()=>{if(!V.canal)return;vozDoc(V.canal).collection("participantes").doc(S.uid).update({visto:Date.now(),mudo:V.mudo}).catch(()=>{});vozParticipantes(null);vozConferirAtividade()},20000);
+  V.desde=Date.now();V.confirmado=Date.now();vozMidiaSessao();
+  if(!opts.quieto)toast(`Você entrou no canal de voz ${titulo}.`);vozUI();vozPedirNotificacao();
   if(opts.video)vozCamera();
 }
 async function vozSair(silencioso){
@@ -3024,7 +3120,8 @@ async function vozSair(silencioso){
   if(V.stream)V.stream.getTracks().forEach(t=>t.stop());
   if(V.video)V.video.stop();V.video=null;V.vtipo=null;
   Object.keys(V.an).forEach(k=>delete V.an[k]);clearInterval(V.laco);V.laco=null;
-  Object.assign(V,{canal:null,titulo:"",stream:null,parts:{},falando:{},sessao:""});
+  Object.assign(V,{canal:null,titulo:"",stream:null,parts:{},falando:{},sessao:"",pergunta:0});vozFecharAviso();vozFecharPip();
+  try{if("mediaSession" in navigator)["enterpictureinpicture","togglemicrophone","hangup"].forEach(a=>{try{navigator.mediaSession.setActionHandler(a,null)}catch(e){}})}catch(e){}
   try{await vozDoc(canal).collection("participantes").doc(S.uid).delete()}catch(e){}
   if(!silencioso)toast(canal.startsWith("dm_")?"Chamada encerrada.":"Você saiu do canal de voz.");vozUI();vozPalco();
   if(canal.startsWith("dm_")&&typeof chamadaCancelarAviso==="function")chamadaCancelarAviso();
@@ -3048,7 +3145,8 @@ function vozPar(uid,sess){
 async function vozOferecer(uid,sess){const p=vozPar(uid,sess);try{const o=await p.pc.createOffer();await p.pc.setLocalDescription(o);vozEnviar(uid,sess,"offer",JSON.stringify(p.pc.localDescription))}catch(e){console.warn("voz oferta",e)}}
 function vozParticipantes(snap){
   if(!V.canal)return;if(snap)V.ultimo=snap.docs.map(d=>({id:d.id,...d.data()}));
-  const vivos={};(V.ultimo||[]).forEach(d=>{if(d.id!==S.uid&&Date.now()-(d.visto||0)<60000)vivos[d.id]=d});V.parts=vivos;
+  // com a aba em segundo plano o navegador atrasa o aviso de presença (até ~1 min): quem ainda está conectado continua na chamada
+  const vivos={};(V.ultimo||[]).forEach(d=>{if(d.id===S.uid)return;const p=V.pcs[d.id],con=p&&p.sessao===d.sessao&&p.estado==="connected";if(Date.now()-(d.visto||0)<VOZ_VIVO||con)vivos[d.id]=d});V.parts=vivos;
   // (a oferta pode chegar antes da lista atualizar: só fecha conexões novas se a sessão mudou)
   Object.keys(V.pcs).forEach(uid=>{const p=V.pcs[uid];if(vivos[uid]?vivos[uid].sessao!==p.sessao:Date.now()-p.criado>15000)vozFecharPar(uid)});
   // quem tem o id menor começa a conexão
@@ -3069,6 +3167,7 @@ async function vozSinais(snap){
 
 // ---- vídeo: câmera ou tela vão no mesmo canal de vídeo de cada conexão (troca sem renegociar) ----
 const podeTela=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia)&&!/Android|iPhone|iPad/i.test(navigator.userAgent);
+const mostraTela=()=>true;
 async function vozDefinirVideo(track,tipo){
   if(V.video&&V.video!==track)V.video.stop();
   V.video=track||null;V.vtipo=track?tipo:null;
@@ -3079,30 +3178,80 @@ async function vozCamera(){if(!V.canal)return;if(V.vtipo==="cam"){vozDefinirVide
   try{const st=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:360},frameRate:{ideal:15},facingMode:"user"}});const t=st.getVideoTracks()[0];t.onended=()=>{if(V.video===t)vozDefinirVideo(null)};vozDefinirVideo(t,"cam")}
   catch(e){toast(e&&e.name==="NotAllowedError"?"Libere a câmera para o site (no cadeado ao lado do endereço).":"Não foi possível ligar a câmera.")}}
 async function vozTela(){if(!V.canal)return;if(V.vtipo==="tela"){vozDefinirVideo(null);return}
-  if(!podeTela()){toast("Compartilhar a tela funciona no navegador do computador.");return}
+  if(!podeTela()){toast("Celulares e tablets não deixam o navegador compartilhar a tela. Use o computador (Chrome, Edge ou Firefox) para mostrar a sua tela; no celular você consegue ver a tela dos outros.");return}
   try{const st=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:{ideal:10}},audio:false});const t=st.getVideoTracks()[0];t.contentHint="detail";t.onended=()=>{if(V.video===t)vozDefinirVideo(null)};vozDefinirVideo(t,"tela")}
   catch(e){if(e&&e.name!=="NotAllowedError")toast("Não foi possível compartilhar a tela.")}}
 // janela flutuante com os vídeos (dá para continuar usando o site)
 function vozPalco(){
-  let el=$("#voz-palco");
+  const pdoc=V.pip&&!V.pip.closed?V.pip.document:null;
+  let el=(pdoc&&pdoc.getElementById("voz-palco"))||$("#voz-palco");
   const tiles=[];if(V.canal&&V.video)tiles.push({id:S.uid,eu:true,st:new MediaStream([V.video]),tela:V.vtipo==="tela"});
   if(V.canal)Object.entries(V.pcs).forEach(([id,p])=>{const d=V.parts[id];if(p.vstream&&d&&(d.cam||d.tela)&&p.vstream.getVideoTracks()[0]&&!p.vstream.getVideoTracks()[0].muted)tiles.push({id,eu:false,st:p.vstream,tela:!!d.tela,nome:d.nome})});
   const dm=V.canal&&V.canal.startsWith("dm_"),chamando=dm&&!V.teveOutro;
-  if(!V.canal||(!tiles.length&&!dm)){if(el)el.remove();return}
+  if(!V.canal||(!tiles.length&&!dm&&!pdoc&&!V.forcarPalco)){if(!V.canal)V.forcarPalco=false;if(el)el.remove();if(!V.canal)vozFecharPip();return}
   if(!el){el=document.createElement("div");el.id="voz-palco";el.className="voz-palco";document.body.appendChild(el);
     el.addEventListener("click",e=>{const b=e.target.closest("[data-palco]");if(!b)return;const a=b.dataset.palco;
-      if(a==="cam")vozCamera();else if(a==="tela")vozTela();else if(a==="mudo")vozMudo();else if(a==="sair")vozSair();else if(a==="grande")el.classList.toggle("grande");else if(a==="min")el.classList.toggle("min")})}
-  const chave=tiles.map(t=>t.id+(t.tela?"t":"c")).join(",")+"|"+V.mudo+V.vtipo+chamando+V.titulo+Object.keys(V.parts).length;
+      if(a==="cam")vozCamera();else if(a==="tela")vozTela();else if(a==="mudo")vozMudo();else if(a==="sair")vozSair();else if(a==="grande")el.classList.toggle("grande");else if(a==="min")el.classList.toggle("min");else if(a==="pip")V.pip&&!V.pip.closed?vozFecharPip():vozAbrirPip();else if(a==="ativo")vozConfirmarAtividade()})}
+  const chave=tiles.map(t=>t.id+(t.tela?"t":"c")).join(",")+"|"+V.mudo+V.vtipo+chamando+V.titulo+Object.keys(V.parts).length+"|"+(V.pergunta||0)+!!pdoc;
   if(el.dataset.chave===chave){return}
   el.dataset.chave=chave;
-  el.innerHTML=`<div class="vp-top"><b>${esc(V.titulo)}</b><span class="small">${chamando?"Chamando…":`${Object.keys(V.parts).length+1} na chamada`}</span><button type="button" class="vp-b" data-palco="min" title="Minimizar" aria-label="Minimizar">–</button><button type="button" class="vp-b" data-palco="grande" title="Aumentar" aria-label="Aumentar">⤢</button></div>
-    <div class="vp-grade n${Math.min(tiles.length,4)}">${tiles.length?tiles.map(t=>`<div class="vp-tile ${t.tela?"tela":""} ${t.eu?"eu":""}"><video autoplay playsinline ${t.eu?"muted":""} data-vt="${t.id}"></video><span class="vp-nome">${t.eu?"Você":esc(t.nome||nomeDe(t.id))}${t.tela?" · tela":""}</span></div>`).join(""):`<div class="vp-vazio">${chamando?`${ico("video")}<span>Chamando ${esc(V.titulo.replace(/^Chamada com /,""))}…</span>`:`${ico("videooff")}<span>Câmeras desligadas</span>`}</div>`}</div>
+  el.innerHTML=`<div class="vp-top"><b>${esc(V.titulo)}</b><span class="small">${chamando?"Chamando…":`${Object.keys(V.parts).length+1} na chamada`}</span>${pipPossivel()?`<button type="button" class="vp-b" data-palco="pip" title="${pdoc?"Voltar para o site":"Janela flutuante: continua por cima mesmo fora do site"}" aria-label="${pdoc?"Voltar a janela para o site":"Abrir em janela flutuante"}">${ico("pip")}</button>`:""}${pdoc?"":`<button type="button" class="vp-b" data-palco="min" title="Minimizar" aria-label="Minimizar">–</button><button type="button" class="vp-b" data-palco="grande" title="Aumentar" aria-label="Aumentar">⤢</button>`}</div>
+    ${V.pergunta?`<div class="vp-aviso" role="alert"><b>Você ainda está estudando?</b><span class="small">A chamada termina sozinha em ${Math.max(1,Math.ceil((V.pergunta-Date.now())/60000))} min se ninguém responder.</span><button type="button" class="btn primary sm" data-palco="ativo">Sim, continuar</button></div>`:""}
+    <div class="vp-grade n${Math.min(tiles.length,4)}">${tiles.length?tiles.map(t=>`<div class="vp-tile ${t.tela?"tela":""} ${t.eu?"eu":""}"><video autoplay playsinline autopictureinpicture ${t.eu?"muted":""} data-vt="${t.id}"></video><span class="vp-nome">${t.eu?"Você":esc(t.nome||nomeDe(t.id))}${t.tela?" · tela":""}</span></div>`).join(""):`<div class="vp-vazio">${chamando?`${ico("video")}<span>Chamando ${esc(V.titulo.replace(/^Chamada com /,""))}…</span>`:`${ico("videooff")}<span>Câmeras desligadas</span>`}</div>`}</div>
     <div class="vp-acoes"><button type="button" class="vp-c ${V.mudo?"off":""}" data-palco="mudo" title="${V.mudo?"Ativar microfone":"Silenciar"}" aria-label="${V.mudo?"Ativar microfone":"Silenciar"}">${ico(V.mudo?"micoff":"mic")}</button>
       <button type="button" class="vp-c ${V.vtipo==="cam"?"on":""}" data-palco="cam" title="Câmera" aria-label="${V.vtipo==="cam"?"Desligar câmera":"Ligar câmera"}">${ico(V.vtipo==="cam"?"video":"videooff")}</button>
-      ${podeTela()?`<button type="button" class="vp-c ${V.vtipo==="tela"?"on":""}" data-palco="tela" title="Compartilhar tela" aria-label="${V.vtipo==="tela"?"Parar de compartilhar a tela":"Compartilhar tela"}">${ico("tela")}</button>`:""}
+      ${mostraTela()?`<button type="button" class="vp-c ${V.vtipo==="tela"?"on":""}" data-palco="tela" title="Compartilhar tela" aria-label="${V.vtipo==="tela"?"Parar de compartilhar a tela":"Compartilhar tela"}">${ico("tela")}</button>`:""}
       <button type="button" class="vp-c sai" data-palco="sair" title="Sair" aria-label="Sair da chamada">${ico("phoneoff")}</button></div>`;
   el.querySelectorAll("video[data-vt]").forEach(v=>{const t=tiles.find(x=>x.id===v.dataset.vt);if(t){v.srcObject=t.st;v.play().catch(()=>{})}});
 }
+// ---- janela flutuante por cima de tudo (Picture-in-Picture), inclusive quando a pessoa sai do site ----
+const pipPossivel=()=>"documentPictureInPicture" in window||(document.pictureInPictureEnabled&&!!HTMLVideoElement.prototype.requestPictureInPicture);
+async function vozAbrirPip(auto){
+  if(!V.canal)return;
+  if("documentPictureInPicture" in window){
+    try{if(V.pip&&!V.pip.closed)return;
+      const w=await documentPictureInPicture.requestWindow({width:360,height:300});V.pip=w;
+      // leva o visual do site junto (estilos, tema e cor neon)
+      [...document.querySelectorAll('style,link[rel="stylesheet"]')].forEach(n=>w.document.head.appendChild(n.cloneNode(true)));
+      [...document.documentElement.attributes].forEach(a=>w.document.documentElement.setAttribute(a.name,a.value));
+      w.document.body.className="pip-corpo";w.document.title=V.titulo||"Chamada";
+      const el=$("#voz-palco");if(el){el.dataset.chave="";w.document.body.appendChild(el)}
+      w.addEventListener("pagehide",()=>{const p=w.document.getElementById("voz-palco");V.pip=null;if(p){p.dataset.chave="";document.body.appendChild(p)}vozPalco()});
+      vozPalco();return}catch(e){if(!auto)toast("Não foi possível abrir a janela flutuante.");}}
+  // navegadores sem janela flutuante completa: só o vídeo flutua
+  const v=[...document.querySelectorAll("#voz-palco video[data-vt]")].find(x=>!x.muted)||document.querySelector("#voz-palco video[data-vt]");
+  if(v&&v.requestPictureInPicture){try{await v.requestPictureInPicture()}catch(e){if(!auto)toast("Ligue a câmera ou espere o vídeo aparecer para usar a janela flutuante.")}}
+  else if(!auto)toast("Este navegador não tem janela flutuante. A chamada continua mesmo se você trocar de aba.");
+}
+function vozFecharPip(){if(V.pip&&!V.pip.closed)V.pip.close();V.pip=null;if(document.pictureInPictureElement)document.exitPictureInPicture().catch(()=>{})}
+// Chrome abre a janela flutuante sozinho ao trocar de aba quando o site está usando câmera ou microfone
+function vozMidiaSessao(){try{if(!("mediaSession" in navigator))return;navigator.mediaSession.metadata=new MediaMetadata({title:V.titulo||"Chamada",artist:"Logic Academy"});
+  navigator.mediaSession.setActionHandler("enterpictureinpicture",()=>vozAbrirPip(true))}catch(e){}
+  try{navigator.mediaSession.setActionHandler("togglemicrophone",()=>vozMudo());navigator.mediaSession.setActionHandler("hangup",()=>vozSair())}catch(e){}}
+// ---- "Você ainda está estudando?": a cada 1 hora na chamada; sem resposta em 5 minutos, a pessoa sai ----
+const VOZ_PERGUNTA=60*60000,VOZ_PRAZO=5*60000;
+function vozConferirAtividade(){if(!V.canal)return;const agora=Date.now();
+  if(V.pergunta){if(agora>=V.pergunta){V.pergunta=0;vozFecharAviso();vozSair(true);toast("Você saiu da chamada porque não respondeu se ainda estava estudando.");
+      try{if(window.Notification&&Notification.permission==="granted")new Notification("Logic Academy",{body:"A chamada foi encerrada por inatividade."})}catch(e){}}
+    else vozMostrarAviso();return}
+  if(agora-(V.confirmado||agora)>=VOZ_PERGUNTA){V.pergunta=agora+VOZ_PRAZO;vozMostrarAviso(true);
+    try{if(document.hidden&&window.Notification&&Notification.permission==="granted")new Notification("Você ainda está estudando?",{body:"Volte ao site e confirme, ou a chamada termina em 5 minutos.",tag:"la-ativo"})}catch(e){}}}
+function vozMostrarAviso(novo){
+  let bg=$("#voz-ativo");const min=Math.max(1,Math.ceil((V.pergunta-Date.now())/60000));
+  if(!bg){bg=document.createElement("div");bg.className="modal-bg";bg.id="voz-ativo";
+    bg.innerHTML=`<div class="card stack modal" role="alertdialog" aria-modal="true" aria-labelledby="va-t"><span class="eyebrow">${esc(V.titulo)}</span><h3 id="va-t">Você ainda está estudando?</h3>
+      <p class="small muted">Você está na chamada há mais de 1 hora. Confirme para continuar; sem resposta, a chamada termina em <b data-va>${min}</b> min.</p>
+      <div class="row" style="justify-content:flex-end;gap:8px"><button class="btn ghost" type="button" data-va-x>Sair da chamada</button><button class="btn primary" type="button" data-va-ok>Sim, continuar</button></div></div>`;
+    document.body.appendChild(bg);bg.querySelector("[data-va-ok]").onclick=vozConfirmarAtividade;bg.querySelector("[data-va-x]").onclick=()=>{vozFecharAviso();vozSair()};
+    setTimeout(()=>{const b=bg.querySelector("[data-va-ok]");if(b)b.focus()},50)}
+  else{const b=bg.querySelector("[data-va]");if(b)b.textContent=min}
+  if(novo)try{const AC=window.AudioContext||window.webkitAudioContext,c=V.ctx||new AC(),t=c.currentTime;[0,.3].forEach(o=>{const os=c.createOscillator(),g=c.createGain();os.frequency.value=740;g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(.15,t+o+.03);g.gain.exponentialRampToValueAtTime(.0001,t+o+.25);os.connect(g);g.connect(c.destination);os.start(t+o);os.stop(t+o+.3)})}catch(e){}
+  const el=V.pip&&!V.pip.closed?V.pip.document.getElementById("voz-palco"):$("#voz-palco");if(el)el.dataset.chave="";vozPalco()}
+function vozFecharAviso(){const bg=$("#voz-ativo");if(bg)bg.remove()}
+function vozConfirmarAtividade(){V.pergunta=0;V.confirmado=Date.now();vozFecharAviso();vozPalco();toast("Boa! Continue firme nos estudos.")}
+// avisos no sistema quando a pessoa está fora do site (pedimos permissão só ao entrar numa chamada)
+function vozPedirNotificacao(){try{if(window.Notification&&Notification.permission==="default")Notification.requestPermission().catch(()=>{})}catch(e){}}
+
 // indicador de quem está falando
 function vozAnalisar(uid,stream){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;V.ctx=V.ctx||new AC();if(V.ctx.state==="suspended")V.ctx.resume().catch(()=>{});
   const src=V.ctx.createMediaStreamSource(stream),an=V.ctx.createAnalyser();an.fftSize=512;src.connect(an);V.an[uid]={an,buf:new Uint8Array(an.fftSize)};
@@ -3119,7 +3268,7 @@ function vozPainelHtml(canal,titulo,prev){
   const lista=aqui?[[S.uid,null,true]].concat(Object.values(V.parts).map(d=>[d.id,d,false])):(prev||[]).map(d=>[d.id,d,false]);
   return `<div class="card voz-painel ${aqui?"ativo":""}" data-voz-painel="${canal}">
     <div class="voz-top"><span class="voz-ic">${ico("mic")}</span><div style="min-width:0;flex:1"><h3>${esc(titulo)}</h3><p class="small muted">${aqui?`Conectado · ${lista.length} ${lista.length===1?"pessoa":"pessoas"}`:lista.length?`${lista.length} ${lista.length===1?"pessoa":"pessoas"} conversando agora`:"Ninguém no canal agora. Entre e chame o pessoal!"}</p></div>
-      <div class="row" style="gap:6px">${aqui?`<button class="btn ${V.mudo?"primary":""}" type="button" data-voz="mudo" aria-pressed="${V.mudo}">${ico(V.mudo?"micoff":"mic")}${V.mudo?"Ativar microfone":"Silenciar"}</button><button class="btn ${V.vtipo==="cam"?"primary":""}" type="button" data-voz="cam" aria-pressed="${V.vtipo==="cam"}">${ico(V.vtipo==="cam"?"video":"videooff")}Câmera</button>${podeTela()?`<button class="btn ${V.vtipo==="tela"?"primary":""}" type="button" data-voz="tela" aria-pressed="${V.vtipo==="tela"}">${ico("tela")}${V.vtipo==="tela"?"Parar tela":"Compartilhar tela"}</button>`:""}<button class="btn danger" type="button" data-voz="sair">${ico("phoneoff")}Sair</button>`
+      <div class="row" style="gap:6px">${aqui?`<button class="btn ${V.mudo?"primary":""}" type="button" data-voz="mudo" aria-pressed="${V.mudo}">${ico(V.mudo?"micoff":"mic")}${V.mudo?"Ativar microfone":"Silenciar"}</button><button class="btn ${V.vtipo==="cam"?"primary":""}" type="button" data-voz="cam" aria-pressed="${V.vtipo==="cam"}">${ico(V.vtipo==="cam"?"video":"videooff")}Câmera</button>${mostraTela()?`<button class="btn ${V.vtipo==="tela"?"primary":""}" type="button" data-voz="tela" aria-pressed="${V.vtipo==="tela"}">${ico("tela")}${V.vtipo==="tela"?"Parar tela":"Compartilhar tela"}</button>`:""}<button class="btn danger" type="button" data-voz="sair">${ico("phoneoff")}Sair</button>`
         :`<button class="btn primary" type="button" data-voz="entrar" data-canal="${canal}" data-titulo="${esc(titulo)}" ${V.entrando?"disabled":""}>${ico("mic")}${V.entrando?"Conectando…":outro?"Trocar para este canal":"Entrar no canal de voz"}</button>`}</div></div>
     ${lista.length?`<div class="voz-lista">${lista.map(([id,d,eu])=>vozPessoaHtml(id,d,eu)).join("")}</div>`:""}
     <p class="hint">${aqui?"Pode navegar pelo site (pomodoro, questões…) que a conversa continua. Use fone de ouvido para não dar eco.":`Até ${VOZ_MAX} pessoas por canal. O áudio vai direto entre os participantes e não é gravado.`}${outro?` Você está em <b>${esc(V.titulo)}</b>.`:""}</p></div>`}
@@ -3130,10 +3279,10 @@ function vozUI(){
   let mb=$("#mini-voz");if(!mb)return;
   if(!V.canal){mb.hidden=true;const fl=$("#voz-flut");if(fl)fl.hidden=true;return}
   const n=Object.keys(V.parts).length+1,html=`<span class="mv-ic ${V.falando[S.uid]?"falando":""}">${ico(V.mudo?"micoff":"mic")}</span><span class="mv-t"><b>${esc(V.titulo)}</b><small>${n} ${n===1?"pessoa":"pessoas"} na voz</small></span>
-    <button type="button" class="mv-b" data-voz="mudo" aria-label="${V.mudo?"Ativar microfone":"Silenciar"}" title="${V.mudo?"Ativar microfone":"Silenciar"}">${ico(V.mudo?"micoff":"mic")}</button><button type="button" class="mv-b sai" data-voz="sair" aria-label="Sair do canal de voz" title="Sair do canal de voz">${ico("phoneoff")}</button>`;
+    ${pipPossivel()?`<button type="button" class="mv-b" data-voz="pip" aria-label="Janela flutuante" title="Janela flutuante (continua por cima fora do site)">${ico("pip")}</button>`:""}<button type="button" class="mv-b" data-voz="tela" aria-label="${V.vtipo==="tela"?"Parar de compartilhar a tela":"Compartilhar tela"}" title="${V.vtipo==="tela"?"Parar de compartilhar a tela":"Compartilhar tela"}">${ico("tela")}</button><button type="button" class="mv-b" data-voz="mudo" aria-label="${V.mudo?"Ativar microfone":"Silenciar"}" title="${V.mudo?"Ativar microfone":"Silenciar"}">${ico(V.mudo?"micoff":"mic")}</button><button type="button" class="mv-b sai" data-voz="sair" aria-label="Sair do canal de voz" title="Sair do canal de voz">${ico("phoneoff")}</button>`;
   mb.hidden=false;mb.innerHTML=html;let fl=$("#voz-flut");if(fl){fl.hidden=false;fl.innerHTML=html}}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-voz]");if(!b)return;e.stopPropagation();const a=b.dataset.voz;
-  if(a==="entrar")vozEntrar(b.dataset.canal,b.dataset.titulo);else if(a==="sair")vozSair();else if(a==="mudo")vozMudo();else if(a==="cam")vozCamera();else if(a==="tela")vozTela();else if(a==="abrir"&&V.canal){if(V.canal.startsWith("dm_")){const o=V.canal.slice(3).split("_").find(x=>x!==S.uid);abrirDM(o)}else if(V.canal==="global")go("voz");else{S.grupoAberto=V.canal.slice(2);FBC.grupoTab="voz";go("grupos")}}},true);
+  if(a==="entrar")vozEntrar(b.dataset.canal,b.dataset.titulo);else if(a==="sair")vozSair();else if(a==="mudo")vozMudo();else if(a==="cam")vozCamera();else if(a==="tela")vozTela();else if(a==="pip"){if(!$("#voz-palco")&&!(V.pip&&!V.pip.closed)){V.forcarPalco=true;vozPalco()}vozAbrirPip()}else if(a==="abrir"&&V.canal){if(V.canal.startsWith("dm_")){const o=V.canal.slice(3).split("_").find(x=>x!==S.uid);abrirDM(o)}else if(V.canal==="global")go("voz");else{S.grupoAberto=V.canal.slice(2);FBC.grupoTab="voz";go("grupos")}}},true);
 function vozPrevia(canal){V.prev=V.prev||{};if(V.canal===canal)return;
   assinar("tela:vozprev:"+canal,vozDoc(canal).collection("participantes"),snap=>{V.prev[canal]=snap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>Date.now()-(d.visto||0)<60000);
     const el=document.querySelector(`[data-voz-painel="${canal}"]`);if(el&&V.canal!==canal)el.outerHTML=vozPainelHtml(canal,el.querySelector("h3").textContent,V.prev[canal])})}
@@ -3188,10 +3337,153 @@ function renderVoz(){
     <p class="hint">${ico("users")} Cada comunidade tem o próprio canal de voz, que fica dentro do grupo, na aba <b>Voz</b>. <a href="#grupos" data-link="grupos">Abrir meus grupos</a></p></div></div>`;
   $$("[data-link]").forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.link)});vozPrevia("global");
 }
+/* ================= Flashcards (aba Prova): baralhos próprios ou montados com IA, revisão espaçada ================= */
+// data/users/{uid}/flashcards = {b:{<id>:{nome,mat,em,c:[{id,f,v,cx,prox,ok,er}]}}}; caixas 1–5 (Leitner): 0, 1, 3, 7 e 16 dias
+const FC_DIAS=[0,0,1,3,7,16],FC_MAX=1500;
+const FC={doc:null,aberto:null,estudo:null,ia:null,editando:null};
+async function fcDoc(){if(FC.doc)return FC.doc;let d=null;try{d=await ler("flashcards")}catch(e){}FC.doc=d&&d.b?d:{b:{}};return FC.doc}
+const fcSalvar=()=>gravar("flashcards",FC.doc);
+const fcHoje=()=>dataISO();
+const fcVence=c=>!c.prox||c.prox<=fcHoje();
+const fcTotal=()=>Object.values(FC.doc.b).reduce((a,b)=>a+b.c.length,0);
+function fcSomarDias(n){const d=new Date();d.setDate(d.getDate()+n);return dataISO(d)}
+function fcNovoBaralho(nome,mat){const id=uid();FC.doc.b[id]={nome:(nome||"Novo baralho").slice(0,80),mat:(mat||"").slice(0,60),em:Date.now(),c:[]};fcSalvar();return id}
+function fcAdd(bid,f,v){const b=FC.doc.b[bid];if(!b)return false;f=String(f||"").trim().slice(0,500);v=String(v||"").trim().slice(0,1200);if(!f||!v)return false;
+  if(fcTotal()>=FC_MAX){toast(`Limite de ${FC_MAX} cartões atingido. Apague alguns para criar novos.`);return false}
+  b.c.push({id:uid(),f,v,cx:1,prox:fcHoje(),ok:0,er:0});return true}
+function fcTopicosProva(){const out=[];if(S.edital&&S.edital.materias)S.edital.materias.forEach(m=>(m.topicos||[]).forEach(t=>out.push([m.nome||"",t.t])));return out}
+async function renderFlashcards(){
+  $("#main").innerHTML=`<div class="page">${pageHead("Flashcards","Crie seus cartões ou peça para a IA montar a partir de um tópico da prova. A revisão volta no dia certo para você não esquecer.")}<div class="row muted"><span class="spinner"></span>Carregando…</div></div>`;
+  await fcDoc();if(S.view!=="flashcards")return;
+  if(FC.estudo)return fcTelaEstudo();if(FC.aberto&&FC.doc.b[FC.aberto])return fcTelaBaralho();FC.aberto=null;fcTelaLista()}
+function fcTelaLista(){
+  const bs=Object.entries(FC.doc.b).sort((a,b)=>b[1].em-a[1].em),venc=bs.reduce((a,[,b])=>a+b.c.filter(fcVence).length,0),tot=fcTotal();
+  $("#main").innerHTML=`<div class="page fc-page">${pageHead("Flashcards","Crie seus cartões ou peça para a IA montar a partir de um tópico da prova. A revisão volta no dia certo para você não esquecer.",
+      `<button class="btn primary" type="button" id="fc-novo">${ico("plus")}Novo baralho</button>`)}
+    <div class="qb-resumo"><div class="stat"><div class="eyebrow">Baralhos</div><div class="v">${bs.length}</div></div><div class="stat"><div class="eyebrow">Cartões</div><div class="v">${tot}</div></div>
+      <div class="stat"><div class="eyebrow">Para revisar hoje</div><div class="v">${venc}</div></div></div>
+    ${venc?`<div class="card fc-hoje row"><span class="qb-cad-ic">${ico("repeat")}</span><div style="flex:1;min-width:0"><b>${venc} ${venc===1?"cartão espera":"cartões esperam"} revisão hoje</b><p class="small muted">Revise todos os baralhos de uma vez, em ordem aleatória.</p></div><button class="btn primary" type="button" id="fc-tudo">${ico("play")}Revisar agora</button></div>`:""}
+    <form class="card stack fc-form" id="fc-form" hidden><h3>Novo baralho</h3>
+      <div class="fc-2"><div class="field"><label for="fc-nome">Nome</label><input id="fc-nome" maxlength="80" required placeholder="Ex.: Biologia — Citologia"></div>
+      <div class="field"><label for="fc-mat">Matéria (opcional)</label><input id="fc-mat" maxlength="60" list="fc-mats" placeholder="Ex.: Biologia"><datalist id="fc-mats">${[...new Set(fcTopicosProva().map(x=>x[0]).filter(Boolean).concat(Object.values(QB_MAT)))].map(m=>`<option value="${esc(m)}">`).join("")}</datalist></div></div>
+      <div class="row" style="justify-content:flex-end;gap:8px"><button class="btn ghost" type="button" id="fc-cancel">Cancelar</button><button class="btn primary" type="submit">Criar baralho</button></div></form>
+    ${bs.length?`<div class="fc-grade">${bs.map(([id,b])=>{const v=b.c.filter(fcVence).length,dom=b.c.filter(c=>c.cx>=4).length;return `<div class="card fc-bar">
+      <div class="row" style="gap:10px;flex-wrap:nowrap"><span class="fc-ic">${ico("cartas")}</span><div style="min-width:0;flex:1"><h3 style="overflow-wrap:anywhere">${esc(b.nome)}</h3><span class="small muted">${b.mat?esc(b.mat)+" · ":""}${b.c.length} ${b.c.length===1?"cartão":"cartões"}</span></div></div>
+      <div class="prog" title="${dom} de ${b.c.length} já dominados"><i style="width:${b.c.length?Math.round(dom/b.c.length*100):0}%"></i></div>
+      <span class="small muted">${v?`<b style="color:var(--fg)">${v}</b> para revisar hoje`:b.c.length?"Em dia por hoje":"Sem cartões ainda"} · ${dom} dominados</span>
+      <div class="row" style="gap:8px"><button class="btn sm ${v?"primary":""}" type="button" data-fc-estudar="${id}" ${b.c.length?"":"disabled"}>${ico("play")}Estudar</button><button class="btn sm" type="button" data-fc-abrir="${id}">Abrir</button></div></div>`}).join("")}</div>`
+    :`<div class="card empty-state stack" style="padding:32px 16px">${ico("cartas")}<b>Nenhum baralho ainda</b><span class="small muted">Crie um baralho e escreva seus cartões (pergunta na frente, resposta atrás) ou use a IA para gerar cartões de um tópico.</span><button class="btn primary" type="button" id="fc-novo2">${ico("plus")}Criar primeiro baralho</button></div>`}
+  </div>`;
+  const abrirForm=()=>{const f=$("#fc-form");f.hidden=false;$("#fc-nome").focus()};
+  $("#fc-novo").onclick=abrirForm;const n2=$("#fc-novo2");if(n2)n2.onclick=abrirForm;
+  $("#fc-cancel").onclick=()=>{$("#fc-form").hidden=true};
+  $("#fc-form").onsubmit=e=>{e.preventDefault();FC.aberto=fcNovoBaralho($("#fc-nome").value.trim(),$("#fc-mat").value.trim());fcTelaBaralho()};
+  const t=$("#fc-tudo");if(t)t.onclick=()=>fcEstudar(null);
+  $$("[data-fc-estudar]").forEach(b=>b.onclick=()=>fcEstudar(b.dataset.fcEstudar));
+  $$("[data-fc-abrir]").forEach(b=>b.onclick=()=>{FC.aberto=b.dataset.fcAbrir;FC.ia=null;fcTelaBaralho()});
+}
+function fcTelaBaralho(){
+  const id=FC.aberto,b=FC.doc.b[id];if(!b){FC.aberto=null;return fcTelaLista()}
+  const tops=fcTopicosProva(),v=b.c.filter(fcVence).length,ia=FC.ia&&FC.ia.bid===id?FC.ia:null;
+  $("#main").innerHTML=`<div class="page fc-page">
+    <button class="btn ghost sm" type="button" id="fc-voltar" style="margin-bottom:10px">${ico("back")}Todos os baralhos</button>
+    ${pageHead(esc(b.nome),`${b.mat?esc(b.mat)+" · ":""}${b.c.length} ${b.c.length===1?"cartão":"cartões"} · ${v} para revisar hoje`,
+      `<button class="btn primary" type="button" id="fc-estudar" ${b.c.length?"":"disabled"}>${ico("play")}Estudar</button>`)}
+    <div class="fc-cols">
+      <div class="stack">
+        <form class="card stack" id="fc-add"><h3>${ico("plus")} Novo cartão</h3>
+          <div class="field"><label for="fc-f">Frente (pergunta ou conceito)</label><textarea id="fc-f" rows="2" maxlength="500" required placeholder="Ex.: O que é a mitocôndria?"></textarea></div>
+          <div class="field"><label for="fc-v">Verso (resposta)</label><textarea id="fc-v" rows="3" maxlength="1200" required placeholder="Ex.: Organela que faz a respiração celular e produz ATP."></textarea></div>
+          <div class="row" style="justify-content:flex-end"><button class="btn primary" type="submit">Adicionar cartão</button></div></form>
+        <div class="card stack fc-ia"><h3>${ico("brilho")} Criar cartões com IA</h3>
+          <p class="small muted">Escolha um tópico da sua prova ou escreva um assunto. Se quiser, cole um resumo seu: a IA monta os cartões a partir dele. Revise antes de salvar.</p>
+          ${tops.length?`<div class="field"><label for="fc-top">Tópico da prova</label><select id="fc-top"><option value="">Escolher tópico…</option>${tops.map(([m,t])=>`<option value="${esc(m?m+" — "+t:t)}">${esc(m?m+" — "+t:t)}</option>`).join("")}</select></div>`:""}
+          <div class="field"><label for="fc-tema">Assunto</label><input id="fc-tema" maxlength="160" value="${esc(ia&&ia.tema||b.mat||"")}" placeholder="Ex.: Divisão celular: mitose e meiose"></div>
+          <div class="field"><label for="fc-base">Seu resumo ou anotações (opcional)</label><textarea id="fc-base" rows="3" maxlength="6000" placeholder="Cole aqui um texto para a IA usar como base">${esc(ia&&ia.base||"")}</textarea></div>
+          <div class="row" style="gap:8px;justify-content:space-between"><label class="row small" style="gap:6px">Quantidade <select id="fc-qtd">${[5,10,15,20].map(n=>`<option ${(ia?ia.qtd:10)===n?"selected":""}>${n}</option>`).join("")}</select></label>
+            <button class="btn primary" type="button" id="fc-gerar" ${ia&&ia.ocupado?"disabled":""}>${ia&&ia.ocupado?`<span class="spinner"></span>Gerando…`:`${ico("brilho")}Gerar cartões`}</button></div>
+          ${ia&&ia.erro?`<p class="small" style="color:var(--danger,#dc2626)">${esc(ia.erro)}</p>`:""}
+          ${ia&&ia.cards&&ia.cards.length?`<div class="fc-sug"><div class="row" style="justify-content:space-between"><b class="small">${ia.cards.length} cartões sugeridos</b><label class="row small" style="gap:6px"><input type="checkbox" id="fc-todos" checked>Marcar todos</label></div>
+            ${ia.cards.map((c,i)=>`<label class="fc-sug-i"><input type="checkbox" data-fc-sug="${i}" checked><span><b>${esc(c.f)}</b><span class="small muted">${esc(c.v)}</span></span></label>`).join("")}
+            <div class="row" style="justify-content:flex-end;gap:8px"><button class="btn ghost sm" type="button" id="fc-descartar">Descartar</button><button class="btn primary sm" type="button" id="fc-salvar-ia">Adicionar ao baralho</button></div></div>`:""}
+        </div>
+      </div>
+      <div class="card fc-lista-c"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>Cartões</h3><button class="btn ghost sm danger" type="button" id="fc-apagar-b">Apagar baralho</button></div>
+        ${b.c.length?`<div class="list">${b.c.slice().reverse().map(c=>FC.editando===c.id?`<form class="fc-edit stack" data-fc-form="${c.id}"><textarea rows="2" maxlength="500" data-fc-ef required>${esc(c.f)}</textarea><textarea rows="3" maxlength="1200" data-fc-ev required>${esc(c.v)}</textarea><div class="row" style="justify-content:flex-end;gap:6px"><button class="btn ghost sm" type="button" data-fc-cancelar>Cancelar</button><button class="btn primary sm" type="submit">Salvar</button></div></form>`
+          :`<div class="fc-item"><div style="min-width:0;flex:1"><div class="nm">${esc(c.f)}</div><div class="small muted">${esc(c.v)}</div><div class="small muted fc-meta">Caixa ${c.cx} de 5 · ${fcVence(c)?"revisar hoje":"próxima revisão em "+new Date(c.prox+"T12:00").toLocaleDateString("pt-BR")}</div></div>
+            <div class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn icon ghost sm" type="button" data-fc-editar="${c.id}" aria-label="Editar cartão" title="Editar">${ico("edit")}</button><button class="btn icon ghost sm" type="button" data-fc-del="${c.id}" aria-label="Apagar cartão" title="Apagar">${ico("lixo")}</button></div></div>`).join("")}</div>`
+          :`<p class="small muted">Nenhum cartão ainda. Escreva o primeiro ao lado ou gere com a IA.</p>`}
+      </div>
+    </div></div>`;
+  $("#fc-voltar").onclick=()=>{FC.aberto=null;FC.editando=null;fcTelaLista()};
+  $("#fc-estudar").onclick=()=>fcEstudar(id);
+  $("#fc-add").onsubmit=e=>{e.preventDefault();if(fcAdd(id,$("#fc-f").value,$("#fc-v").value)){fcSalvar();fcTelaBaralho();toast("Cartão adicionado.");const f=$("#fc-f");if(f)f.focus()}};
+  const st=$("#fc-top");if(st)st.onchange=()=>{if(st.value)$("#fc-tema").value=st.value};
+  $("#fc-gerar").onclick=()=>fcGerarIA(id);
+  const td=$("#fc-todos");if(td)td.onchange=()=>$$("[data-fc-sug]").forEach(c=>c.checked=td.checked);
+  const ds=$("#fc-descartar");if(ds)ds.onclick=()=>{FC.ia=null;fcTelaBaralho()};
+  const sv=$("#fc-salvar-ia");if(sv)sv.onclick=()=>{let n=0;$$("[data-fc-sug]").forEach(c=>{if(c.checked){const x=FC.ia.cards[+c.dataset.fcSug];if(fcAdd(id,x.f,x.v))n++}});fcSalvar();FC.ia=null;fcTelaBaralho();toast(n?`${n} ${n===1?"cartão adicionado":"cartões adicionados"}.`:"Nenhum cartão marcado.")};
+  $("#fc-apagar-b").onclick=e=>{const bt=e.currentTarget;if(!bt.dataset.c){bt.dataset.c="1";bt.textContent="Apagar mesmo?";return}delete FC.doc.b[id];fcSalvar();FC.aberto=null;fcTelaLista();toast("Baralho apagado.")};
+  $$("[data-fc-del]").forEach(bt=>bt.onclick=()=>{b.c=b.c.filter(c=>c.id!==bt.dataset.fcDel);fcSalvar();fcTelaBaralho()});
+  $$("[data-fc-editar]").forEach(bt=>bt.onclick=()=>{FC.editando=bt.dataset.fcEditar;fcTelaBaralho()});
+  $$("[data-fc-cancelar]").forEach(bt=>bt.onclick=()=>{FC.editando=null;fcTelaBaralho()});
+  $$("[data-fc-form]").forEach(f=>f.onsubmit=e=>{e.preventDefault();const c=b.c.find(x=>x.id===f.dataset.fcForm);if(c){c.f=f.querySelector("[data-fc-ef]").value.trim().slice(0,500)||c.f;c.v=f.querySelector("[data-fc-ev]").value.trim().slice(0,1200)||c.v;fcSalvar()}FC.editando=null;fcTelaBaralho()});
+}
+// IA: pede os cartões em JSON e mostra para a pessoa escolher quais salvar
+async function fcGerarIA(bid){
+  const tema=$("#fc-tema").value.trim(),base=$("#fc-base").value.trim(),qtd=+$("#fc-qtd").value||10;
+  if(!tema&&!base){toast("Escreva um assunto ou cole um resumo.");$("#fc-tema").focus();return}
+  FC.ia={bid,tema,base,qtd,ocupado:true};fcTelaBaralho();
+  const prova=S.edital?(S.edital.nome||""):(S.perfil&&S.perfil.nomeProva)||"";
+  const pedido=`Crie exatamente ${qtd} flashcards em português do Brasil para um estudante${prova?` que se prepara para ${prova}`:" de vestibular/concurso"}.
+Assunto: ${tema||"o texto abaixo"}.
+${base?`Use SOMENTE as informações deste texto do estudante:\n"""${base.slice(0,6000)}"""\n`:""}Regras: frente curta (pergunta direta, conceito ou lacuna); verso com a resposta correta em até 2 frases; um fato por cartão; sem repetir; nada inventado; cobrir os pontos mais cobrados em prova.
+Responda APENAS com um array JSON, sem texto antes ou depois, no formato: [{"f":"frente","v":"verso"}]`;
+  try{const ia=await iaMentoria();const r=await ia([{role:"user",content:pedido}],{modelTier:"default",cache:false});
+    const txt=(r&&r.text)||"",m=txt.match(/\[[\s\S]*\]/);let arr=[];try{arr=JSON.parse(m?m[0]:txt)}catch(e){}
+    arr=(Array.isArray(arr)?arr:[]).map(x=>({f:String(x&&(x.f||x.frente||x.pergunta)||"").trim().slice(0,500),v:String(x&&(x.v||x.verso||x.resposta)||"").trim().slice(0,1200)})).filter(x=>x.f&&x.v);
+    FC.ia={bid,tema,base,qtd,cards:arr,erro:arr.length?"":"A IA não devolveu cartões válidos. Tente de novo ou mude o assunto."}}
+  catch(e){FC.ia={bid,tema,base,qtd,erro:e&&e.code==="rate_limited"?"Muitos pedidos seguidos. Espere um pouco e tente de novo.":e&&e.code==="ia_desativada"?"A IA ainda não foi ativada no Firebase deste site.":"Não foi possível gerar agora ("+(e&&e.code||"erro")+"). Tente de novo."}}
+  if(S.view==="flashcards"&&FC.aberto===bid&&!FC.estudo)fcTelaBaralho()}
+// ---- modo estudo ----
+function fcEstudar(bid){
+  const fila=[];Object.entries(FC.doc.b).forEach(([id,b])=>{if(bid&&id!==bid)return;b.c.forEach(c=>{if(fcVence(c))fila.push([id,c.id])})});
+  let extra=false;if(!fila.length&&bid){FC.doc.b[bid].c.forEach(c=>fila.push([bid,c.id]));extra=true}   // tudo em dia: revisão livre
+  if(!fila.length){toast("Nada para revisar hoje. Volte amanhã!");return}
+  for(let i=fila.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fila[i],fila[j]]=[fila[j],fila[i]]}
+  FC.estudo={bid,fila,i:0,virado:false,ok:0,er:0,extra,total:fila.length};fcTelaEstudo()}
+function fcTelaEstudo(){
+  const e=FC.estudo;if(!e)return renderFlashcards();
+  const sairBtn=`<button class="btn ghost sm" type="button" id="fc-sair">${ico("back")}Sair da revisão</button>`;
+  if(e.i>=e.fila.length){const pct=e.ok+e.er?Math.round(e.ok/(e.ok+e.er)*100):0;
+    $("#main").innerHTML=`<div class="page fc-page">${sairBtn}<div class="card stack fc-fim"><span class="fc-ic grande">${ico("check")}</span><h2>Revisão concluída!</h2><p class="muted">${e.total} ${e.total===1?"cartão":"cartões"} · ${e.ok} ${e.ok===1?"lembrado":"lembrados"} · ${e.er} para reforçar (${pct}%)</p>
+      <p class="small muted">${e.extra?"Esta foi uma revisão livre: os cartões não mudaram de data.":"Os cartões que você errou voltam amanhã; os que acertou aparecem cada vez mais espaçados."}</p><div class="row" style="justify-content:center;gap:8px"><button class="btn primary" type="button" id="fc-ok">Voltar aos baralhos</button></div></div></div>`;
+    $("#fc-sair").onclick=$("#fc-ok").onclick=()=>{FC.estudo=null;fcTelaLista()};return}
+  const [bid,cid]=e.fila[e.i],b=FC.doc.b[bid],c=b&&b.c.find(x=>x.id===cid);if(!c){e.i++;return fcTelaEstudo()}
+  $("#main").innerHTML=`<div class="page fc-page">${sairBtn}
+    <div class="fc-estudo"><div class="row small muted" style="justify-content:space-between"><span>${esc(b.nome)}</span><span>${e.i+1} de ${e.fila.length}</span></div>
+      <div class="prog" style="margin:8px 0 14px"><i style="width:${Math.round(e.i/e.fila.length*100)}%"></i></div>
+      <button type="button" class="fc-carta ${e.virado?"virada":""}" id="fc-carta" aria-label="${e.virado?"Resposta":"Pergunta"}. Toque para virar.">
+        <span class="fc-face fc-frente"><span class="eyebrow">Pergunta</span><span class="fc-txt">${esc(c.f)}</span><span class="small muted">Toque ou aperte espaço para ver a resposta</span></span>
+        <span class="fc-face fc-verso"><span class="eyebrow">Resposta</span><span class="fc-txt">${esc(c.v)}</span></span></button>
+      <div class="fc-notas" ${e.virado?"":"hidden"}><button class="btn" type="button" data-fc-nota="1"><b>Errei</b><span class="small muted">volta amanhã</span></button><button class="btn" type="button" data-fc-nota="2"><b>Difícil</b><span class="small muted">mesma caixa</span></button><button class="btn primary" type="button" data-fc-nota="3"><b>Acertei</b><span class="small">${c.cx>=5?"dominado":"próxima caixa"}</span></button></div>
+      <p class="hint" style="text-align:center">Atalhos: espaço vira o cartão · 1 errei · 2 difícil · 3 acertei</p></div></div>`;
+  $("#fc-sair").onclick=()=>{FC.estudo=null;renderFlashcards()};
+  $("#fc-carta").onclick=()=>{e.virado=!e.virado;$("#fc-carta").classList.toggle("virada",e.virado);$(".fc-notas").hidden=!e.virado};
+  $$("[data-fc-nota]").forEach(bt=>bt.onclick=()=>fcNota(+bt.dataset.fcNota));
+}
+function fcNota(n){const e=FC.estudo;if(!e||!e.virado)return;const [bid,cid]=e.fila[e.i],b=FC.doc.b[bid],c=b&&b.c.find(x=>x.id===cid);
+  if(c){if(n===1){e.er++;c.er=(c.er||0)+1}else{e.ok++;c.ok=(c.ok||0)+1}
+    if(!e.extra){if(n===1)c.cx=1;else if(n===3)c.cx=Math.min(5,c.cx+1);c.prox=fcSomarDias(n===1?1:n===2?Math.max(1,FC_DIAS[c.cx]):FC_DIAS[c.cx]||1)}
+    fcSalvar()}
+  e.i++;e.virado=false;fcTelaEstudo()}
+document.addEventListener("keydown",ev=>{if(S.view!=="flashcards"||!FC.estudo||ev.ctrlKey||ev.metaKey||ev.altKey)return;if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement&&document.activeElement.tagName))return;
+  if(ev.key===" "){const c=$("#fc-carta");if(c){ev.preventDefault();c.click()}}else if("123".includes(ev.key)&&ev.key.length===1&&FC.estudo.virado){ev.preventDefault();fcNota(+ev.key)}});
+
 /* ================= Shell com barra lateral ================= */
 const NAV=[
   ["Estudos",[["inicio","Início","home"],["semana","Minha semana","cal"],["questoes","Banco de questões","qbank"],["pomodoro","Pomodoro","timer"],["cronometro","Cronômetro","watch"],["desafios","Desafios","trophy"],["estatisticas","Estatísticas","chart"],["mentoria","Mentoria com IA","mentor"]]],
-  ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"]]],
+  ["Prova",[["edital","Escanear edital","scan"],["topicos","Tópicos da prova","list"],["flashcards","Flashcards","cartas"]]],
   ["Comunidade",[["grupos","Meus grupos","users"],...(STANDALONE?[["buscarGrupos","Buscar grupos","search"]]:[]),["voz","Voz global","mic"],["chat","Chat global","chat"],...(STANDALONE?[["mensagens","Mensagens","send"],["amigos","Amigos","user"]]:[]),["ranking","Ranking","trophy"]]],
   ["Conta",[["perfil","Meu perfil","user"],["aparencia","Aparência","palette"],["config","Configurações","gear"]]]];
 function renderShell(){
@@ -3263,7 +3555,7 @@ function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}fecharMenu();renderView();scrollTo(0,0)}
 function renderView(){
   $$("[data-go]").forEach(a=>{a.classList.toggle("on",a.dataset.go===S.view);if(a.dataset.go===S.view){const g=a.closest(".nav-grp.fech");if(g){g.classList.remove("fech");g.querySelectorAll("a").forEach(x=>x.removeAttribute("tabindex"));const b=g.previousElementSibling;if(b)b.setAttribute("aria-expanded","true")}}if(a.dataset.go==="topicos"){a.hidden=!S.edital;const b=a.querySelector(".badge");if(S.edital){if(b)b.textContent=progEdital()+"%";else a.insertAdjacentHTML("beforeend",`<span class="badge">${progEdital()}%</span>`)}}});
-  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),voz:renderVoz,buscarGrupos:()=>FBM()?renderBuscarGruposFB():(($("#main").innerHTML=bloqueado("Buscar grupos")),ligarBloqueado()),questoes:renderQuestoes,mentoria:renderMentoria,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
+  const f={inicio:renderInicio,semana:renderSemana,pomodoro:renderPomodoro,cronometro:renderCronometro,edital:renderEdital,topicos:renderTopicos,triagemProva:renderTriagemProva,grupos:()=>FBM()?renderGruposFB():renderGrupos(),chat:()=>FBM()?renderChatFB():renderChat(),mensagens:()=>FBM()?renderMensagensFB():(($("#main").innerHTML=bloqueado("Mensagens")),ligarBloqueado()),amigos:()=>FBM()?renderAmigosFB():(($("#main").innerHTML=bloqueado("Amigos")),ligarBloqueado()),voz:renderVoz,buscarGrupos:()=>FBM()?renderBuscarGruposFB():(($("#main").innerHTML=bloqueado("Buscar grupos")),ligarBloqueado()),questoes:renderQuestoes,flashcards:renderFlashcards,mentoria:renderMentoria,desafios:renderDesafios,aparencia:renderAparencia,estatisticas:renderEstatisticas,ranking:renderRanking,perfil:renderPerfil,config:renderConfig}[S.view]||renderInicio;
   f();
 }
 const pageHead=(t,sub,acoes)=>`<div class="page-h"><div><h1>${t}</h1>${sub?`<p>${sub}</p>`:""}</div>${acoes?`<div class="row">${acoes}</div>`:""}</div>`;
