@@ -2,7 +2,14 @@
 
 Organizador de estudos: triagem do aluno (colégio, vestibular, concurso, faculdade), plano semanal, pomodoro, banco de questões oficiais, catálogo de provas de todo o Brasil e leitura de editais em PDF.
 
-Site: https://dematospromp.github.io/mapa-de-estudos/
+Site oficial: https://mapa-de-estudos-d6eca.web.app/ (Firebase Hosting)
+Site de testes: https://dematospromp.github.io/mapa-de-estudos/ (GitHub Pages)
+
+## Como publicar
+- `main` → GitHub Pages (testes). Toda mudança vai primeiro para cá.
+- `producao` → Firebase Hosting (oficial) e regras do Firestore, pelo GitHub Actions (`.github/workflows/firebase.yml`).
+  Precisa do segredo `FIREBASE_SERVICE_ACCOUNT` (chave JSON de uma conta de serviço do projeto) em Settings → Secrets and variables → Actions.
+- Os dois sites usam o mesmo Firebase (mesmas contas e dados).
 
 ## Arquivos
 - `index.html`: o site.
