@@ -108,7 +108,7 @@ textarea{min-height:88px;resize:vertical}
 .me{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:var(--r-sm);cursor:pointer}
 .me:hover{background:var(--hover)}
 .me .nm{font-weight:600;font-size:.88rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.me .sub{font-size:.75rem;color:var(--muted)}
+.me .sub{font-size:.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.me>div{min-width:0}
 .mini-pomo{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);background:var(--inv-bg);color:var(--inv-fg);cursor:pointer;font-size:.84rem}
 .mini-pomo b{font-family:var(--f-mono);font-size:1rem}
 .main{min-width:0}
@@ -2496,10 +2496,12 @@ function renderShell(){
   $("#ovl").onclick=()=>$("#shell").classList.remove("open");
   renderSideUser();renderView();tickPomo();atualizarBadgeDesafios();
 }
+// e-mail da conta conectada (ajuda a perceber quando se entrou em outra conta)
+function contaEmail(){try{return (FB&&FB.auth&&FB.auth.currentUser&&FB.auth.currentUser.email)||""}catch(e){return ""}}
 function renderSideUser(){
   const el=$("#side-me");if(!el)return;
   const nm=S.mode==="nuvem"?(S.pub&&S.pub.nome)||(S.perfil&&S.perfil.nome)||"Estudante":(S.perfil&&S.perfil.nome)||"Visitante";
-  el.innerHTML=`${S.mode==="nuvem"?avatar(S.uid):`<span class="avatar" aria-hidden="true">${esc(nm[0]||"V").toUpperCase()}</span>`}<div style="min-width:0"><div class="nm">${esc(nm)}</div><div class="sub">${S.mode==="nuvem"?"Salvo na nuvem":"Visitante · nada é salvo"}</div></div>`;
+  el.innerHTML=`${S.mode==="nuvem"?avatar(S.uid):`<span class="avatar" aria-hidden="true">${esc(nm[0]||"V").toUpperCase()}</span>`}<div style="min-width:0"><div class="nm">${esc(nm)}</div><div class="sub" title="${esc(contaEmail())}">${S.mode==="nuvem"?(esc(contaEmail())||"Salvo na nuvem"):"Visitante · nada é salvo"}</div></div>`;
 }
 function progEdital(){if(!S.edital)return 0;const all=S.edital.materias.flatMap(m=>m.topicos);return all.length?Math.round(all.filter(t=>t.feito).length/all.length*100):0}
 function go(v){pararTela();S.view=v;if(v!=="grupos")S.grupoAberto=null;const sh=$("#shell");if(!sh){renderShell();return}sh.classList.remove("open");renderView();scrollTo(0,0)}
