@@ -1270,23 +1270,62 @@ function editalDoCatalogo(e,uf){
 
 /* Leitura de edital sem IA: encontra o conteúdo programático e separa matérias e tópicos */
 const MATERIAS_CONHECIDAS=["língua portuguesa","português","literatura","redação","matemática","matemática financeira","raciocínio lógico","raciocínio lógico-matemático","informática","noções de informática","física","química","biologia","história","geografia","inglês","língua inglesa","espanhol","língua espanhola","filosofia","sociologia","atualidades","conhecimentos gerais","direito constitucional","direito administrativo","direito penal","direito processual penal","direito civil","direito processual civil","direito do trabalho","direito tributário","direitos humanos","legislação especial","legislação de trânsito","legislação","ética","ética no serviço público","contabilidade","contabilidade geral","estatística","administração pública","administração geral","arquivologia","conhecimentos bancários","seguridade social","ciências","estudos sociais","legislação aplicada","conhecimentos específicos"];
+// O PDF de uma ficha em tabela vem com as colunas misturadas na mesma linha. Pelas posições do texto,
+// separa "Sequência didática", "Detalhamento" (o conteúdo da prova) e "Fonte de consulta" (que não é conteúdo).
+function tabelaFOA(itens){
+  const h=itens.find(i=>/^\s*Detalhamento/i.test(i.s));if(!h)return null;
+  const noCab=i=>i.pg===h.pg&&Math.abs(i.y-h.y)<16,abaixo=i=>i.pg>h.pg||(i.pg===h.pg&&i.y<h.y-16);
+  const cab=itens.filter(noCab),corpo=itens.filter(i=>abaixo(i)&&!/^\s*(\d+\s*\/\s*\d+|EB\d+.*)\s*$/.test(i.s));if(!corpo.length)return null;
+  // colunas do cabeçalho: pedaços separados por mais de 40 pt
+  const xsCab=[...cab].sort((a,b)=>a.x-b.x);const gCab=[];xsCab.forEach(i=>{const u=gCab[gCab.length-1];if(u&&i.x-u.fim<=40){u.its.push(i);u.fim=Math.max(u.fim,i.x+i.w)}else gCab.push({x:i.x,fim:i.x+i.w,its:[i]})});
+  if(gCab.length<2)return null;
+  // divisa entre colunas = faixa vertical sem nenhum texto entre um cabeçalho e o próximo
+  const W=Math.ceil(Math.max(...itens.map(i=>i.x+i.w)))+2,cob=new Uint8Array(W);
+  corpo.forEach(i=>{for(let x=Math.max(0,Math.floor(i.x));x<Math.min(W,Math.ceil(i.x+i.w));x++)cob[x]=1});
+  const divs=[];for(let k=1;k<gCab.length;k++){const a0=Math.floor(gCab[k-1].x)+8,a1=Math.floor(gCab[k].x);let best=null,ini=null;
+    for(let x=a0;x<=a1;x++){if(x<a1&&!cob[x]){if(ini===null)ini=x}else if(ini!==null){if(!best||x-ini>best[1]-best[0])best=[ini,x];ini=null}}
+    divs.push(best?(best[0]+best[1])/2:(gCab[k-1].fim+gCab[k].x)/2)}
+  const colX=i=>{let k=0;divs.forEach((d,j)=>{if(i.x+Math.min(i.w,4)/2>d)k=j+1});return k};
+  // palavra colada à anterior na mesma linha (espaço normal) continua na mesma coluna, mesmo passando da divisa
+  const colMap=new Map();{const ord=[...corpo].sort((a,b)=>a.pg-b.pg||b.y-a.y||a.x-b.x);let ant=null;
+    ord.forEach(i=>{let k=colX(i);if(ant&&ant.pg===i.pg&&Math.abs(ant.y-i.y)<=2&&i.x-(ant.x+ant.w)<7&&i.x>ant.x)k=Math.min(k,colMap.get(ant));colMap.set(i,k);ant=i})}
+  const colDe=i=>colMap.get(i);
+  // monta o texto de cada coluna, linha a linha, sem quebrar palavras
+  const montar=lista=>{const ord=[...lista].sort((a,b)=>a.pg-b.pg||b.y-a.y||a.x-b.x);const lin=[];ord.forEach(i=>{const u=lin[lin.length-1];if(u&&u[0].pg===i.pg&&Math.abs(u[0].y-i.y)<=2)u.push(i);else lin.push([i])});
+    return lin.map(l=>{l.sort((a,b)=>a.x-b.x);let t="",fim=null;l.forEach(i=>{if(fim!==null&&i.x-fim>1.2&&!/\s$/.test(t)&&!/^\s/.test(i.s))t+=" ";t+=i.s;fim=i.x+i.w});return t.replace(/\s+/g," ").trim()}).filter(Boolean)};
+  const nomes=gCab.map(g=>montar(g.its).join(" "));
+  const ehFonte=j=>/Fonte|Refer[êe]ncia|Bibliografia|Material/i.test(nomes[j]),ehSeq=j=>/Sequ[êe]ncia|Unidade/i.test(nomes[j]);
+  const linhasCol=j=>montar(corpo.filter(i=>colDe(i)===j)).filter(l=>!/^(Professor|Prof\.|TEN\s|CAP\s|MAJ\s)/i.test(l)&&!/^[A-ZÁÉÍÓÚÇ\s]{6,}$/.test(l)||/^[•▪●–]/.test(l));
+  const det=nomes.map((n,j)=>j).filter(j=>!ehFonte(j)&&!ehSeq(j));if(!det.length)return null;
+  // tópicos: cada marcador (•, –) do detalhamento vira um item; linhas sem marcador continuam o item anterior
+  const itensDet=[];det.flatMap(linhasCol).forEach(l=>{const partes=l.split(/(?:^|\s)[•▪●–]\s*/);partes.forEach((p,k)=>{p=p.trim();const novo=k>0;
+      if(!p){if(novo)itensDet.push("");return}if(novo||!itensDet.length)itensDet.push(p);else itensDet[itensDet.length-1]+=" "+p})});
+  const lim=itensDet.map(x=>x.replace(/\s+/g," ").trim()).filter(x=>x.length>=4);if(!lim.length)return null;
+  const seq=nomes.map((n,j)=>j).filter(ehSeq).flatMap(linhasCol).join(" ").replace(/\s+/g," ").trim();
+  const fonte=nomes.map((n,j)=>j).filter(ehFonte).flatMap(linhasCol).join(" ").replace(/\s+/g," ").trim();
+  const topo=montar(itens.filter(i=>!abaixo(i)&&!noCab(i))).join("\n");
+  return `${topo}\n\nCONTEÚDO DA PROVA (coluna "${nomes[det[0]]}" da tabela):\n${seq?`Sequências didáticas: ${seq}\n`:""}${lim.map(x=>"• "+x).join("\n")}\n\nFONTE DE CONSULTA (não é conteúdo da prova): ${fonte||"—"}`;
+}
 // fichas escolares (FOA, roteiro de estudos): disciplina no título e tópicos em marcadores
 function extrairEscolar(texto){
   const t=texto.replace(/\r/g,"");if(!/FICHA DE ORIENTA|ROTEIRO DE ESTUDO|OBJETOS? D[OE] CONHECIMENTO|SEQU[ÊE]NCIA\s+DID[ÁA]TICA|AVALIA[ÇC][ÃA]O\s+(PARCIAL|BIMESTRAL|TRIMESTRAL|DE ESTUDO)/i.test(t))return null;
   let nome="",serie="";const cab=t.slice(0,3000).split("\n").map(l=>l.trim()).filter(Boolean);
   for(const l of cab){const n=norm(l);const m=MATERIAS_CONHECIDAS.filter(x=>x.length>4).find(x=>n.startsWith(norm(x)));if(m&&l===l.toUpperCase()){nome=l.replace(/\s+D[OA]S?\s+\d.*$/i,"").trim();const sm=/(\d+º\s*ANO[^\n]*)/i.exec(l);serie=sm?sm[1]:"";break}}
-  const blocos=t.split(/\n?\s*[•▪●◦]\s*/).slice(1);if(blocos.length<2)return null;
+  const ini=t.search(/CONTE[ÚU]DO DA PROVA \(coluna/);const base=ini>=0?t.slice(ini,t.search(/FONTE DE CONSULTA \(n[ãa]o/)>ini?t.search(/FONTE DE CONSULTA \(n[ãa]o/):undefined):t;
+  let blocos=base.split(/\n?\s*[•▪●◦]\s*/).slice(1);
+  if(blocos.length<2){const m=/Detalhamento[^\n]*\n([\s\S]*)/i.exec(t);blocos=m?m[1].split(/\s[–]\s|\n\s*[–]\s*/).slice(1):[]}
+  if(!blocos.length)return {vazio:true};
   // cada marcador continua nas linhas seguintes até a frase terminar (o PDF quebra as linhas da tabela)
   const PARA=/^(SD\s*\d|Sequ[êe]ncia|Material no|Fonte de|Consulta ao|Atividades\/|Livro did|-\s*Cap[íi]tulo|TEN\s|PROF|Professor)/i;
-  const tops=blocos.map(b=>{let out="";for(const l of b.split("\n").map(x=>x.trim()).filter(Boolean)){if(out&&(PARA.test(l)||/[.;:!?]$/.test(out)))break;out+=(out?" ":"")+l}return out.replace(/\s+/g," ").trim()})
-    .filter(x=>x.length>=4).map(x=>x.length>200?x.slice(0,197)+"…":x);
-  const av=/(Avalia[çc][ãa]o[^\n]{0,40}\d{4})/i.exec(t),dt=/Data da aplica[çc][ãa]o[\s\S]{0,60}?(\d{2})\/(\d{2})\/(\d{4})/i.exec(t);
+  const tops=blocos.map(b=>{let out="";for(const l of b.split("\n").map(x=>x.trim()).filter(Boolean)){if(out&&(PARA.test(l)||(/[.;:!?]$/.test(out)&&!/^[a-zà-ú]/.test(l)&&ini<0&&!/^Produ|^Estrat/.test(l))))break;out+=(out?" ":"")+l}return out.replace(/\s+/g," ").trim()})
+    .filter(x=>x.length>=4).flatMap(x=>x.length>170?x.split(/(?<=\.)\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/):[x]).map(x=>x.replace(/[–\-]\s*$/,"").trim()).filter(x=>x.length>=4).map(x=>x.length>200?x.slice(0,197)+"…":x);
+  const av=/(Avalia[çc][ãa]o[^\n]{0,40}\d{4})/i.exec(t),dt=/Data da aplica[çc][ãa]o[\s\S]{0,60}?(\d{2})\/(\d{2})\/(\d{4}|\d{2})\b/i.exec(t);if(dt&&dt[3].length===2)dt[3]="20"+dt[3];
   const disc=nome?nome.charAt(0)+nome.slice(1).toLowerCase().replace(/\b(de|da|do|e)\b/g,x=>x):"Conteúdo da prova";
   return {prova:{nome:[av?av[1].replace(/\s+/g," "):"",disc,serie.toLowerCase()].filter(Boolean).join(" · "),banca:"",dataProva:dt?`${dt[3]}-${dt[2]}-${dt[1]}`:"",cargo:serie},
     materias:[{nome:disc.replace(/^(.)/,c=>c.toUpperCase()).slice(0,60),questoes:0,topicos:tops.slice(0,80)}]};
 }
 function extrairLocal(texto){
-  const esc_=extrairEscolar(texto);if(esc_&&esc_.materias[0].topicos.length>=2)return esc_;
+  const esc_=extrairEscolar(texto);if(esc_){if(esc_.vazio)return {prova:{},materias:[]};return esc_}
   const t=texto.replace(/\r/g,"");
   const conta=trecho=>{const n=norm(trecho);return MATERIAS_CONHECIDAS.reduce((a,m)=>a+(n.includes(norm(m))?1:0),0)};
   const marcas=[...t.matchAll(/CONTE[ÚU]DOS?\s+PROGRAM[ÁA]TICOS?|OBJETOS\s+DE\s+AVALIA[ÇC][ÃA]O|PROGRAMAS?\s+DAS?\s+PROVAS?|CONHECIMENTOS\s+B[ÁA]SICOS/gi)].map(m=>m.index);
@@ -1294,7 +1333,7 @@ function extrairLocal(texto){
   let fim=t.length;const re=/\n\s*(ANEXO\s+[IVX]+\b|QUADRO\s+DE\s+VAGAS)/gi;re.lastIndex=ini+400;const mf=re.exec(t);if(mf)fim=mf.index;
   const corpo=t.slice(ini,fim);
   const linhas=corpo.split("\n");const secs=[];let atual=null;
-  const RUIDO=/ANEXO|EDITAL|CRONOGRAMA|MINIST[ÉE]RIO|UNIVERSIDADE|CONTE[ÚU]DO PROGRAM|OBJETOS DE AVALIA|P[ÁA]GINA|^HABILIDADES$|^CONHECIMENTOS$|PRESIDENTE|DIRETOR|SECRET[ÁA]RIO/i;
+  const RUIDO=/ANEXO|EDITAL|CRONOGRAMA|MINIST[ÉE]RIO|COL[ÉE]GIO|ESCOLA|EX[ÉE]RCITO|DIRETORIA|FICHA DE|PROFESSOR|UNIVERSIDADE|CONTE[ÚU]DO PROGRAM|OBJETOS DE AVALIA|P[ÁA]GINA|^HABILIDADES$|^CONHECIMENTOS$|PRESIDENTE|DIRETOR|SECRET[ÁA]RIO/i;
   const ehTitulo=l=>{let s=l.trim().replace(/^[\dIVX]+(?:\.\d+)*\s*[.)\-–]?\s*/,"").replace(/[:.\-–]+$/,"").trim();if(s.length<4||s.length>70)return null;
     if(/^(DA|DAS|DO|DOS|DE)\s/i.test(s)&&!/^DE\s/i.test(s))return null;
     const n=norm(s);const conhecida=MATERIAS_CONHECIDAS.find(m=>n===norm(m)||n==="nocoes de "+norm(m)||n.startsWith(norm(m)+" ")||n.startsWith("nocoes de "+norm(m)));
@@ -1761,6 +1800,7 @@ Altere só o necessário para atender o pedido, mantendo as regras. No "resumo",
   return txt;
 }
 const FORMATO_EDITAL=`{
+  "tipo": "edital | ficha_escola | outro",
   "prova": {"nome": "", "banca": "", "dataProva": "AAAA-MM-DD ou vazio", "cargo": ""},
   "observacao": "",
   "materias": [{"nome": "Matemática", "questoes": 20, "topicos": ["Funções: domínio, imagem, composta e inversa", "..."]}]
@@ -1780,6 +1820,9 @@ Regras:
 - Nome da prova em documento escolar: avaliação + disciplina + série (ex.: "AP2 2026 · Língua Portuguesa · 1º ano EM"). Banca: a escola ou instituição (ex.: "Colégio Militar / DEPA – Exército Brasileiro").
 - Se houver várias datas de aplicação (uma por turma ou chamada), use a primeira em "dataProva" e cite todas em "observacao".
 - Em "observacao" resuma em até 300 caracteres as orientações úteis: duração, datas, material permitido e proibido e fonte de consulta (capítulos do livro, material do ambiente virtual).
+- NUNCA vire tópico ou disciplina: nome da escola/órgão (ex.: "Colégio Militar de Brasília", "Ministério da Defesa", "Exército Brasileiro"), lema da escola (ex.: "Jovem Casa de Velhas Tradições"), nomes de professores, cabeçalhos ("Orientações para estudo", "Material a ser trazido", "Não será permitido"), datas, duração e itens da fonte de consulta (caderno, slides, vídeos, livro, EBVirtual).
+- Pense no assunto de cada item: os tópicos devem ser conteúdos que caem na prova (ex.: "Artigo de opinião: características estruturais e discursivas"). Em Redação, o gênero textual estudado (artigo de opinião, crônica, editorial…) deve aparecer no tópico.
+- Antes de tudo, diga em "tipo" o que é o documento: "edital", "ficha_escola" (orientação de prova da escola) ou "outro" (texto, artigo, apostila, lista de exercícios, prova já aplicada… que não diz o conteúdo cobrado). Se for "outro", devolva "materias": [] e explique em "observacao" do que se trata o arquivo.
 
 Responda SOMENTE com JSON válido neste formato:
 ${FORMATO_EDITAL}
@@ -3970,14 +4013,17 @@ async function lerArquivos(files){
     for(const [n,f] of docs.entries()){let tx="";
       if(/pdf/i.test(f.type)||/\.pdf$/i.test(f.name)){
         if(!window.pdfjsLib)throw new Error("O leitor de PDF não carregou. Recarregue a página ou cole o texto.");
-        const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false}).promise;pags+=doc.numPages;
+        const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false}).promise;pags+=doc.numPages;const itensPdf=[];
         for(let i=1;i<=doc.numPages;i++){const pg=await doc.getPage(i);const tc=await pg.getTextContent();let last=null,line="";
+          tc.items.forEach(it=>{const tr=it.transform||[0,0,0,0,0,0];if(it.str&&it.str.trim())itensPdf.push({s:it.str,x:tr[4],y:tr[5],w:it.width||0,pg:i})});
           let fimX=null;tc.items.forEach(it=>{const tr=it.transform||[0,0,0,0,0,0],y=Math.round(tr[5]),x=tr[4],h=Math.abs(tr[3])||10;
             if(last!==null&&Math.abs(y-last)>2){tx+=line+"\n";line="";fimX=null}
             if(fimX!==null&&x-fimX>h*.18&&!/\s$/.test(line)&&!/^\s/.test(it.str))line+=" ";
             line+=it.str;fimX=x+(it.width||0);last=y;if(it.hasEOL){tx+=line+"\n";line="";fimX=null;last=null}});tx+=line+"\n\n";
           const p=$("#rd-p");if(p)p.style.width=Math.round(((n+i/doc.numPages)/docs.length)*100)+"%"}
-        if(tx.replace(/\s+/g,"").length<120)escaneados.push({f,doc})}
+        if(tx.replace(/\s+/g,"").length<120)escaneados.push({f,doc});
+        // ficha da escola em tabela (Sequência didática | Detalhamento | Fonte de consulta): remonta as colunas
+        const foa=tabelaFOA(itensPdf);if(foa)tx=foa}
       else tx=await f.text();
       texto+=(docs.length>1?`\n\n=== ARQUIVO: ${f.name} ===\n`:"")+tx}
     texto=texto.replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
@@ -4015,10 +4061,14 @@ async function analisarTexto(texto,origem){
     $("#ed-s").textContent=`Analisando a parte ${i+1} de ${partes.length}…`;
     try{res.push(await iaJson(promptEditalTrecho(partes[i],i,partes.length)))}
     catch(e){if(e&&e.code==="not_granted"){toast("Você não autorizou o uso da IA.");renderEdital();return}
+      console.warn("edital IA",e);if(!S.iaFalhaEdital)S.iaFalhaEdital=e;
       if(e&&/rate_limited|ia_desativada|ia_appcheck/.test(e.code||"")){toast(iaErroTxt(e)+" Vou separar os tópicos sem IA.");lerSemIA(texto,origem);return}falhas++}
     $("#ed-p").style.width=Math.round((i+1)/partes.length*100)+"%";
   }
   const ed=juntarEdital(res,{fonte:"edital",origem});
+  const outro=res.length&&res.every(r=>r&&r.tipo==="outro");
+  if(outro){const ob=res.map(r=>r.observacao).filter(Boolean).join(" ");$("#ed-body").innerHTML=`<div class="empty-state stack"><b>Este arquivo não parece um edital nem uma ficha de prova.</b><span>${esc(ob||"Ele não diz quais conteúdos caem na prova.")}</span><span class="small muted">Envie o edital ou a ficha de orientação da prova (FOA). Nada foi adicionado aos seus tópicos.</span><button class="btn" type="button" id="ed-volta">Voltar</button></div>`;$("#ed-volta").onclick=renderEdital;S.iaFalhaEdital=null;return}
+  if(!res.length){const e=S.iaFalhaEdital;S.iaFalhaEdital=null;toast(`${iaErroTxt(e)}${e&&e.message?" ("+String(e.message).slice(0,80)+")":""} Separei os tópicos sem IA; confira.`)}S.iaFalhaEdital=null;
   if(!ed.materias.length){if(!res.length){lerSemIA(texto,origem);return}const loc=extrairLocal(texto);if(loc.materias.length){lerSemIA(texto,origem);return}toast("Não encontrei o conteúdo da prova. Confira se o arquivo é o documento completo.");renderEdital();return}
   if(falhas)toast(`${falhas} parte(s) do edital não puderam ser analisadas; confira os tópicos.`);
   salvarEdital(ed);
