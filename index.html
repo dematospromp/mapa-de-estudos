@@ -1270,7 +1270,23 @@ function editalDoCatalogo(e,uf){
 
 /* Leitura de edital sem IA: encontra o conteúdo programático e separa matérias e tópicos */
 const MATERIAS_CONHECIDAS=["língua portuguesa","português","literatura","redação","matemática","matemática financeira","raciocínio lógico","raciocínio lógico-matemático","informática","noções de informática","física","química","biologia","história","geografia","inglês","língua inglesa","espanhol","língua espanhola","filosofia","sociologia","atualidades","conhecimentos gerais","direito constitucional","direito administrativo","direito penal","direito processual penal","direito civil","direito processual civil","direito do trabalho","direito tributário","direitos humanos","legislação especial","legislação de trânsito","legislação","ética","ética no serviço público","contabilidade","contabilidade geral","estatística","administração pública","administração geral","arquivologia","conhecimentos bancários","seguridade social","ciências","estudos sociais","legislação aplicada","conhecimentos específicos"];
+// fichas escolares (FOA, roteiro de estudos): disciplina no título e tópicos em marcadores
+function extrairEscolar(texto){
+  const t=texto.replace(/\r/g,"");if(!/FICHA DE ORIENTA|ROTEIRO DE ESTUDO|OBJETOS? D[OE] CONHECIMENTO|SEQU[ÊE]NCIA\s+DID[ÁA]TICA|AVALIA[ÇC][ÃA]O\s+(PARCIAL|BIMESTRAL|TRIMESTRAL|DE ESTUDO)/i.test(t))return null;
+  let nome="",serie="";const cab=t.slice(0,3000).split("\n").map(l=>l.trim()).filter(Boolean);
+  for(const l of cab){const n=norm(l);const m=MATERIAS_CONHECIDAS.filter(x=>x.length>4).find(x=>n.startsWith(norm(x)));if(m&&l===l.toUpperCase()){nome=l.replace(/\s+D[OA]S?\s+\d.*$/i,"").trim();const sm=/(\d+º\s*ANO[^\n]*)/i.exec(l);serie=sm?sm[1]:"";break}}
+  const blocos=t.split(/\n?\s*[•▪●◦]\s*/).slice(1);if(blocos.length<2)return null;
+  // cada marcador continua nas linhas seguintes até a frase terminar (o PDF quebra as linhas da tabela)
+  const PARA=/^(SD\s*\d|Sequ[êe]ncia|Material no|Fonte de|Consulta ao|Atividades\/|Livro did|-\s*Cap[íi]tulo|TEN\s|PROF|Professor)/i;
+  const tops=blocos.map(b=>{let out="";for(const l of b.split("\n").map(x=>x.trim()).filter(Boolean)){if(out&&(PARA.test(l)||/[.;:!?]$/.test(out)))break;out+=(out?" ":"")+l}return out.replace(/\s+/g," ").trim()})
+    .filter(x=>x.length>=4).map(x=>x.length>200?x.slice(0,197)+"…":x);
+  const av=/(Avalia[çc][ãa]o[^\n]{0,40}\d{4})/i.exec(t),dt=/Data da aplica[çc][ãa]o[\s\S]{0,60}?(\d{2})\/(\d{2})\/(\d{4})/i.exec(t);
+  const disc=nome?nome.charAt(0)+nome.slice(1).toLowerCase().replace(/\b(de|da|do|e)\b/g,x=>x):"Conteúdo da prova";
+  return {prova:{nome:[av?av[1].replace(/\s+/g," "):"",disc,serie.toLowerCase()].filter(Boolean).join(" · "),banca:"",dataProva:dt?`${dt[3]}-${dt[2]}-${dt[1]}`:"",cargo:serie},
+    materias:[{nome:disc.replace(/^(.)/,c=>c.toUpperCase()).slice(0,60),questoes:0,topicos:tops.slice(0,80)}]};
+}
 function extrairLocal(texto){
+  const esc_=extrairEscolar(texto);if(esc_&&esc_.materias[0].topicos.length>=2)return esc_;
   const t=texto.replace(/\r/g,"");
   const conta=trecho=>{const n=norm(trecho);return MATERIAS_CONHECIDAS.reduce((a,m)=>a+(n.includes(norm(m))?1:0),0)};
   const marcas=[...t.matchAll(/CONTE[ÚU]DOS?\s+PROGRAM[ÁA]TICOS?|OBJETOS\s+DE\s+AVALIA[ÇC][ÃA]O|PROGRAMAS?\s+DAS?\s+PROVAS?|CONHECIMENTOS\s+B[ÁA]SICOS/gi)].map(m=>m.index);
@@ -1746,19 +1762,24 @@ Altere só o necessário para atender o pedido, mantendo as regras. No "resumo",
 }
 const FORMATO_EDITAL=`{
   "prova": {"nome": "", "banca": "", "dataProva": "AAAA-MM-DD ou vazio", "cargo": ""},
+  "observacao": "",
   "materias": [{"nome": "Matemática", "questoes": 20, "topicos": ["Funções: domínio, imagem, composta e inversa", "..."]}]
 }`;
 function promptEditalTrecho(txt,i,n){
-  return `Você está lendo a parte ${i+1} de ${n} de um edital de prova ou concurso. Extraia SOMENTE o que aparece neste trecho:
-- dados da prova: nome, banca organizadora, data da prova objetiva (AAAA-MM-DD) e cargo/curso;
-- o conteúdo programático: cada disciplina e seus tópicos, na ordem em que aparecem no edital.
+  return `Você está lendo a parte ${i+1} de ${n} de um documento com o conteúdo de uma prova. Pode ser um edital de concurso ou vestibular OU um documento escolar: ficha de orientação aos alunos (FOA), roteiro de estudos, orientação para avaliação parcial/bimestral/trimestral, lista de conteúdos de prova de colégio (inclusive Colégio Militar). Extraia SOMENTE o que aparece neste trecho:
+- dados da prova: nome, banca ou instituição/escola, data da prova (AAAA-MM-DD) e cargo/curso/série;
+- o conteúdo cobrado: cada disciplina e seus tópicos, na ordem em que aparecem.
 
 Regras:
-- Seja fiel ao texto do edital. Não invente tópicos.
+- Seja fiel ao texto. Não invente tópicos.
 - Agrupe subitens curtos num mesmo tópico (ex.: "Funções: domínio, imagem, composta e inversa"), com no máximo 160 caracteres por tópico.
 - Informe o número de questões da disciplina se o trecho disser; senão use 0.
-- Se o trecho não tiver conteúdo programático, devolva "materias": [].
-- Ignore regras de inscrição, taxas, recursos e documentos.
+- Se o trecho não tiver conteúdo cobrado, devolva "materias": [].
+- Ignore regras de inscrição, taxas, recursos, documentos e assinaturas.
+- Documento escolar: a disciplina costuma estar no título (ex.: "LÍNGUA PORTUGUESA DO 1º ANO DO ENSINO MÉDIO" → disciplina "Língua Portuguesa", cargo "1º ano do Ensino Médio"). Os tópicos são os "objetos de conhecimento", "conteúdos", itens com marcadores (•, -) ou linhas de tabelas como "Sequência didática / Detalhamento do objeto do conhecimento". Transforme cada marcador num tópico e, quando ajudar, comece pelo nome da unidade (ex.: "Barroco e Arcadismo: figuras de linguagem nos textos barrocos e árcades"). Não transforme em tópico a coluna "Fonte de consulta" nem as orientações de estudo (ler, refazer, revisar).
+- Nome da prova em documento escolar: avaliação + disciplina + série (ex.: "AP2 2026 · Língua Portuguesa · 1º ano EM"). Banca: a escola ou instituição (ex.: "Colégio Militar / DEPA – Exército Brasileiro").
+- Se houver várias datas de aplicação (uma por turma ou chamada), use a primeira em "dataProva" e cite todas em "observacao".
+- Em "observacao" resuma em até 300 caracteres as orientações úteis: duração, datas, material permitido e proibido e fonte de consulta (capítulos do livro, material do ambiente virtual).
 
 Responda SOMENTE com JSON válido neste formato:
 ${FORMATO_EDITAL}
@@ -3005,6 +3026,14 @@ function contextoMentoria(){
 const IA_FB_VERSAO="12.19.0",IA_FB_MODELOS=["gemini-3.8-flash","gemini-3.5-flash-lite"];
 let iaFBPromessa=null;
 function iaMentoriaDisponivel(){return !!S.sample||(FBM()&&!!window.MAPA_FIREBASE_CONFIG)}
+// IA que devolve JSON: na prévia usa S.sample; no site usa o Firebase AI Logic (mesmo da mentoria)
+const iaEditalDisponivel=()=>!!S.sample||iaMentoriaDisponivel();
+function jsonDaResposta(txt){txt=String(txt||"").replace(/```(?:json)?/gi,"");const a=txt.indexOf("{"),b=txt.lastIndexOf("}");if(a<0||b<a)throw {code:"json",message:"resposta sem JSON"};
+  try{return JSON.parse(txt.slice(a,b+1))}catch(e){return JSON.parse(txt.slice(a,b+1).replace(/,\s*([}\]])/g,"$1"))}}
+async function iaJson(prompt,opts){opts=opts||{};
+  if(S.sample)return S.sample.json(prompt,{modelTier:opts.tier||"default",cache:false,images:opts.arquivos,onText:opts.onText});
+  const ia=await iaMentoria();const r=await ia([{role:"user",content:prompt}],{imagens:opts.imagens,onText:opts.onText});return jsonDaResposta(r&&r.text)}
+const iaErroTxt=e=>e&&e.code==="rate_limited"?"Limite de uso da IA atingido. Tente de novo daqui a pouco.":e&&e.code==="ia_desativada"?"A IA ainda não foi ativada no Firebase deste site.":e&&e.code==="ia_appcheck"?"A IA está bloqueada pela proteção App Check do Firebase.":e&&e.code==="ia_tempo"?"A IA demorou demais para responder.":e&&e.code==="not_granted"?"Você não autorizou o uso da IA.":"A IA não conseguiu ler agora.";
 function iaFirebase(){
   if(!iaFBPromessa)iaFBPromessa=(async()=>{const b=`https://www.gstatic.com/firebasejs/${IA_FB_VERSAO}/`;
     const {initializeApp}=await import(b+"firebase-app.js"),{getAI,getGenerativeModel,GoogleAIBackend}=await import(b+"firebase-ai.js");
@@ -3015,6 +3044,7 @@ function iaFirebase(){
       ac.initializeAppCheck(app,{provider:new Prov(chaveAC),isTokenAutoRefreshEnabled:true})}catch(e){console.warn("app check",e)}}
     const ai=getAI(app,{backend:new GoogleAIBackend(),useLimitedUseAppCheckTokens:false});let mi=0;
     return async(turns,opts)=>{const contents=turns.map(t=>({role:t.role==="assistant"?"model":"user",parts:[{text:t.content}]}));
+      if(opts&&opts.imagens&&opts.imagens.length){const u=contents.find(c=>c.role==="user");if(u)opts.imagens.forEach(im=>u.parts.push({inlineData:{mimeType:im.mime,data:im.b64}}))}
       for(;;){try{const espera=new Promise((_,no)=>setTimeout(()=>no({code:"ia_tempo",message:"tempo esgotado"}),35000));
           const r=await Promise.race([getGenerativeModel(ai,{model:IA_FB_MODELOS[mi]}).generateContentStream({contents}),espera]);let text="";
           for await(const ch of r.stream){let d="";try{d=ch.text()}catch(e){}text+=d;if(opts&&opts.onText)opts.onText({text,delta:d})}return {text,truncated:false}}
@@ -3890,17 +3920,17 @@ function renderPomodoro(){
 function renderEdital(){
   const t=S.editalTab;
   $("#main").innerHTML=`<div class="page">
-    ${pageHead("Escanear edital",(S.sample?"A IA lê o edital inteiro":"O site lê o edital inteiro")+" e separa os tópicos cobrados por matéria. O resultado aparece em “Tópicos da prova”, separado da sua semana.")}
+    ${pageHead("Escanear edital",(iaEditalDisponivel()?"A IA lê o edital ou a ficha de orientação da prova da escola":"O site lê o edital inteiro")+" e separa os tópicos cobrados por matéria. O resultado aparece em “Tópicos da prova”, separado da sua semana.")}
     ${S.edital?`<div class="card row" style="justify-content:space-between;margin-bottom:16px"><div><span class="eyebrow">Prova atual</span><div style="font-weight:600">${esc(S.edital.nome)}</div><div class="small muted">${S.edital.materias.length} matérias · ${S.edital.materias.reduce((a,m)=>a+m.topicos.length,0)} tópicos</div></div><button class="btn" type="button" data-link="topicos">${ico("list")}Abrir tópicos</button></div>`:""}
     <div class="tabs" role="tablist">${[["arquivo","Enviar arquivo"],["texto","Colar texto"],["nome","Não tenho o edital"]].map(([k,n])=>`<button type="button" role="tab" aria-selected="${t===k}" class="${t===k?"on":""}" data-tab="${k}">${n}</button>`).join("")}</div>
     <div class="card stack" id="ed-body">
       ${t==="arquivo"?`
-        <label class="drop" id="drop" for="ed-file">${ico("file")}<b>Escolha ou arraste o edital</b><span class="small muted">PDF com texto ou arquivo .txt${S.sample?" · fotos (JPG/PNG) se o PDF for escaneado":""}</span></label>
+        <label class="drop" id="drop" for="ed-file">${ico("file")}<b>Escolha ou arraste o edital</b><span class="small muted">Edital, ficha de orientação da escola (FOA) ou roteiro de estudos: PDF ou .txt${iaEditalDisponivel()?" · fotos (JPG/PNG) ou PDF escaneado. Pode enviar vários de uma vez":""}</span></label>
         <input type="file" id="ed-file" accept=".pdf,.txt,application/pdf,text/plain,image/jpeg,image/png,image/webp" hidden multiple>
         <div id="ed-info"></div>`
       :t==="texto"?`
         <div class="field"><label for="ed-txt">Cole o texto do edital (ou só o conteúdo programático)</label><textarea id="ed-txt" style="min-height:220px" placeholder="Cole aqui…">${esc(S.editalTexto||"")}</textarea></div>
-        <div class="row"><button class="btn primary" type="button" id="ed-go-txt">${ico("spark")}${S.sample?"Analisar com IA":"Separar os tópicos"}</button><span class="hint" id="ed-count"></span></div>`
+        <div class="row"><button class="btn primary" type="button" id="ed-go-txt">${ico("spark")}${iaEditalDisponivel()?"Analisar com IA":"Separar os tópicos"}</button><span class="hint" id="ed-count"></span></div>`
       :`
         <div class="field"><label for="ed-nome">Para qual prova você está se preparando?</label><input type="text" id="ed-nome" placeholder="Ex.: Pism 1, EsPCEx, ENEM, PM de Minas, Banco do Brasil" maxlength="80" autocomplete="off">
           <span class="hint">Pode escrever do seu jeito: apelidos, siglas, número do módulo ou o estado.</span></div>
@@ -3909,7 +3939,7 @@ function renderEdital(){
         <details><summary>Ver todas as provas do catálogo (${CATALOGO.length})</summary>
           <div class="stack sm" style="margin-top:12px">${["Vestibular","Seriado","Militar","Concurso","Outro"].map(tp=>`<div><div class="eyebrow" style="margin-bottom:6px">${tp==="Outro"?"Outros":tp==="Seriado"?"Vestibulares seriados":tp==="Militar"?"Escolas militares":tp+"s"}</div><div class="sugs">${CATALOGO.filter(c=>c.tipo===tp).map(c=>`<button class="sug" type="button" data-usar="${c.id}">${esc(c.nome)}</button>`).join("")}</div></div>`).join("")}</div></details>`}
     </div>
-    ${S.sample?"":`<p class="hint" style="margin-top:12px">Nesta versão, a leitura do edital é feita pelo próprio site, sem IA. Confira os tópicos depois de ler.</p>`}
+    ${iaEditalDisponivel()?"":`<p class="hint" style="margin-top:12px">Nesta versão, a leitura do edital é feita pelo próprio site, sem IA. Confira os tópicos depois de ler.</p>`}
   </div>`;
   $$("[data-tab]").forEach(b=>b.onclick=()=>{S.editalTab=b.dataset.tab;renderEdital()});
   $$("[data-link]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();go(a.dataset.link)}));
@@ -3921,7 +3951,7 @@ function renderEdital(){
     dr.addEventListener("drop",e=>{e.preventDefault();dr.classList.remove("over");lerArquivos([...e.dataTransfer.files])});
   }else if(t==="texto"){
     const ta=$("#ed-txt"),cnt=()=>$("#ed-count").textContent=ta.value.length?ta.value.length.toLocaleString("pt-BR")+" caracteres":"";cnt();ta.oninput=cnt;
-    $("#ed-go-txt").onclick=()=>{const v=ta.value.trim();if(v.length<200){toast("Cole um trecho maior do edital (pelo menos o conteúdo programático).");return}S.editalTexto=v;analisarTexto(v,"texto colado")};
+    $("#ed-go-txt").onclick=()=>{const v=ta.value.trim();if(v.length<200){toast("Cole um trecho maior do edital (pelo menos o conteúdo programático).");return}S.editalTexto=v;S.editalModo=S.edital?S.editalModo:null;analisarTexto(v,"texto colado")};
   }else{
     const inp=$("#ed-nome");
     $$("[data-pn]").forEach(b=>b.onclick=()=>{inp.value=b.dataset.pn;mostrarResultados(inp.value)});
@@ -3932,59 +3962,84 @@ function renderEdital(){
 }
 async function lerArquivos(files){
   if(!files.length)return;const info=$("#ed-info");
-  const imgs=files.filter(f=>/^image\//.test(f.type)),f=files.find(f=>!/^image\//.test(f.type));
-  if(imgs.length&&!f){analisarImagens(imgs);return}
-  if(!f)return;
-  info.innerHTML=`<div class="row muted"><span class="spinner"></span>Lendo ${esc(f.name)}…</div><div class="prog" style="margin-top:8px"><i id="rd-p" style="width:3%"></i></div>`;
+  const imgs=files.filter(f=>/^image\//.test(f.type)),docs=files.filter(f=>!/^image\//.test(f.type));
+  if(imgs.length&&!docs.length){escolherModo(()=>analisarImagens(imgs,imgs[0].name),`${imgs.length} ${imgs.length===1?"foto":"fotos"} · a IA vai ler as imagens`,imgs.length===1?imgs[0].name:"Fotos do edital");return}
+  info.innerHTML=`<div class="row muted"><span class="spinner"></span>Lendo ${docs.length>1?docs.length+" arquivos":esc(docs[0].name)}…</div><div class="prog" style="margin-top:8px"><i id="rd-p" style="width:3%"></i></div>`;
   try{
-    let texto="",pags=0;
-    if(/pdf/i.test(f.type)||/\.pdf$/i.test(f.name)){
-      if(!window.pdfjsLib)throw new Error("O leitor de PDF não carregou. Recarregue a página ou cole o texto.");
-      const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false}).promise;pags=doc.numPages;
-      for(let i=1;i<=pags;i++){const pg=await doc.getPage(i);const tc=await pg.getTextContent();let last=null,line="";
-        let fimX=null;tc.items.forEach(it=>{const tr=it.transform||[0,0,0,0,0,0],y=Math.round(tr[5]),x=tr[4],h=Math.abs(tr[3])||10;
-          if(last!==null&&Math.abs(y-last)>2){texto+=line+"\n";line="";fimX=null}
-          if(fimX!==null&&x-fimX>h*.18&&!/\s$/.test(line)&&!/^\s/.test(it.str))line+=" ";
-          line+=it.str;fimX=x+(it.width||0);last=y;if(it.hasEOL){texto+=line+"\n";line="";fimX=null;last=null}});texto+=line+"\n\n";
-        $("#rd-p").style.width=Math.round(i/pags*100)+"%"}
-    }else{texto=await f.text()}
+    let texto="",pags=0,escaneados=[];
+    for(const [n,f] of docs.entries()){let tx="";
+      if(/pdf/i.test(f.type)||/\.pdf$/i.test(f.name)){
+        if(!window.pdfjsLib)throw new Error("O leitor de PDF não carregou. Recarregue a página ou cole o texto.");
+        const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false}).promise;pags+=doc.numPages;
+        for(let i=1;i<=doc.numPages;i++){const pg=await doc.getPage(i);const tc=await pg.getTextContent();let last=null,line="";
+          let fimX=null;tc.items.forEach(it=>{const tr=it.transform||[0,0,0,0,0,0],y=Math.round(tr[5]),x=tr[4],h=Math.abs(tr[3])||10;
+            if(last!==null&&Math.abs(y-last)>2){tx+=line+"\n";line="";fimX=null}
+            if(fimX!==null&&x-fimX>h*.18&&!/\s$/.test(line)&&!/^\s/.test(it.str))line+=" ";
+            line+=it.str;fimX=x+(it.width||0);last=y;if(it.hasEOL){tx+=line+"\n";line="";fimX=null;last=null}});tx+=line+"\n\n";
+          const p=$("#rd-p");if(p)p.style.width=Math.round(((n+i/doc.numPages)/docs.length)*100)+"%"}
+        if(tx.replace(/\s+/g,"").length<120)escaneados.push({f,doc})}
+      else tx=await f.text();
+      texto+=(docs.length>1?`\n\n=== ARQUIVO: ${f.name} ===\n`:"")+tx}
     texto=texto.replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
-    if(texto.length<200){info.innerHTML=`<p class="err">Não encontrei texto neste arquivo. Ele parece ser um PDF escaneado (imagem). ${S.sample?"Envie fotos das páginas do conteúdo programático ou":""} cole o texto na aba “Colar texto”.</p>`;return}
+    // PDF escaneado (só imagem): a IA lê as páginas como fotos
+    if(texto.replace(/=== ARQUIVO:[^\n]*===/g,"").replace(/\s+/g,"").length<120){
+      if(escaneados.length&&iaEditalDisponivel()){info.innerHTML=`<div class="row muted"><span class="spinner"></span>O PDF é escaneado. Preparando as páginas para a IA ler…</div>`;
+        const cs=[];for(const x of escaneados)cs.push(...await paginasPdfImagens(x.doc,10-cs.length));escolherModo(()=>analisarImagens(cs,docs[0].name),`PDF escaneado: a IA vai ler ${cs.length} ${cs.length===1?"página":"páginas"} como imagem`,docs.map(f=>f.name).join(", "));return}
+      info.innerHTML=`<p class="err">Não encontrei texto neste arquivo. Ele parece ser um PDF escaneado (imagem). Envie fotos das páginas ou cole o texto na aba “Colar texto”.</p>`;return}
     S.editalTexto=texto;
-    info.innerHTML=`<div class="row" style="justify-content:space-between"><div><b>${esc(f.name)}</b><div class="small muted">${pags?pags+" páginas · ":""}${texto.length.toLocaleString("pt-BR")} caracteres lidos</div></div><button class="btn primary" type="button" id="ed-go">${ico("spark")}${S.sample?"Analisar edital inteiro com IA":"Separar os tópicos do edital"}</button></div>`;
-    $("#ed-go").onclick=()=>analisarTexto(texto,f.name);
+    escolherModo(()=>analisarTexto(texto,docs.map(f=>f.name).join(", ")),`${docs.length>1?docs.length+" arquivos · ":""}${pags?pags+" páginas · ":""}${texto.length.toLocaleString("pt-BR")} caracteres lidos`,docs.map(f=>f.name).join(", "));
   }catch(e){info.innerHTML=`<p class="err">${esc(e.message||"Não foi possível ler o arquivo.")} Tente colar o texto na aba “Colar texto”.</p>`}
 }
+// com uma prova já salva, a pessoa escolhe: juntar (ex.: uma ficha por matéria) ou substituir
+function escolherModo(analisar,resumo,nome){const info=$("#ed-info");const ia=iaEditalDisponivel();
+  info.innerHTML=`<div class="stack sm"><div><b>${esc(nome||"Arquivo pronto")}</b><div class="small muted">${esc(resumo)}</div></div>
+    ${S.edital?`<div class="small muted">Você já tem <b>${esc(S.edital.nome||"uma prova")}</b> salva. Quer juntar estes tópicos a ela (bom para fichas de cada matéria) ou começar uma prova nova?</div>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" data-modo="juntar">${ico("plus")}Juntar com a prova atual</button><button class="btn" type="button" data-modo="novo">${ico("spark")}Substituir pela nova</button></div>`
+    :`<div class="row"><button class="btn primary" type="button" data-modo="novo">${ico("spark")}${ia?"Ler com IA e separar os tópicos":"Separar os tópicos"}</button></div>`}
+    ${ia?`<p class="hint">A IA lê editais de concursos e vestibulares e também fichas de orientação de provas da escola (FOA, roteiros de estudo, avaliações parciais).</p>`:""}</div>`;
+  $$("[data-modo]",info).forEach(b=>b.onclick=()=>{S.editalModo=b.dataset.modo;analisar()})}
 function progressoEdital(t,s,p){$("#ed-body").innerHTML=`<div class="loadbox"><div class="row"><span class="spinner"></span><b>${esc(t)}</b></div><p class="small muted" id="ed-s">${esc(s)}</p><div class="prog"><i id="ed-p" style="width:${p}%"></i></div></div>`}
 function nomeDoEdital(texto,origem){const m=/(CONCURSO P[ÚU]BLICO|PROCESSO SELETIVO|VESTIBULAR|EXAME DE ADMISS[ÃA]O)[^\n]{0,90}/i.exec(texto.slice(0,6000));
   return (m?m[0].replace(/\s+/g," ").trim():String(origem||"Edital").replace(/\.[a-z]+$/i,"")).slice(0,90)}
 function lerSemIA(texto,origem){
-  const ed=juntarEdital([extrairLocal(texto)],{fonte:"leitura",origem});
+  const r=extrairLocal(texto),ed=juntarEdital([r],{fonte:"leitura",origem});
   if(!ed.materias.length){toast("Não consegui separar as matérias deste edital. Cole só o conteúdo programático na aba “Colar texto”.");renderEdital();return}
-  ed.nome=nomeDoEdital(texto,origem);salvarEdital(ed);
+  ed.nome=(r.prova&&r.prova.nome)||nomeDoEdital(texto,origem);salvarEdital(ed);
 }
 async function analisarTexto(texto,origem){
-  if(!S.sample){progressoEdital("Lendo o edital","Procurando o conteúdo programático e separando as matérias…",50);setTimeout(()=>lerSemIA(texto,origem),50);return}
+  if(!iaEditalDisponivel()){progressoEdital("Lendo o edital","Procurando o conteúdo programático e separando as matérias…",50);setTimeout(()=>lerSemIA(texto,origem),50);return}
   const TAM=60000,SOB=800,partes=[];for(let i=0;i<texto.length;i+=TAM-SOB)partes.push(texto.slice(i,i+TAM));
   progressoEdital("Lendo o edital inteiro",`Dividi o edital em ${partes.length} ${partes.length>1?"partes":"parte"}. Analisando a parte 1…`,5);
   const res=[];let falhas=0;
   for(let i=0;i<partes.length;i++){
     $("#ed-s").textContent=`Analisando a parte ${i+1} de ${partes.length}…`;
-    try{res.push(await S.sample.json(promptEditalTrecho(partes[i],i,partes.length),{modelTier:"default",cache:false}))}
-    catch(e){if(e&&e.code==="not_granted"){toast("Você não autorizou o uso da IA.");renderEdital();return}if(e&&e.code==="rate_limited"){toast("Limite de uso da IA atingido. Tente de novo mais tarde.");renderEdital();return}falhas++}
+    try{res.push(await iaJson(promptEditalTrecho(partes[i],i,partes.length)))}
+    catch(e){if(e&&e.code==="not_granted"){toast("Você não autorizou o uso da IA.");renderEdital();return}
+      if(e&&/rate_limited|ia_desativada|ia_appcheck/.test(e.code||"")){toast(iaErroTxt(e)+" Vou separar os tópicos sem IA.");lerSemIA(texto,origem);return}falhas++}
     $("#ed-p").style.width=Math.round((i+1)/partes.length*100)+"%";
   }
   const ed=juntarEdital(res,{fonte:"edital",origem});
-  if(!ed.materias.length){if(!res.length){lerSemIA(texto,origem);return}toast("Não encontrei o conteúdo programático. Confira se o arquivo é o edital completo.");renderEdital();return}
+  if(!ed.materias.length){if(!res.length){lerSemIA(texto,origem);return}const loc=extrairLocal(texto);if(loc.materias.length){lerSemIA(texto,origem);return}toast("Não encontrei o conteúdo da prova. Confira se o arquivo é o documento completo.");renderEdital();return}
   if(falhas)toast(`${falhas} parte(s) do edital não puderam ser analisadas; confira os tópicos.`);
   salvarEdital(ed);
 }
-async function analisarImagens(imgs){
-  const lim=await S.sample.limits().catch(()=>null);if(!lim||!lim.images){toast("Esta visualização não aceita imagens. Cole o texto do edital.");return}
-  imgs=imgs.slice(0,lim.images.maxCount);progressoEdital("Lendo as fotos do edital",`${imgs.length} imagem(ns) enviada(s)…`,30);
-  try{const r=await S.sample.json(promptEditalTrecho("(o conteúdo está nas imagens anexadas)",0,1),{images:imgs,modelTier:"default",cache:false});
-    const ed=juntarEdital([r],{fonte:"edital",origem:"fotos"});if(!ed.materias.length){toast("Não encontrei tópicos nas imagens.");renderEdital();return}salvarEdital(ed)}
-  catch(e){toast("A IA não conseguiu ler as imagens.");renderEdital()}
+// fotos do edital ou páginas de PDF escaneado: a IA lê as imagens (até 10 páginas)
+function imagemParaIA(fonte){return new Promise((ok,no)=>{const fim=c=>{const u=c.toDataURL("image/jpeg",.82);ok({mime:"image/jpeg",b64:u.split(",")[1]})};
+  if(fonte instanceof HTMLCanvasElement)return fim(fonte);
+  const img=new Image(),url=URL.createObjectURL(fonte);img.onload=()=>{const k=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);fim(c)};img.onerror=no;img.src=url})}
+async function paginasPdfImagens(doc,max){const out=[];for(let i=1;i<=Math.min(doc.numPages,max);i++){const pg=await doc.getPage(i),v0=pg.getViewport({scale:1}),esc_=Math.min(2,1600/Math.max(v0.width,v0.height)),v=pg.getViewport({scale:esc_});
+  const c=document.createElement("canvas");c.width=Math.round(v.width);c.height=Math.round(v.height);const cx=c.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:cx,viewport:v}).promise;out.push(c)}return out}
+async function analisarImagens(imgs,origem){
+  if(!iaEditalDisponivel()){toast("A leitura de fotos precisa da IA, que não está disponível aqui. Cole o texto do edital.");return}
+  imgs=imgs.slice(0,10);progressoEdital("Lendo as páginas com IA",`${imgs.length} ${imgs.length===1?"imagem":"imagens"}…`,30);
+  try{let r;
+    if(S.sample){const lim=await S.sample.limits().catch(()=>null);if(!lim||!lim.images){toast("Esta visualização não aceita imagens. Cole o texto do edital.");renderEdital();return}
+      const arqs=await Promise.all(imgs.slice(0,lim.images.maxCount).map(x=>x instanceof HTMLCanvasElement?new Promise(ok=>x.toBlob(bl=>ok(new File([bl],"pagina.jpg",{type:"image/jpeg"})),"image/jpeg",.82)):x));
+      r=await iaJson(promptEditalTrecho("(o conteúdo está nas imagens anexadas)",0,1),{arquivos:arqs})}
+    else r=await iaJson(promptEditalTrecho("(o conteúdo está nas imagens anexadas, em ordem)",0,1),{imagens:await Promise.all(imgs.map(imagemParaIA))});
+    const ed=juntarEdital([r],{fonte:"edital",origem:origem||"fotos"});if(!ed.materias.length){toast("Não encontrei tópicos nas imagens.");renderEdital();return}salvarEdital(ed)}
+  catch(e){toast(iaErroTxt(e));renderEdital()}
 }
 function ambiguo(r){return r.length>1&&r[1].score>=r[0].score-.01&&r[0].e.id.replace(/\d$/,"")===r[1].e.id.replace(/\d$/,"")&&!r[0].num}
 function mostrarResultados(q){
@@ -4002,25 +4057,26 @@ function mostrarResultados(q){
       <p class="small">${esc(x.e.est)}</p>
       <div class="row"><button class="btn sm ${i===0&&!amb?"primary":""}" type="button" data-usar="${x.e.id}" data-uf="${x.uf||""}">Usar esta prova</button><span class="small muted">${x.e.m.length} matérias · ${x.e.m.reduce((a,m)=>a+m[2].length,0)} tópicos</span></div>
     </div>`).join("")}
-    ${S.sample?`<button class="btn ghost sm" type="button" id="ed-ia" style="align-self:flex-start">Não é nenhuma dessas? Buscar com a IA</button>`:""}`;
+    ${iaEditalDisponivel()?`<button class="btn ghost sm" type="button" id="ed-ia" style="align-self:flex-start">Não é nenhuma dessas? Buscar com a IA</button>`:""}`;
   $$("[data-usar]",box).forEach(b=>b.onclick=()=>usarCatalogo(b.dataset.usar,b.dataset.uf||null));
   const b=$("#ed-ia");if(b)b.onclick=()=>buscarPorNome(q);
 }
 function usarCatalogo(id,uf){const e=CATALOGO.find(c=>c.id===id);if(e)salvarEdital(editalDoCatalogo(e,uf))}
 async function buscarPorNome(nome,extra){
-  if(!S.sample){toast("A busca com IA não está disponível aqui. Envie o edital em PDF.");return}
+  if(!iaEditalDisponivel()){toast("A busca com IA não está disponível aqui. Envie o edital em PDF.");return}S.editalModo=null;
   progressoEdital(`Buscando os tópicos de ${nome}`,"A IA está montando o conteúdo programático…",15);
   try{
-    const r=await S.sample.json(promptPorNome(nome,extra),{modelTier:"complex",cache:false,onText:({text})=>{const p=$("#ed-p");if(p)p.style.width=Math.min(95,15+text.length/60)+"%"}});
+    const r=await iaJson(promptPorNome(nome,extra),{tier:"complex",onText:({text})=>{const p=$("#ed-p");if(p)p.style.width=Math.min(95,15+text.length/60)+"%"}});
     const ed=juntarEdital([r],{fonte:"ia",origem:nome});
     if(!ed.materias.length){$("#ed-body").innerHTML=`<div class="empty-state"><b>Não encontrei o conteúdo de “${esc(nome)}”.</b><span>${esc(r&&r.observacao||"A IA não conhece essa prova com segurança.")}</span><span>Envie o edital em PDF ou cole o texto dele.</span><button class="btn" type="button" id="ed-volta">Voltar</button></div>`;$("#ed-volta").onclick=renderEdital;return}
     ed.nome=ed.nome||nome;ed.referencia=String(r.referencia||"");ed.confianca=String(r.confianca||"media");ed.observacao=String(r.observacao||"");
     salvarEdital(ed);
-  }catch(e){toast(e&&e.code==="not_granted"?"Você não autorizou o uso da IA.":"A IA não respondeu. Tente de novo.");renderEdital()}
+  }catch(e){toast(iaErroTxt(e)+" Tente de novo.");renderEdital()}
 }
 function juntarEdital(partes,meta){
   const ed={nome:"",banca:"",dataProva:"",cargo:"",materias:[],...meta,criadoEm:new Date().toISOString()};const idx={};
-  partes.forEach(r=>{if(!r||typeof r!=="object")return;const pv=r.prova||{};
+  const obs=[];partes.forEach(r=>{if(!r||typeof r!=="object")return;const pv=r.prova||{};
+    const ob=String(r.observacao||"").trim();if(ob&&!obs.includes(ob))obs.push(ob.slice(0,400));
     ["nome","banca","cargo"].forEach(k=>{if(!ed[k]&&pv[k])ed[k]=String(pv[k]).slice(0,120)});
     if(!ed.dataProva&&/^\d{4}-\d{2}-\d{2}$/.test(pv.dataProva||""))ed.dataProva=pv.dataProva;
     (Array.isArray(r.materias)?r.materias:[]).forEach(m=>{if(!m||!m.nome)return;const k=norm(m.nome);
@@ -4029,9 +4085,16 @@ function juntarEdital(partes,meta){
       (Array.isArray(m.topicos)?m.topicos:[]).forEach(t=>{t=String(t&&t.t||t||"").trim().slice(0,200);if(t&&!alvo.topicos.some(x=>norm(x.t)===norm(t)))alvo.topicos.push({id:uid(),t,feito:false})});
     })});
   ed.materias=ed.materias.filter(m=>m.topicos.length);
+  if(obs.length&&!ed.orientacoes)ed.orientacoes=obs.join(" ").slice(0,700);
   return ed;
 }
-function salvarEdital(ed){S.edital=ed;gravar("edital",ed,true);toast(`Tópicos de ${ed.nome||"prova"} organizados.`);go("topicos")}
+function juntarComAtual(ed){const at=S.edital;if(!at)return ed;const out=clone(at);
+  ed.materias.forEach(m=>{const x=out.materias.find(y=>norm(y.nome)===norm(m.nome));if(!x){out.materias.push(m);return}
+    m.topicos.forEach(t=>{if(!x.topicos.some(z=>norm(z.t)===norm(t.t)))x.topicos.push(t)});if(m.questoes>x.questoes)x.questoes=m.questoes});
+  if(ed.orientacoes)out.orientacoes=[out.orientacoes,ed.orientacoes].filter(Boolean).join(" · ").slice(0,1400);
+  if(ed.dataProva&&(!out.dataProva||ed.dataProva<out.dataProva))out.dataProva=ed.dataProva;
+  if(out.tri)delete out.tri;return out}
+function salvarEdital(ed){if(S.editalModo==="juntar"&&S.edital&&ed.fonte!=="catalogo"){ed=juntarComAtual(ed);S.editalModo=null}S.edital=ed;gravar("edital",ed,true);toast(`Tópicos de ${ed.nome||"prova"} organizados.`);go("topicos")}
 
 /* ================= Tópicos da prova ================= */
 function renderTopicos(){
@@ -4043,6 +4106,7 @@ function renderTopicos(){
       `<button class="btn primary" type="button" id="tp-tri">${ico("spark")}${ed.tri?"Refazer triagem da prova":"Fazer triagem da prova"}</button>`)}
     ${ed.fonte==="ia"?`<div class="card flat small" style="margin-bottom:16px;border-style:dashed"><b>Gerado a partir do conhecimento da IA</b> (confiança ${esc(ed.confianca||"média")}). ${ed.referencia?"Base: "+esc(ed.referencia)+". ":""}${esc(ed.observacao||"")} Confira com o edital oficial mais recente.</div>`:""}
     ${ed.fonte==="catalogo"?`<div class="card flat small stack sm" style="margin-bottom:16px"><div><b>Estrutura:</b> ${esc(ed.estrutura||"")}</div><div class="muted">${esc(ed.referencia||"")}${ed.fonteUrl?` <a href="${esc(ed.fonteUrl)}" target="_blank" rel="noopener">Ver fonte</a>`:""}</div></div>`:""}
+    ${ed.orientacoes?`<div class="card flat small" style="margin-bottom:16px"><b>Orientações da prova:</b> ${esc(ed.orientacoes)}</div>`:""}
     ${ed.fonte==="leitura"?`<div class="card flat small" style="margin-bottom:16px;border-style:dashed"><b>Tópicos separados automaticamente do edital, sem IA.</b> Confira se as matérias e os tópicos estão certos; você pode acrescentar tópicos em cada matéria.</div>`:""}
     ${ed.fonte==="pesquisa"?`<div class="card flat small" style="margin-bottom:16px"><b>Fonte:</b> ${esc(ed.referencia)} <a href="${esc(ed.fonteUrl)}" target="_blank" rel="noopener">Ver resumo do conteúdo programático</a></div>`:""}
     <div class="stats">
