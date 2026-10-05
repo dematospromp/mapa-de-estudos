@@ -3695,7 +3695,7 @@ function renderInicio(){
       <div class="stat stat-meta">${anelMeta(minutosDia(dataISO()),metaHoje())}<div style="min-width:0"><div class="eyebrow">Meta de hoje</div><div class="v" style="font-size:1.25rem">${fmtH(minutosDia(dataISO()))}</div><div class="s">de ${fmtH(metaHoje())}${minutosDia(dataISO())>=metaHoje()?" · batida!":""}</div></div></div>
       ${tileEstudo7()}
       ${tileQuestoes7()}
-      ${dp!=null?`<div class="stat"><div class="eyebrow">${esc(p.nomeProva||"Prova")}</div><div class="v">${dp>=0?dp+" dias":"já passou"}</div><div class="s">até a prova · semana ${feitos}/${todos.length}</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>`
+      ${dp!=null?`<div class="stat"><div class="eyebrow">${esc(p.nomeProva||"Prova")}</div><div class="v">${dp>=0?dp+(dp===1?" dia":" dias"):"já passou"}</div><div class="s">até a prova · semana ${feitos}/${todos.length}</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>`
         :`<div class="stat"><div class="eyebrow">Semana</div><div class="v">${feitos}/${todos.length}</div><div class="s">blocos do plano feitos</div><div class="prog" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>`}
     </div>
     ${cartaoMentoriaInicio()}
@@ -4113,7 +4113,7 @@ function renderTopicos(){
       <div class="stat"><div class="eyebrow">Progresso</div><div class="v">${tot?Math.round(feitos/tot*100):0}%</div><div class="prog" style="margin-top:8px"><i style="width:${tot?feitos/tot*100:0}%"></i></div></div>
       <div class="stat"><div class="eyebrow">Tópicos estudados</div><div class="v">${feitos}/${tot}</div></div>
       <div class="stat"><div class="eyebrow">Matérias</div><div class="v">${ed.materias.length}</div></div>
-      <div class="stat"><div class="eyebrow">Prova</div><div class="v">${dp!=null?(dp>=0?dp+" dias":"passou"):"—"}</div><div class="s">${ed.dataProva?new Date(ed.dataProva+"T12:00").toLocaleDateString("pt-BR"):"defina na triagem"}</div></div>
+      <div class="stat"><div class="eyebrow">Prova</div><div class="v">${dp!=null?(dp>=0?dp+(dp===1?" dia":" dias"):"passou"):"—"}</div><div class="s">${ed.dataProva?new Date(ed.dataProva+"T12:00").toLocaleDateString("pt-BR"):"defina na triagem"}</div></div>
     </div>
     ${S.plano&&S.plano.prova?`<p class="small muted" style="margin-bottom:12px">Sua semana já inclui esta prova. Refaça a triagem para recalcular.</p>`:""}
     <div class="stack sm">${ed.materias.map((m,mi)=>{const f=m.topicos.filter(t=>t.feito).length;return `
